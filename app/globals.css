@@ -1,0 +1,70 @@
+@import 'tailwindcss';
+
+/* === Theme Tokens === */
+@theme {
+    /* Core Brand */
+    --color-primary: 79 70 229; /* Indigo 600 */
+    --color-primary-foreground: 255 255 255;
+
+    --color-secondary: 16 185 129; /* Emerald 500 */
+    --color-secondary-foreground: 255 255 255;
+
+    --color-accent: 99 102 241; /* Indigo 500 */
+    --color-accent-foreground: 255 255 255;
+
+    --color-destructive: 244 63 94; /* Rose 500 */
+    --color-destructive-foreground: 255 255 255;
+
+    /* Base UI */
+    --color-background: 255 255 255; /* White */
+    --color-foreground: 15 23 42; /* Slate 900 */
+
+    --color-card: 255 255 255;
+    --color-card-foreground: 15 23 42;
+
+    --color-popover: 255 255 255;
+    --color-popover-foreground: 15 23 42;
+
+    --color-muted: 241 245 249; /* Slate 100 */
+    --color-muted-foreground: 100 116 139; /* Slate 500 */
+
+    --color-border: 226 232 240; /* Slate 200 */
+    --color-input: 226 232 240;
+    --color-ring: 79 70 229; /* Indigo 600 */
+
+    /* Radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+}
+
+/* === Dark Mode Overrides === */
+.dark {
+    --color-background: 15 23 42; /* Slate 900 */
+    --color-foreground: 241 245 249; /* Slate 100 */
+
+    --color-card: 30 41 59; /* Slate 800 */
+    --color-card-foreground: 241 245 249;
+
+    --color-popover: 30 41 59;
+    --color-popover-foreground: 241 245 249;
+
+    --color-muted: 51 65 85; /* Slate 700 */
+    --color-muted-foreground: 148 163 184; /* Slate 400 */
+
+    --color-border: 71 85 105; /* Slate 600 */
+    --color-input: 71 85 105;
+
+    --color-ring: 129 140 248; /* Indigo 400 */
+}
+
+/* === Base Layer === */
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}

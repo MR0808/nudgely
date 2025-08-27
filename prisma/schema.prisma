@@ -1,0 +1,248 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+  output          = "../generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  NOTSAY
+}
+
+enum ImageType {
+  EVENT
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  createdAt DateTime
+  updatedAt DateTime
+
+  name          String
+  lastName      String
+  email         String    @unique
+  emailVerified Boolean
+  image         String?
+  role          UserRole  @default(USER)
+  banned        Boolean?
+  banReason     String?
+  banExpires    DateTime?
+
+  sessions           Session[]
+  accounts           Account[]
+  gender             Gender?
+  dateOfBirth        DateTime?
+  phoneNumber        String?             @unique
+  phoneVerified      Boolean             @default(false)
+  timezone           String? // IANA timezone identifier
+  locale             String? // Language/locale preference
+  country            Country?            @relation(fields: [countryId], references: [id])
+  countryId          String?
+  region             Region?             @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  regionId           String?
+  emailChangeRecords EmailChangeRecord[]
+  phoneChangeRecords PhoneChangeRecord[]
+  auditLogs          AuditLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  createdAt DateTime
+  updatedAt DateTime
+
+  expiresAt      DateTime
+  token          String   @unique
+  ipAddress      String?
+  userAgent      String?
+  impersonatedBy String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Account {
+  id        String   @id @default(uuid())
+  createdAt DateTime
+  updatedAt DateTime
+
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("accounts")
+}
+
+model Verification {
+  id        String    @id @default(uuid())
+  createdAt DateTime?
+  updatedAt DateTime?
+
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  @@map("verifications")
+}
+
+model EmailChangeRecord {
+  id        String   @id @default(cuid())
+  email     String // current email
+  newEmail  String   @map("new_email") // new email to verify
+  otp       String
+  expiresAt DateTime @map("expires_at")
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("emailChangeRecords")
+}
+
+model PhoneChangeRecord {
+  id             String   @id @default(cuid())
+  phoneNumber    String?
+  newPhoneNumber String
+  otp            String
+  expiresAt      DateTime @map("expires_at")
+  attempts       Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([otp])
+  @@map("phoneChangeRecords")
+}
+
+model RateLimit {
+  id        String   @id @default(cuid())
+  key       String   @unique // e.g., 'email_change:user_id'
+  count     Int      @default(0)
+  resetTime DateTime @map("reset_time")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("rateLimits")
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      String?  @map("user_id")
+  action      String
+  category    String
+  description String?
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  metadata    Json     @default("{}")
+  sessionId   String?  @map("session_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Indexes for better query performance
+  @@index([userId])
+  @@index([action])
+  @@index([category])
+  @@index([createdAt])
+  @@index([sessionId])
+  @@map("audit_logs")
+}
+
+model Currency {
+  id           String    @id @default(cuid())
+  name         String    @unique
+  code         String    @unique // ISO 4217 currency code
+  symbol       String?
+  decimals     Int?
+  demonym      String?
+  majorSingle  String?
+  majorPlural  String?
+  ISOnum       Int?
+  symbolNative String
+  minorSingle  String?
+  minorPlural  String?
+  ISOdigits    Int?
+  numToBasic   Int?
+  countries    Country[]
+
+  @@map("currencies")
+}
+
+model Continent {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  countries Country[]
+
+  @@map("continents")
+}
+
+model Country {
+  id          String    @id @default(cuid())
+  isoCode     String    @unique // ISO 3166-1 alpha-2 country code
+  isoCode3    String    @unique // ISO 3166-1 alpha-3 country code
+  name        String
+  flag        String
+  latitude    Float
+  longitude   Float
+  currency    Currency  @relation(fields: [currencyId], references: [id])
+  currencyId  String
+  continent   Continent @relation(fields: [continentId], references: [id])
+  continentId String
+  phonePrefix String? // International dialing code
+  regions     Region[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  users       User[]
+
+  @@map("countries")
+}
+
+model Region {
+  id        String   @id @default(cuid())
+  code      String // State/Province/Region code
+  name      String
+  country   Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  countryId String
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([countryId, code])
+  @@map("regions")
+}
