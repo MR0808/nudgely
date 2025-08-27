@@ -1,7 +1,7 @@
 const siteMetadata = {
-    title: 'Buxmate',
-    author: 'Buxmate co',
-    headerTitle: 'Buxmate',
+    title: 'Nudgely',
+    author: 'Nudgely co',
+    headerTitle: 'Nudgely',
     description:
         'Make organising the next big night easier, Buxmate sorts out the schedule, money and the good fun!',
     language: 'en-au',
