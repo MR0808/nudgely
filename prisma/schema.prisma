@@ -33,6 +33,12 @@ enum InvitationStatus {
   EXPIRED
 }
 
+enum UserStatus {
+  ACTIVE
+  DISABLED
+  BANNED
+}
+
 model User {
   id        String   @id @default(uuid())
   createdAt DateTime
@@ -54,6 +60,7 @@ model User {
   dateOfBirth        DateTime?
   phoneNumber        String?             @unique
   phoneVerified      Boolean             @default(false)
+  status             UserStatus          @default(ACTIVE)
   timezone           String? // IANA timezone identifier
   locale             String? // Language/locale preference
   country            Country?            @relation(fields: [countryId], references: [id])

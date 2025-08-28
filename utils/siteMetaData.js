@@ -3,7 +3,7 @@ const siteMetadata = {
     author: 'Nudgely co',
     headerTitle: 'Nudgely',
     description:
-        'Make organising the next big night easier, Buxmate sorts out the schedule, money and the good fun!',
+        'Nudgely is a simple SaaS for recurring task reminders via email. Perfect for teams, startups, and solopreneurs. Never miss a task again.',
     language: 'en-au',
     theme: 'system', // system, dark or light
     siteUrl: 'https://www.buxmate.com', // your website URL
