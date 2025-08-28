@@ -58,6 +58,7 @@
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3",
+        "@faker-js/faker": "^10.0.0",
         "@tailwindcss/postcss": "^4",
         "@types/google-libphonenumber": "^7.4.30",
         "@types/node": "^24",
