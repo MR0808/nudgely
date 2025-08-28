@@ -1,10 +1,18 @@
 'use server';
 
+import { headers } from 'next/headers';
+
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { generateOTP, sendEmailOTP } from '@/lib/otp';
 import { logEmailVerified } from '@/actions/audit/audit-auth';
 
-export const verifyEmailOTP = async (userId: string, otp: string) => {
+export const verifyEmailOTP = async (
+    userId: string,
+    otp: string,
+    email: string,
+    password: string
+) => {
     try {
         // Find the OTP verification record
         const verification = await prisma.verification.findFirst({
@@ -33,6 +41,15 @@ export const verifyEmailOTP = async (userId: string, otp: string) => {
         });
 
         await logEmailVerified(userId, user.email);
+
+        await auth.api.signInEmail({
+            headers: await headers(),
+            body: {
+                email,
+                password,
+                rememberMe: true
+            }
+        });
 
         return { success: true };
     } catch (error) {

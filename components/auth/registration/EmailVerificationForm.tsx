@@ -28,6 +28,7 @@ import { SubmitButtonAuth } from '@/components/form/FormInputs';
 const EmailVerificationForm = ({
     email,
     userId,
+    password,
     onNext
 }: EmailVerificationFormProps) => {
     const [isPending, startTransition] = useTransition();
@@ -54,14 +55,16 @@ const EmailVerificationForm = ({
         }
 
         startTransition(async () => {
-            const result = await verifyEmailOTP(userId, values.otp);
+            const result = await verifyEmailOTP(
+                userId,
+                values.otp,
+                email,
+                password
+            );
             if (result.error) {
                 toast.error(result.error, { position: 'top-center' });
                 form.setError('otp', { message: result.error });
             } else {
-                toast.success('Email verified successfully!', {
-                    position: 'top-center'
-                });
                 onNext(userId);
             }
         });

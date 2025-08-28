@@ -41,6 +41,7 @@ const RegisterForm = () => {
                 <EmailVerificationForm
                     email={registrationData.email}
                     userId={registrationData.userId}
+                    password={registrationData.password}
                     onNext={(userId) => {
                         updateRegistrationData({ userId });
                         goToStep('complete');

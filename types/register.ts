@@ -19,6 +19,7 @@ export interface InitialRegistrationFormProps {
 export interface EmailVerificationFormProps {
     email: string;
     userId?: string;
+    password: string;
     onNext: (userId: string) => void;
 }
 
