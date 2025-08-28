@@ -57,7 +57,11 @@ const options = {
                 { user, newEmail, url, token },
                 request
             ) => {
-                await sendVerificationEmail({ email: newEmail, link: url });
+                await sendVerificationEmail({
+                    email: newEmail,
+                    otp: token,
+                    name: user.name
+                });
             }
         },
         additionalFields: {

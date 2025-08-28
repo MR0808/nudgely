@@ -11,7 +11,8 @@ import {
     logUserRegistered,
     logEmailVerifyRequested
 } from '@/actions/audit/audit-auth';
-import { generateOTP, sendEmailOTP } from '@/lib/otp';
+import { generateOTP } from '@/lib/otp';
+import { sendVerificationEmail } from '@/lib/mail';
 
 export const registerInitial = async (
     values: z.infer<typeof RegisterSchema>
@@ -54,7 +55,7 @@ export const registerInitial = async (
             }
         });
 
-        await sendEmailOTP(email, otp, name);
+        await sendVerificationEmail({ email, otp, name });
 
         await logUserRegistered(data.user.id, {
             registrationMethod: 'email',

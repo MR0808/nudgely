@@ -2,20 +2,42 @@
 
 import { Resend } from 'resend';
 
+import { EmailOTPEmailTemplate } from '@/emails/email-otp';
+import WelcomeEmailTemplate from '@/emails/welcome-email';
+
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+const from = `${process.env.NEXT_PUBLIC_APP_NAME as string} <${process.env.NEXT_PUBLIC_APP_EMAIL as string}>`;
 
 export const sendVerificationEmail = async ({
     email,
-    link
+    otp,
+    name
 }: {
     email: string;
-    link: string;
+    otp: string;
+    name: string;
 }) => {
     await resend.emails.send({
-        from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
+        from,
         to: email,
-        subject: 'Buxmate - Confirm your email',
-        html: `<p>Click <a href="${link}">here</a> to confirm email.</p>`
+        subject: 'Nudgely - Confirm your email',
+        react: EmailOTPEmailTemplate({ name, otp })
+    });
+};
+
+export const sendWelcomeEmail = async ({
+    email,
+    name
+}: {
+    email: string;
+    name: string;
+}) => {
+    await resend.emails.send({
+        from,
+        to: email,
+        subject: `🎉 Welcome to Nudgely, ${name}!`,
+        react: WelcomeEmailTemplate({ name })
     });
 };
 

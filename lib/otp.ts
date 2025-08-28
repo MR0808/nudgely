@@ -67,29 +67,6 @@ export const validatePhoneNumber = (phone: string) => {
     }
 };
 
-export const sendEmailOTP = async (
-    email: string,
-    otp: string,
-    name: string
-) => {
-    // Replace this with your email service (Resend, SendGrid, etc.)
-    console.log(`Sending email OTP to ${email}: ${otp}`);
-
-    // Example with a hypothetical email service:
-    /*
-    await emailService.send({
-        to: email,
-        subject: 'Verify your Buxmate account',
-        template: 'email-otp',
-        data: {
-            name,
-            otp,
-            expiresIn: '10 minutes'
-        }
-    });
-    */
-};
-
 // export const sendSMSOTP = async (phoneNumber: string, otp: string) => {
 //     console.log(`Sending SMS OTP to ${phoneNumber}: ${otp}`);
 

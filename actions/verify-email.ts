@@ -4,8 +4,9 @@ import { headers } from 'next/headers';
 
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { generateOTP, sendEmailOTP } from '@/lib/otp';
+import { generateOTP } from '@/lib/otp';
 import { logEmailVerified } from '@/actions/audit/audit-auth';
+import { sendWelcomeEmail, sendVerificationEmail } from '@/lib/mail';
 
 export const verifyEmailOTP = async (
     userId: string,
@@ -51,6 +52,8 @@ export const verifyEmailOTP = async (
             }
         });
 
+        await sendWelcomeEmail({ email, name: user.name });
+
         return { success: true };
     } catch (error) {
         console.error('Email verification error:', error);
@@ -90,7 +93,11 @@ export const resendEmailOTP = async (userId: string) => {
         });
 
         // Send new OTP email
-        await sendEmailOTP(user.email, otp, user.name);
+        await sendVerificationEmail({
+            email: user.email,
+            otp,
+            name: user.name
+        });
 
         return { success: true };
     } catch (error) {

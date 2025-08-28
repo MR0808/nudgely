@@ -204,14 +204,6 @@ const InitialRegistrationForm = ({
                                 />
                             </div>
                         </div>
-                        <div className="text-right">
-                            <Link
-                                className="text-indigo-600 dark:text-indigo-400"
-                                href="/forgot-password"
-                            >
-                                Forgot Password?
-                            </Link>
-                        </div>
                     </div>
                     <SubmitButtonAuth
                         text="Register"
@@ -224,7 +216,7 @@ const InitialRegistrationForm = ({
                 Already have an account?&nbsp;
                 <Link
                     className="font-medium text-indigo-600 underline"
-                    href="/login"
+                    href="/auth/login"
                 >
                     Log in
                 </Link>
