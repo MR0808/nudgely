@@ -59,33 +59,3 @@ export const sendResetEmail = async ({
         react: ResetPasswordEmailTemplate({ name, link })
     });
 };
-
-export const sendEmailVerificationOtpEmail = async ({
-    email,
-    otp
-}: {
-    email: string;
-    otp: string;
-}) => {
-    const sent = await resend.emails.send({
-        from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
-        to: email,
-        subject: `Buxmate - Email Verification - ${otp}`,
-        html: `<p>Your email verification code is ${otp}.</p>`
-    });
-
-    return sent;
-};
-
-export const sendPasswordResetNotificationEmail = async ({
-    email
-}: {
-    email: string;
-}) => {
-    await resend.emails.send({
-        from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
-        to: email,
-        subject: 'Buxmate - Your password has been reset',
-        html: `<p>Your password has been reset</p>`
-    });
-};
