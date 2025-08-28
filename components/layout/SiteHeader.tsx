@@ -6,6 +6,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch';
 import { ProfileDropdown } from '@/components/layout/ProfileDropdown';
+import NotificationsDropdown from '@/components/layout/NotificationsDropdown';
 
 function getPageTitle(pathname: string): string {
     // Handle exact matches first
@@ -34,8 +35,9 @@ export function SiteHeader() {
                     />
                     <h1 className="text-base font-medium">{pageTitle}</h1>
                 </div>
-                <div className="flex items-center gap-1 lg:gap-2 ">
+                <div className="flex items-center gap-3 ">
                     <ThemeSwitch />
+                    <NotificationsDropdown />
                     <ProfileDropdown />
                 </div>
             </div>
