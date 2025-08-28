@@ -25,7 +25,7 @@ import {
 import { LoginSchema } from '@/schemas/auth';
 import { login } from '@/actions/login';
 
-const RegisterForm = () => {
+const LoginForm = () => {
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -168,7 +168,7 @@ const RegisterForm = () => {
                         <div className="text-right">
                             <a
                                 className="text-indigo-600 dark:text-indigo-400"
-                                href="/forgot-password"
+                                href="/auth/forgot-password"
                             >
                                 Forgot Password?
                             </a>
@@ -214,4 +214,4 @@ const RegisterForm = () => {
     );
 };
 
-export default RegisterForm;
+export default LoginForm;

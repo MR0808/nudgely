@@ -11,8 +11,8 @@ import { sendWelcomeEmail, sendVerificationEmail } from '@/lib/mail';
 export const verifyEmailOTP = async (
     userId: string,
     otp: string,
-    email: string,
-    password: string
+    email?: string,
+    password?: string
 ) => {
     try {
         // Find the OTP verification record
@@ -43,16 +43,18 @@ export const verifyEmailOTP = async (
 
         await logEmailVerified(userId, user.email);
 
-        await auth.api.signInEmail({
-            headers: await headers(),
-            body: {
-                email,
-                password,
-                rememberMe: true
-            }
-        });
+        if (email && password) {
+            await auth.api.signInEmail({
+                headers: await headers(),
+                body: {
+                    email,
+                    password,
+                    rememberMe: true
+                }
+            });
 
-        await sendWelcomeEmail({ email, name: user.name });
+            await sendWelcomeEmail({ email, name: user.name });
+        }
 
         return { success: true };
     } catch (error) {

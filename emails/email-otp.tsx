@@ -41,8 +41,8 @@ export const EmailOTPEmailTemplate = ({
                         />
                     </Section>
                     <Heading style={h1}>Confirm your email address</Heading>
-                    <Text style={heroText}>Hi {name},</Text>
-                    <Text style={heroText}>
+                    <Text style={text}>Hi {name},</Text>
+                    <Text style={text}>
                         Your confirmation code is below - use it to verify your
                         email address.
                     </Text>
@@ -56,9 +56,9 @@ export const EmailOTPEmailTemplate = ({
                         nothing to worry about, you can safely ignore it.
                     </Text>
 
-                    <Text style={text}>Thanks</Text>
+                    <Text style={text}>Cheers</Text>
 
-                    <Text style={text}>Mark</Text>
+                    <Text style={text}>The Nudgely Team</Text>
 
                     <Section>
                         <Text style={footerText}>
