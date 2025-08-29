@@ -1,24 +1,13 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch';
 import { ProfileDropdown } from '@/components/layout/ProfileDropdown';
 import NotificationsDropdown from '@/components/layout/NotificationsDropdown';
-
-function getPageTitle(pathname: string): string {
-    // Handle exact matches first
-    switch (pathname) {
-        case '/':
-            return 'Dashboard';
-        case '/dashboard/payment-gated':
-            return 'Payment gated';
-        default:
-            return 'Page';
-    }
-}
+import getPageTitle from '@/lib/page-title';
 
 export function SiteHeader() {
     const pathname = usePathname();

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -21,8 +21,21 @@ import LogoutDialog from '@/components/layout/LogoutDialog';
 export function ProfileDropdown() {
     const { data: userSession } = useSession();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [initials, setInitials] = useState('');
+    const [fullName, setFullName] = useState('');
+    const [email, setEmail] = useState('');
 
-    const initials = `${userSession?.user.name[0]}${userSession?.user.lastName[0]}`;
+    useEffect(() => {
+        if (userSession && userSession.user) {
+            setInitials(
+                `${userSession.user.name[0]}${userSession.user.lastName[0]}`
+            );
+            setFullName(
+                `${userSession.user.name} ${userSession.user.lastName}`
+            );
+            setEmail(userSession.user.email);
+        }
+    }, [userSession]);
 
     return (
         <>
@@ -30,12 +43,12 @@ export function ProfileDropdown() {
                 <DropdownMenuTrigger asChild>
                     <Button
                         variant="ghost"
-                        className="relative h-8 w-8 rounded-full"
+                        className="relative h-8 w-8 rounded-full cursor-pointer"
                     >
                         <Avatar className="h-8 w-8">
                             <AvatarImage
                                 src={userSession?.user.image || undefined}
-                                alt={`${userSession?.user.name} ${userSession?.user.lastName}`}
+                                alt={fullName}
                             />
                             <AvatarFallback>{initials}</AvatarFallback>
                         </Avatar>
@@ -43,30 +56,30 @@ export function ProfileDropdown() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5 ">
                             <p className="text-sm leading-none font-medium">
-                                {`${userSession?.user.name} ${userSession?.user.lastName}`}
+                                {fullName}
                             </p>
                             <p className="text-muted-foreground text-xs leading-none">
-                                {`${userSession?.user.email}`}
+                                {email}
                             </p>
                         </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
                         <DropdownMenuItem asChild>
-                            <Link href="/settings">
+                            <Link href="/settings" className="cursor-pointer">
                                 <User /> Profile
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                            <Link href="/settings">
+                            <Link href="/settings" className="cursor-pointer">
                                 <CircleDollarSign />
                                 Billing
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                            <Link href="/settings">
+                            <Link href="/settings" className="cursor-pointer">
                                 <Settings /> Settings
                             </Link>
                         </DropdownMenuItem>

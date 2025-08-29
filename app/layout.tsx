@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/providers/theme-provider';
@@ -15,6 +15,8 @@ const geistMono = Geist_Mono({
     variable: '--font-geist-mono',
     subsets: ['latin']
 });
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
     metadataBase: new URL(siteMetadata.siteUrl),
@@ -68,7 +70,7 @@ export default function RootLayout({
                 <meta name="apple-mobile-web-app-title" content="Nudgely" />
             </head>
             <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased overscroll-none`}
+                className={`${inter.className} antialiased overscroll-none`}
                 suppressHydrationWarning={true}
             >
                 <ThemeProvider

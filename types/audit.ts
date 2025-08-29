@@ -1,5 +1,6 @@
 export type AuditCategory =
     | 'authentication'
+    | 'account'
     | 'security'
     | 'personal'
     | 'settings'
@@ -31,9 +32,13 @@ export type AuditAction =
     | 'user.two_factor_disabled'
     | 'user.security_question_updated'
 
-    // Personal actions
+    // Account actions
     | 'user.name_updated'
     | 'user.location_updated'
+    | 'user.timezone_updated'
+    | 'user.locale_updated'
+
+    // Personal actions
     | 'user.gender_updated'
     | 'user.dateofbirth_updated'
     | 'user.picture_updated'

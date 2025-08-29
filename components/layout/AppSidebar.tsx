@@ -44,19 +44,9 @@ const data = {
     ],
     navSecondary: [
         {
-            title: 'Settings',
-            url: '#',
-            icon: Settings
-        },
-        {
             title: 'Get Help',
             url: '#',
             icon: CircleQuestionMark
-        },
-        {
-            title: 'Search',
-            url: '#',
-            icon: Search
         }
     ],
     documents: [

@@ -58,6 +58,7 @@ model User {
   accounts           Account[]
   gender             Gender?
   dateOfBirth        DateTime?
+  jobTitle           String?
   phoneNumber        String?             @unique
   phoneVerified      Boolean             @default(false)
   status             UserStatus          @default(ACTIVE)

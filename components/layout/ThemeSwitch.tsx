@@ -31,7 +31,7 @@ export function ThemeSwitch() {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="scale-95 rounded-full focus:ring-none focus:outline-hidden md:bg-secondary"
+                    className="scale-95 rounded-full focus:ring-none focus:outline-hidden md:bg-secondary cursor-pointer"
                 >
                     <Sun className="size-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
                     <Moon className="absolute size-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
@@ -39,21 +39,30 @@ export function ThemeSwitch() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme('light')}>
+                <DropdownMenuItem
+                    onClick={() => setTheme('light')}
+                    className=" cursor-pointer"
+                >
                     Light{' '}
                     <Check
                         size={14}
                         className={cn('ms-auto', theme !== 'light' && 'hidden')}
                     />
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme('dark')}>
+                <DropdownMenuItem
+                    onClick={() => setTheme('dark')}
+                    className=" cursor-pointer"
+                >
                     Dark
                     <Check
                         size={14}
                         className={cn('ms-auto', theme !== 'dark' && 'hidden')}
                     />
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme('system')}>
+                <DropdownMenuItem
+                    onClick={() => setTheme('system')}
+                    className=" cursor-pointer"
+                >
                     System
                     <Check
                         size={14}

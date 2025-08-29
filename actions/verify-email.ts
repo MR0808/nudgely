@@ -53,7 +53,10 @@ export const verifyEmailOTP = async (
                 }
             });
 
-            await sendWelcomeEmail({ email, name: user.name });
+            await sendWelcomeEmail({
+                email,
+                name: user.name
+            });
         }
 
         return { success: true };
@@ -95,11 +98,17 @@ export const resendEmailOTP = async (userId: string) => {
         });
 
         // Send new OTP email
-        await sendVerificationEmail({
+        const emailSent = await sendVerificationEmail({
             email: user.email,
             otp,
             name: user.name
         });
+
+        if (emailSent.error) {
+            return {
+                error: 'Failed to send verification email'
+            };
+        }
 
         return { success: true };
     } catch (error) {

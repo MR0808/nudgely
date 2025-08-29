@@ -84,7 +84,7 @@ const options = {
                 type: 'string',
                 required: false
             },
-            stateId: {
+            regionId: {
                 type: 'string',
                 required: false
             },
@@ -98,6 +98,14 @@ const options = {
             },
             emailVerified: {
                 type: 'boolean',
+                required: false
+            },
+            timezone: {
+                type: 'string',
+                required: false
+            },
+            locale: {
+                type: 'string',
                 required: false
             }
         }

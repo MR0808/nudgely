@@ -14,6 +14,8 @@ type FormInputProps = {
     type: string;
     label?: string;
     defaultValue?: string;
+    placeholder?: string;
+    disabled?: boolean;
 };
 
 type btnSize = 'default' | 'lg' | 'sm';
@@ -130,3 +132,18 @@ export const SubmitButton = ({
         </Button>
     );
 };
+
+export const AccountFormInput = forwardRef<HTMLInputElement, FormInputProps>(
+    function AccountFormInput({ name, type, placeholder, ...props }, ref) {
+        return (
+            <Input
+                name={name}
+                type={type}
+                placeholder={placeholder}
+                {...props}
+                className={cn('h-12 rounded-xl px-6 py-3 text-sm font-normal')}
+                formNoValidate={true}
+            />
+        );
+    }
+);

@@ -1,8 +1,6 @@
 'use client';
 
-import * as React from 'react';
-
-import { Sun, type LucideIcon } from 'lucide-react';
+import { type LucideIcon } from 'lucide-react';
 
 import {
     SidebarGroup,
@@ -11,7 +9,6 @@ import {
     SidebarMenuButton,
     SidebarMenuItem
 } from '@/components/ui/sidebar';
-import { ModeToggle } from '@/components/layout/ModeToggle';
 
 export function NavSecondary({
     items,
@@ -37,17 +34,6 @@ export function NavSecondary({
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     ))}
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild>
-                            <label>
-                                <Sun />
-                                Dark Mode
-                                <span className="ml-auto">
-                                    <ModeToggle />
-                                </span>
-                            </label>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarGroupContent>
         </SidebarGroup>

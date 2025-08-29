@@ -27,3 +27,8 @@ export interface RegistrationCompleteProps {
     name: string;
     email: string;
 }
+
+export interface EmailCheckResult {
+    isDisposable: boolean;
+    error: string | null;
+}

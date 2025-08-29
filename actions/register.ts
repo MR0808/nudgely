@@ -13,6 +13,11 @@ import {
 } from '@/actions/audit/audit-auth';
 import { generateOTP } from '@/lib/otp';
 import { sendVerificationEmail } from '@/lib/mail';
+import { EmailCheckResult } from '@/types/register';
+
+let cachedDomains: string[] | null = null;
+let lastFetched: number | null = null;
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 export const registerInitial = async (
     values: z.infer<typeof RegisterSchema>
@@ -26,6 +31,20 @@ export const registerInitial = async (
     const { name, lastName, email, password } = validatedFields.data;
 
     try {
+        const isEmailDisposable = await checkEmail(email);
+
+        if (isEmailDisposable.error) {
+            return {
+                error: `Email is invalid - ${isEmailDisposable.error}`
+            };
+        } else {
+            if (isEmailDisposable.isDisposable) {
+                return {
+                    error: `Email is invalid`
+                };
+            }
+        }
+
         const existingUser = await prisma.user.findUnique({
             where: { email }
         });
@@ -55,7 +74,13 @@ export const registerInitial = async (
             }
         });
 
-        await sendVerificationEmail({ email, otp, name });
+        const emailSent = await sendVerificationEmail({ email, otp, name });
+
+        if (emailSent.error) {
+            return {
+                error: 'Failed to send verification email'
+            };
+        }
 
         await logUserRegistered(data.user.id, {
             registrationMethod: 'email',
@@ -71,5 +96,52 @@ export const registerInitial = async (
         }
 
         return { error: 'Internal Server Error' };
+    }
+};
+
+export const checkEmail = async (email: string): Promise<EmailCheckResult> => {
+    try {
+        // Validate email format
+        if (!email || !email.includes('@')) {
+            return { isDisposable: false, error: 'Invalid email format' };
+        }
+
+        // Extract domain from email
+        const domain = email.split('@')[1]?.toLowerCase();
+        if (!domain) {
+            return { isDisposable: false, error: 'Invalid email domain' };
+        }
+
+        // Check cache
+        const now = Date.now();
+        if (
+            !cachedDomains ||
+            !lastFetched ||
+            now - lastFetched > CACHE_DURATION
+        ) {
+            const response = await fetch(
+                'https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/master/disposable_email_blocklist.conf',
+                { cache: 'force-cache' }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch disposable email domains');
+            }
+
+            const text = await response.text();
+            cachedDomains = text
+                .split('\n')
+                .map((line) => line.trim().toLowerCase())
+                .filter((line) => line && !line.startsWith('#'));
+            lastFetched = now;
+        }
+
+        // Check if the email's domain is in the disposable list
+        const isDisposable = cachedDomains.includes(domain);
+
+        return { isDisposable, error: null };
+    } catch (error) {
+        console.error('Error checking email:', error);
+        return { isDisposable: false, error: 'Server error occurred' };
     }
 };
