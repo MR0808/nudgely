@@ -8,6 +8,7 @@ import { ReloadIcon } from '@radix-ui/react-icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
 
 type FormInputProps = {
     name: string;
@@ -143,6 +144,19 @@ export const AccountFormInput = forwardRef<HTMLInputElement, FormInputProps>(
                 {...props}
                 className={cn('h-12 rounded-xl px-6 py-3 text-sm font-normal')}
                 formNoValidate={true}
+            />
+        );
+    }
+);
+
+export const AccountFormTextarea = forwardRef<HTMLInputElement, FormInputProps>(
+    function AccountFormTextarea({ name, placeholder, ...props }, ref) {
+        return (
+            <Textarea
+                name={name}
+                placeholder={placeholder}
+                {...props}
+                className={cn('rounded-xl px-6 py-3 text-sm font-normal')}
             />
         );
     }

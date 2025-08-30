@@ -107,6 +107,14 @@ const options = {
             locale: {
                 type: 'string',
                 required: false
+            },
+            jobTitle: {
+                type: 'string',
+                required: false
+            },
+            bio: {
+                type: 'string',
+                required: false
             }
         }
     },

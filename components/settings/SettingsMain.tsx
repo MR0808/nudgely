@@ -7,6 +7,7 @@ import { MenuOption } from '@/types/settings';
 import AccountMain from '@/components/settings/account/AccountMain';
 import { SettingsProps } from '@/types/settings';
 import SecurityMain from '@/components/settings/security/SecurityMain';
+import ProfileMain from '@/components/settings/profile/ProfileMain';
 
 const SettingsMain = ({ userSession, location }: SettingsProps) => {
     const [selectedOption, setSelectedOption] = useState<MenuOption>(
@@ -30,6 +31,12 @@ const SettingsMain = ({ userSession, location }: SettingsProps) => {
                 )}
                 {selectedOption === MenuOption.Security && (
                     <SecurityMain
+                        userSession={userSession}
+                        location={location}
+                    />
+                )}
+                {selectedOption === MenuOption.Profile && (
+                    <ProfileMain
                         userSession={userSession}
                         location={location}
                     />

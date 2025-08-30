@@ -3,7 +3,7 @@
 import { logAuditEvent } from './audit';
 import type { AuditLogResult, AuditAction } from '@/types/audit';
 
-export async function logPersonalUpdated(
+export async function logProfileUpdated(
     userId: string,
     action: AuditAction,
     changes: string[],
@@ -12,7 +12,7 @@ export async function logPersonalUpdated(
     return await logAuditEvent({
         userId,
         action,
-        category: 'personal',
+        category: 'profile',
         description: `User profile fields: ${changes.join(', ')}`,
         metadata: { ...metadata }
     });

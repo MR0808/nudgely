@@ -60,6 +60,7 @@ model User {
   dateOfBirth        DateTime?
   jobTitle           String?
   phoneNumber        String?             @unique
+  bio                String?
   phoneVerified      Boolean             @default(false)
   status             UserStatus          @default(ACTIVE)
   timezone           String? // IANA timezone identifier
@@ -253,4 +254,17 @@ model Region {
 
   @@unique([countryId, code])
   @@map("regions")
+}
+
+model Image {
+  id            String    @id @default(cuid())
+  image         String    @unique
+  imageName     String    @unique
+  imageType     ImageType
+  relatedEntity String?
+  bucket        String
+  createdAt     DateTime? @default(now())
+  updatedAt     DateTime? @updatedAt
+
+  @@map("images")
 }

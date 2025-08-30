@@ -2,7 +2,7 @@ export type AuditCategory =
     | 'authentication'
     | 'account'
     | 'security'
-    | 'personal'
+    | 'profile'
     | 'settings'
     | 'data'
     | 'system'
@@ -31,6 +31,7 @@ export type AuditAction =
     | 'user.two_factor_enabled'
     | 'user.two_factor_disabled'
     | 'user.security_question_updated'
+    | 'user.phone_updated'
 
     // Account actions
     | 'user.name_updated'
@@ -38,11 +39,12 @@ export type AuditAction =
     | 'user.timezone_updated'
     | 'user.locale_updated'
 
-    // Personal actions
+    // Profile actions
     | 'user.gender_updated'
     | 'user.dateofbirth_updated'
     | 'user.picture_updated'
-    | 'user.phone_updated'
+    | 'user.bio_updated'
+    | 'user.jobTitle_updated'
 
     // Settings actions
     | 'user.preferences_updated'
