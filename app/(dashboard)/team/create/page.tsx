@@ -35,7 +35,7 @@ export function generateMetadata(): Metadata {
 }
 
 const TeamCreatePage = async () => {
-    const userSession = await authCheck('/workspace/create');
+    const userSession = await authCheck('/team/create');
 
     const company = await getUserCompany(userSession.user.id);
 

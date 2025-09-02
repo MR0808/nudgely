@@ -1,3 +1,4 @@
+import { getCurrentTeamBySlug } from '@/actions/team';
 import { auth } from '@/lib/auth';
 
 export type Session = typeof auth.$Infer.Session;
@@ -26,4 +27,29 @@ export type Company = {
 export interface TeamSelectorProps {
     teams: Team[];
     company: Company;
+}
+
+export interface TeamMember {
+    id: string;
+    name: string;
+    email: string;
+    role: 'TEAM_ADMIN' | 'TEAM_MEMBER';
+    avatar?: string;
+    joinedAt: Date;
+    isCurrentUser: boolean;
+}
+
+export type TeamData = Awaited<ReturnType<typeof getCurrentTeamBySlug>>;
+
+export interface TeamMainProps {
+    teamData: TeamData;
+    userRole: 'TEAM_ADMIN' | 'TEAM_MEMBER';
+}
+
+export interface InviteMemberDialogProps {
+    teamId: string;
+    teamName: string;
+    companyPlan: 'FREE' | 'PRO';
+    currentMemberCount: number;
+    trigger?: React.ReactNode;
 }

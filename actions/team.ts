@@ -2,29 +2,24 @@
 
 import * as z from 'zod';
 import GithubSlugger from 'github-slugger';
+import { randomBytes } from 'crypto';
 
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { CreateTeamSchema } from '@/schemas/team';
-import { checkCompanyLimits } from '@/lib/team';
+import { checkCompanyLimits, checkTeamPermission } from '@/lib/team';
 
 const slugger = new GithubSlugger();
 
 export const getUserTeams = async () => {
     try {
-        console.log('a');
-
         const userSession = await authCheckServer();
-        console.log('b');
 
         if (!userSession) {
             return null;
         }
-        console.log('c');
 
         const { user } = userSession;
-        console.log('d');
-
         const teams = await prisma.teamMember.findMany({
             where: {
                 userId: user.id
@@ -39,7 +34,6 @@ export const getUserTeams = async () => {
                 }
             }
         });
-        console.log('e');
 
         return teams.map((membership) => ({
             id: membership.team.id,
@@ -49,8 +43,6 @@ export const getUserTeams = async () => {
             tasksCount: membership.team.tasks.length
         }));
     } catch (error) {
-        console.log('f');
-
         return null;
     }
 };
@@ -128,6 +120,66 @@ export const getCurrentTeam = async (teamId?: string) => {
                 : false,
             trialEndsAt: membership.team.company.trialEndsAt
         };
+    } catch (error) {
+        console.error('Failed to fetch current team:', error);
+        return null;
+    }
+};
+
+export const getCurrentTeamBySlug = async (slug: string) => {
+    try {
+        const userSession = await authCheckServer();
+
+        if (!userSession) {
+            return null;
+        }
+
+        const { user } = userSession;
+
+        const team = await prisma.team.findUnique({
+            where: {
+                slug
+            },
+            include: {
+                company: true,
+                tasks: true
+            }
+        });
+
+        if (!team) return null;
+
+        const membership = await checkTeamPermission(user.id, team.id);
+
+        const data = await prisma.teamMember.findMany({
+            where: { teamId: team.id },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        lastName: true,
+                        email: true,
+                        image: true
+                    }
+                }
+            },
+            orderBy: [
+                { role: 'asc' }, // Admins first
+                { createdAt: 'asc' }
+            ]
+        });
+
+        const members = data.map((member) => ({
+            id: member.id,
+            name: `${member.user.name} ${member.user.lastName}`.trim(),
+            email: member.user.email,
+            role: member.role,
+            avatar: member.user.image || undefined,
+            joinedAt: member.createdAt,
+            isCurrentUser: member.user.id === user.id
+        }));
+
+        return { team, members, userRole: membership.role };
     } catch (error) {
         console.error('Failed to fetch current team:', error);
         return null;
@@ -258,3 +310,355 @@ export const createTeam = async (
         return { data: null, error: 'Failed to create team' };
     }
 };
+
+// export async function inviteTeamMember(data: {
+//     teamId: string;
+//     email: string;
+//     role: 'TEAM_ADMIN' | 'TEAM_MEMBER';
+// }) {
+//     const userSession = await authCheckServer();
+
+//     if (!userSession) {
+//         return {
+//             data: null,
+//             message: 'Not authorised'
+//         };
+//     }
+
+//     const { user } = userSession;
+
+//     try {
+//         // Validate input
+//         if (!data.email?.trim()) {
+//             return { success: false, error: 'Email is required' };
+//         }
+
+//         if (!data.email.includes('@')) {
+//             return {
+//                 success: false,
+//                 error: 'Please enter a valid email address'
+//             };
+//         }
+
+//         // Check team permissions - only team admins can invite
+//         const membership = await checkTeamPermission(
+//             user.id,
+//             data.teamId,
+//             'TEAM_ADMIN'
+//         );
+
+//         // Check if user is already a team member
+//         const existingMember = await prisma.teamMember.findFirst({
+//             where: {
+//                 teamId: data.teamId,
+//                 user: {
+//                     email: data.email.toLowerCase().trim()
+//                 }
+//             }
+//         });
+
+//         if (existingMember) {
+//             return {
+//                 success: false,
+//                 error: 'This user is already a team member'
+//             };
+//         }
+
+//         // Check if there's already a pending invitation
+//         const existingInvite = await prisma.teamInvite.findFirst({
+//             where: {
+//                 teamId: data.teamId,
+//                 email: data.email.toLowerCase().trim(),
+//                 status: 'PENDING'
+//             }
+//         });
+
+//         if (existingInvite) {
+//             return {
+//                 success: false,
+//                 error: 'An invitation has already been sent to this email'
+//             };
+//         }
+
+//         // Check company plan limits
+//         const team = await prisma.team.findUnique({
+//             where: { id: data.teamId },
+//             include: {
+//                 company: true,
+//                 members: true
+//             }
+//         });
+
+//         if (!team) {
+//             return { success: false, error: 'Team not found' };
+//         }
+
+//         // Free plan: max 3 members per team
+//         if (team.company.plan === 'FREE' && team.members.length >= 3) {
+//             return {
+//                 success: false,
+//                 error: 'Free plan is limited to 3 members per team. Upgrade to Pro for unlimited members.'
+//             };
+//         }
+
+//         // Generate secure invitation token
+//         const token = randomBytes(32).toString('hex');
+//         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+//         // Create the invitation
+//         const invite = await prisma.teamInvite.create({
+//             data: {
+//                 teamId: data.teamId,
+//                 email: data.email.toLowerCase().trim(),
+//                 role: data.role,
+//                 token,
+//                 expiresAt,
+//                 invitedBy: user.id
+//             }
+//         });
+
+//         const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invite/${token}`;
+
+//         const emailResult = await sendTeamInvitationEmail({
+//             invitedEmail: data.email.toLowerCase().trim(),
+//             inviterName: `${user.name} ${user.lastName}`.trim(),
+//             teamName: team.name,
+//             companyName: team.company.name,
+//             role: data.role,
+//             inviteUrl,
+//             expiresAt
+//         });
+
+//         if (!emailResult.success) {
+//             // If email fails, delete the invitation and return error
+//             await prisma.teamInvite.delete({ where: { id: invite.id } });
+//             return { success: false, error: 'Failed to send invitation email' };
+//         }
+
+//         // Create audit log
+//         await prisma.auditLog.create({
+//             data: {
+//                 userId: user.id,
+//                 companyId: team.companyId,
+//                 teamId: data.teamId,
+//                 action: 'TEAM_MEMBER_INVITED',
+//                 category: 'team',
+//                 description: `Invited ${data.email} to join team as ${data.role}`,
+//                 metadata: {
+//                     invitedEmail: data.email,
+//                     role: data.role,
+//                     inviteId: invite.id,
+//                     emailMessageId: emailResult.messageId
+//                 }
+//             }
+//         });
+
+//         return { success: true, inviteId: invite.id, token };
+//     } catch (error) {
+//         console.error('Failed to invite team member:', error);
+//         return { success: false, error: 'Failed to send invitation' };
+//     }
+// }
+
+// export async function getTeamInvitations(teamId: string) {
+//     try {
+//         const user = await getCurrentUser();
+
+//         // Check team permissions - only admins can view invitations
+//         await checkTeamPermission(user.id, teamId, 'TEAM_ADMIN');
+
+//         const invitations = await prisma.teamInvite.findMany({
+//             where: { teamId },
+//             include: {
+//                 team: {
+//                     select: {
+//                         name: true
+//                     }
+//                 }
+//             },
+//             orderBy: { createdAt: 'desc' }
+//         });
+
+//         return invitations.map((invite) => ({
+//             id: invite.id,
+//             email: invite.email,
+//             role: invite.role,
+//             status: invite.status,
+//             expiresAt: invite.expiresAt,
+//             createdAt: invite.createdAt,
+//             teamName: invite.team.name
+//         }));
+//     } catch (error) {
+//         console.error('Failed to fetch team invitations:', error);
+//         return null;
+//     }
+// }
+
+// export async function cancelTeamInvitation(inviteId: string) {
+//     try {
+//         const user = await getCurrentUser();
+
+//         // Get the invitation
+//         const invite = await prisma.teamInvite.findUnique({
+//             where: { id: inviteId },
+//             include: { team: true }
+//         });
+
+//         if (!invite) {
+//             return { success: false, error: 'Invitation not found' };
+//         }
+
+//         // Check team permissions
+//         await checkTeamPermission(user.id, invite.teamId, 'TEAM_ADMIN');
+
+//         // Delete the invitation
+//         await prisma.teamInvite.delete({
+//             where: { id: inviteId }
+//         });
+
+//         // Create audit log
+//         await prisma.auditLog.create({
+//             data: {
+//                 userId: user.id,
+//                 companyId: invite.team.companyId,
+//                 teamId: invite.teamId,
+//                 action: 'TEAM_INVITATION_CANCELLED',
+//                 category: 'team',
+//                 description: `Cancelled invitation for ${invite.email}`,
+//                 metadata: {
+//                     invitedEmail: invite.email,
+//                     role: invite.role
+//                 }
+//             }
+//         });
+
+//         return { success: true };
+//     } catch (error) {
+//         console.error('Failed to cancel invitation:', error);
+//         return { success: false, error: 'Failed to cancel invitation' };
+//     }
+// }
+
+// export async function removeTeamMember(memberId: string) {
+//     try {
+//         const user = await getCurrentUser();
+
+//         // Get the member
+//         const member = await prisma.teamMember.findUnique({
+//             where: { id: memberId },
+//             include: {
+//                 team: true,
+//                 user: true
+//             }
+//         });
+
+//         if (!member) {
+//             return { success: false, error: 'Team member not found' };
+//         }
+
+//         // Check team permissions
+//         await checkTeamPermission(user.id, member.teamId, 'TEAM_ADMIN');
+
+//         // Prevent removing the team creator
+//         if (member.team.creatorId === member.userId) {
+//             return { success: false, error: 'Cannot remove the team creator' };
+//         }
+
+//         // Prevent removing yourself
+//         if (member.userId === user.id) {
+//             return {
+//                 success: false,
+//                 error: 'Cannot remove yourself from the team'
+//             };
+//         }
+
+//         // Remove the member
+//         await prisma.teamMember.delete({
+//             where: { id: memberId }
+//         });
+
+//         // Create audit log
+//         await prisma.auditLog.create({
+//             data: {
+//                 userId: user.id,
+//                 companyId: member.team.companyId,
+//                 teamId: member.teamId,
+//                 action: 'TEAM_MEMBER_REMOVED',
+//                 category: 'team',
+//                 description: `Removed ${member.user.name} ${member.user.lastName} from team`,
+//                 metadata: {
+//                     removedUserId: member.userId,
+//                     removedUserEmail: member.user.email,
+//                     removedUserName: `${member.user.name} ${member.user.lastName}`
+//                 }
+//             }
+//         });
+
+//         return { success: true };
+//     } catch (error) {
+//         console.error('Failed to remove team member:', error);
+//         return { success: false, error: 'Failed to remove team member' };
+//     }
+// }
+
+// export async function changeTeamMemberRole(
+//     memberId: string,
+//     newRole: 'TEAM_ADMIN' | 'TEAM_MEMBER'
+// ) {
+//     try {
+//         const user = await getCurrentUser();
+
+//         // Get the member
+//         const member = await prisma.teamMember.findUnique({
+//             where: { id: memberId },
+//             include: {
+//                 team: true,
+//                 user: true
+//             }
+//         });
+
+//         if (!member) {
+//             return { success: false, error: 'Team member not found' };
+//         }
+
+//         // Check team permissions
+//         await checkTeamPermission(user.id, member.teamId, 'TEAM_ADMIN');
+
+//         // Prevent changing the team creator's role
+//         if (member.team.creatorId === member.userId) {
+//             return {
+//                 success: false,
+//                 error: "Cannot change the team creator's role"
+//             };
+//         }
+
+//         // Update the role
+//         await prisma.teamMember.update({
+//             where: { id: memberId },
+//             data: { role: newRole }
+//         });
+
+//         // Create audit log
+//         await prisma.auditLog.create({
+//             data: {
+//                 userId: user.id,
+//                 companyId: member.team.companyId,
+//                 teamId: member.teamId,
+//                 action: 'TEAM_MEMBER_ROLE_CHANGED',
+//                 category: 'team',
+//                 description: `Changed ${member.user.name} ${member.user.lastName}'s role to ${newRole}`,
+//                 metadata: {
+//                     targetUserId: member.userId,
+//                     targetUserEmail: member.user.email,
+//                     oldRole: member.role,
+//                     newRole
+//                 }
+//             }
+//         });
+
+//         return { success: true };
+//     } catch (error) {
+//         console.error('Failed to change team member role:', error);
+//         return { success: false, error: 'Failed to change member role' };
+//     }
+// }

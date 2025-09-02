@@ -63,7 +63,7 @@ const data = {
             icon: ChartColumn
         },
         {
-            title: 'Team',
+            title: 'Teams',
             url: '/team',
             icon: UsersRound
         },
