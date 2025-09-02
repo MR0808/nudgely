@@ -71,7 +71,7 @@ const TeamPage = async (props: { params: ParamsSlug }) => {
         <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
             <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
                 <Suspense fallback={<TeamSkeleton />}>
-                    <div className="container mx-auto py-8 space-y-6">
+                    <div className="py-8 space-y-6">
                         <div>
                             <h1 className="text-3xl font-bold">
                                 {team.team.name} Members
