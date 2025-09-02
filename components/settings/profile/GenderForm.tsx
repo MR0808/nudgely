@@ -26,12 +26,12 @@ import {
 } from '@/components/ui/select';
 
 import { authClient, useSession } from '@/lib/auth-client';
-import { SubmitButton } from '@/components/Form/Buttons';
-import FormError from '@/components/Form/FormError';
-import { GenderSchema } from '@/schemas/personal';
-import { GenderProps } from '@/types/personal';
+import { SubmitButton } from '@/components/form/Buttons';
+import FormError from '@/components/form/FormError';
+import { GenderSchema } from '@/schemas/profile';
+import { GenderProps } from '@/types/profile';
 import { cn } from '@/lib/utils';
-import { logPersonalUpdated } from '@/actions/audit/audit-personal';
+import { logProfileUpdated } from '@/actions/audit/audit-profile';
 
 const genderLabels: { value: Gender; label: string }[] = [
     { value: Gender.MALE, label: 'Male' },
@@ -78,7 +78,7 @@ const GenderForm = ({ genderProp, userSession }: GenderProps) => {
                             genderLabels.find((g) => g.value === values.gender)
                         );
                         if (userSession)
-                            await logPersonalUpdated(
+                            await logProfileUpdated(
                                 userSession?.user.id,
                                 'user.gender_updated',
                                 ['gender'],

@@ -34,6 +34,7 @@ const InitialRegistrationForm = ({
     const form = useForm<z.infer<typeof RegisterSchema>>({
         resolver: zodResolver(RegisterSchema),
         defaultValues: {
+            companyName: data.companyName,
             name: data.name,
             lastName: data.lastName,
             email: data.email,
@@ -86,6 +87,26 @@ const InitialRegistrationForm = ({
                     onSubmit={form.handleSubmit(onSubmit, onError)}
                     className="flex flex-col gap-6"
                 >
+                    <div className="relative">
+                        <FormField
+                            control={form.control}
+                            name="companyName"
+                            render={({ field }) => (
+                                <FormItem className="w-full">
+                                    <FormLabel className="flex cursor-pointer items-center gap-2 text-xs font-medium leading-none text-gray-700 dark:text-gray-200 mb-3">
+                                        Company Name
+                                    </FormLabel>
+                                    <FormControl>
+                                        <InputAuth
+                                            {...field}
+                                            type="text"
+                                            name="companyName"
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                     <div className="relative flex flex-row gap-5 w-full">
                         <FormField
                             control={form.control}

@@ -5,6 +5,8 @@ const getPageTitle = (pathname: string): string => {
             return 'Dashboard';
         case '/settings':
             return 'Settings';
+        case '/team/create':
+            return 'Create a Team';
         default:
             return 'Page';
     }

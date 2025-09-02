@@ -1,5 +1,6 @@
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { LoadingBar } from '@/components/layout/LoadingBar';
+import ServerSidebar from '@/components/layout/ServerSidebar';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
@@ -18,7 +19,7 @@ export default async function RootLayout({
             }
             className="group/layout"
         >
-            <AppSidebar variant="inset" />
+            <ServerSidebar />
             <SidebarInset>
                 <LoadingBar />
                 <SiteHeader />

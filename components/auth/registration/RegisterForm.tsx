@@ -10,6 +10,7 @@ import { RegistrationData, RegistrationStep } from '@/types/register';
 const RegisterForm = () => {
     const [currentStep, setCurrentStep] = useState<RegistrationStep>('initial');
     const [registrationData, setRegistrationData] = useState<RegistrationData>({
+        companyName: '',
         name: '',
         lastName: '',
         email: '',

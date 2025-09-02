@@ -15,6 +15,45 @@ enum UserRole {
   ADMIN
 }
 
+enum SiteRole {
+  USER
+  SITE_ADMIN
+}
+
+enum CompanyRole {
+  COMPANY_ADMIN
+  COMPANY_MEMBER
+}
+
+enum TeamRole {
+  TEAM_ADMIN
+  TEAM_MEMBER
+}
+
+enum TaskStatus {
+  ACTIVE
+  DISABLED
+  FROZEN
+}
+
+enum TaskFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  CUSTOM
+}
+
+enum IntervalUnit {
+  DAY
+  WEEK
+  MONTH
+}
+
+enum PlanType {
+  FREE
+  PRO
+}
+
 enum Gender {
   MALE
   FEMALE
@@ -39,6 +78,13 @@ enum UserStatus {
   BANNED
 }
 
+enum TaskInstanceStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  OVERDUE
+}
+
 model User {
   id        String   @id @default(uuid())
   createdAt DateTime
@@ -49,7 +95,7 @@ model User {
   email         String    @unique
   emailVerified Boolean
   image         String?
-  role          UserRole  @default(USER)
+  role          SiteRole  @default(USER)
   banned        Boolean?
   banReason     String?
   banExpires    DateTime?
@@ -72,6 +118,12 @@ model User {
   emailChangeRecords EmailChangeRecord[]
   phoneChangeRecords PhoneChangeRecord[]
   auditLogs          AuditLog[]
+  company            Company[]
+  companyMember      CompanyMember[]
+  teams              Team[]
+  teamMembers        TeamMember[]
+  tasks              Task[]
+  taskCompletions    TaskCompletion[]
 
   @@map("users")
 }
@@ -267,4 +319,268 @@ model Image {
   updatedAt     DateTime? @updatedAt
 
   @@map("images")
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String
+  description String?
+  plan        PlanType  @default(FREE)
+  trialEndsAt DateTime?
+
+  // Stripe billing - now at company level
+  stripeCustomerId String? @unique
+  stripeSubId      String? @unique
+
+  // Relations
+  creator   User            @relation(fields: [creatorId], references: [id])
+  creatorId String
+  members   CompanyMember[]
+  teams     Team[]
+  invites   CompanyInvite[]
+
+  @@map("companies")
+}
+
+model CompanyMember {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  role CompanyRole @default(COMPANY_MEMBER)
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+
+  @@unique([companyId, userId])
+  @@map("company_members")
+}
+
+model CompanyInvite {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email     String
+  role      CompanyRole      @default(COMPANY_MEMBER)
+  status    InvitationStatus @default(PENDING)
+  token     String           @unique
+  expiresAt DateTime
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+  invitedBy String // User ID who sent the invite
+
+  @@unique([companyId, email])
+  @@map("company_invites")
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String
+  description String?
+  isFrozen    Boolean @default(false)
+
+  // Relations
+  company    Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId  String
+  creator    User           @relation(fields: [creatorId], references: [id])
+  creatorId  String
+  members    TeamMember[]
+  tasks      Task[]
+  templates  TeamTemplate[]
+  TeamInvite TeamInvite[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  role TeamRole @default(TEAM_MEMBER)
+
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model Task {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title       String
+  description String?
+  status      TaskStatus    @default(ACTIVE)
+  frequency   TaskFrequency @default(DAILY)
+
+  intervalCount Int?         @default(1)
+  intervalUnit  IntervalUnit @default(DAY)
+
+  dueHour  Int?   @default(8)
+  timezone String @default("UTC")
+
+  team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId      String
+  creator     User             @relation(fields: [creatorId], references: [id])
+  creatorId   String
+  recipients  TaskRecipient[]
+  instances   TaskInstance[]
+  completions TaskCompletion[]
+
+  @@map("tasks")
+}
+
+model TaskInstance {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scheduledFor DateTime
+  status       TaskInstanceStatus @default(PENDING)
+  overdueCount Int                @default(0)
+  completedAt  DateTime?
+  failedAt     DateTime?
+
+  task        Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId      String
+  reminders   ReminderEvent[]
+  completions TaskCompletion[]
+
+  @@index([scheduledFor])
+  @@index([status])
+  @@map("task_instances")
+}
+
+model TaskRecipient {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name  String
+  email String
+
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId String
+
+  @@unique([taskId, email])
+  @@map("task_recipients")
+}
+
+model ReminderEvent {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  recipientEmail String
+  recipientName  String
+  token          String    @unique
+  expiresAt      DateTime
+  sent           Boolean   @default(false)
+  usedAt         DateTime?
+  attempts       Int       @default(0)
+  lastAttemptAt  DateTime?
+  errorMessage   String?
+
+  completedBy  String?
+  completedAt  DateTime?
+  completionIp String?
+  completionUa String?
+
+  taskInstance   TaskInstance @relation(fields: [taskInstanceId], references: [id], onDelete: Cascade)
+  taskInstanceId String
+
+  @@map("reminder_events")
+}
+
+model TaskCompletion {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  completedBy     String
+  completedByName String?
+  ipAddress       String?
+  userAgent       String?
+  reminderToken   String?
+
+  task           Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId         String
+  taskInstance   TaskInstance @relation(fields: [taskInstanceId], references: [id], onDelete: Cascade)
+  taskInstanceId String
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId         String?
+
+  @@map("task_completions")
+}
+
+model GlobalTemplate {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String  @unique
+  description String?
+  content     String
+  variables   Json    @default("[]")
+  isActive    Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  @@map("global_templates")
+}
+
+model TeamTemplate {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String
+  description String?
+  content     String
+  variables   Json    @default("[]")
+  isActive    Boolean @default(true)
+
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String
+
+  @@unique([teamId, name])
+  @@map("team_templates")
+}
+
+model TeamInvite {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email     String
+  role      TeamRole         @default(TEAM_MEMBER)
+  status    InvitationStatus @default(PENDING)
+  token     String           @unique
+  expiresAt DateTime
+
+  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+  invitedBy String // User ID who sent the invite
+
+  @@unique([teamId, email])
+  @@map("team_invites")
 }

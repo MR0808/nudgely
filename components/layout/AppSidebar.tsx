@@ -2,16 +2,15 @@
 
 import {
     Gauge,
-    Database,
     FileText,
     CircleQuestionMark,
-    ClipboardList,
-    Search,
     Settings,
-    Sparkles
+    SquareCheckBig,
+    ChartColumn,
+    UsersRound
 } from 'lucide-react';
 
-import { NavDocuments } from '@/components/layout/NavDocuments';
+import { NavAdmin } from '@/components/layout/NavAdmin';
 import { NavMain } from '@/components/layout/NavMain';
 import { NavSecondary } from '@/components/layout/NavSecondary';
 import { NavUser } from '@/components/layout/NavUser';
@@ -28,18 +27,26 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
+import TeamSelector from '@/components/layout/TeamSelector';
+import { SessionType } from '@/types/session';
+import { Company, Team } from '@/types/team';
 
 const data = {
     navMain: [
         {
             title: 'Dashboard',
-            url: '/dashboard',
+            url: '/',
             icon: Gauge
         },
         {
-            title: 'Payment gated',
-            url: '/dashboard/payment-gated',
-            icon: Sparkles
+            title: 'Tasks',
+            url: '/tasks',
+            icon: SquareCheckBig
+        },
+        {
+            title: 'Templates',
+            url: '/Templates',
+            icon: FileText
         }
     ],
     navSecondary: [
@@ -49,26 +56,37 @@ const data = {
             icon: CircleQuestionMark
         }
     ],
-    documents: [
+    admin: [
         {
-            name: 'Data Library',
-            url: '#',
-            icon: Database
+            title: 'Analytics',
+            url: '/analytics',
+            icon: ChartColumn
         },
         {
-            name: 'Reports',
-            url: '#',
-            icon: ClipboardList
+            title: 'Team',
+            url: '/team',
+            icon: UsersRound
         },
         {
-            name: 'Word Assistant',
-            url: '#',
-            icon: FileText
+            title: 'Settings',
+            url: '/settings',
+            icon: Settings
         }
     ]
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+    userSession: SessionType;
+    teams: Team[];
+    company: Company;
+}
+
+export function AppSidebar({
+    userSession,
+    teams,
+    company,
+    ...props
+}: AppSidebarProps) {
     return (
         <Sidebar collapsible="offcanvas" {...props}>
             <SidebarHeader>
@@ -92,11 +110,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarHeader>
             <SidebarContent>
                 <NavMain items={data.navMain} />
-                <NavDocuments items={data.documents} />
+                <NavAdmin items={data.admin} />
                 <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>
             <SidebarFooter>
-                <NavUser />
+                {/* <NavUser /> */}
+                <TeamSelector teams={teams} company={company} />
             </SidebarFooter>
         </Sidebar>
     );

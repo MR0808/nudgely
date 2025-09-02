@@ -8,7 +8,7 @@ export type AuditCategory =
     | 'system'
     | 'billing'
     | 'admin'
-    | 'event';
+    | 'team';
 
 export type AuditAction =
     // Authentication actions
@@ -50,6 +50,9 @@ export type AuditAction =
     | 'user.preferences_updated'
     | 'user.notification_settings_updated'
     | 'user.privacy_settings_updated'
+
+    // Team actions
+    | 'team.team_created'
 
     // Data actions
     | 'data.exported'

@@ -4,6 +4,7 @@ export type RegistrationStep = 'initial' | 'email-verify' | 'complete';
 
 export interface RegistrationData {
     userId?: string;
+    companyName: string;
     name: string;
     lastName: string;
     email: string;

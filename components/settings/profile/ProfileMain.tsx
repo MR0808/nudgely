@@ -3,9 +3,17 @@ import { SettingsProps } from '@/types/settings';
 import ProfilePictureForm from '@/components/settings/profile/ProfilePictureForm';
 import JobTitleForm from '@/components/settings/profile/JobTitleForm';
 import BioForm from '@/components/settings/profile/BioForm';
+import DateOfBirthForm from '@/components/settings/profile/DateOfBirthForm';
+import GenderForm from '@/components/settings/profile/GenderForm';
 
 const ProfileMain = ({ userSession, location }: SettingsProps) => {
     if (!userSession) return null;
+    const user = userSession.user;
+
+    const hasGoogleAccount = userSession.accounts.some(
+        (account) => account.providerId === 'google'
+    );
+
     return (
         <SettingsContent
             title="Profile"
@@ -15,6 +23,14 @@ const ProfileMain = ({ userSession, location }: SettingsProps) => {
                 <ProfilePictureForm userSession={userSession} />
                 <JobTitleForm userSession={userSession} />
                 <BioForm userSession={userSession} />
+                <DateOfBirthForm
+                    dateOfBirthProp={user.dateOfBirth || undefined}
+                    userSession={userSession}
+                />
+                <GenderForm
+                    genderProp={user.gender || undefined}
+                    userSession={userSession}
+                />
             </>
         </SettingsContent>
     );

@@ -9,10 +9,12 @@ import {
     SidebarGroupContent,
     SidebarMenu,
     SidebarMenuButton,
-    SidebarMenuItem
+    SidebarMenuItem,
+    SidebarGroupLabel,
+    useSidebar
 } from '@/components/ui/sidebar';
 
-export function NavMain({
+export function NavAdmin({
     items
 }: {
     items: {
@@ -21,6 +23,7 @@ export function NavMain({
         icon?: LucideIcon;
     }[];
 }) {
+    const { isMobile } = useSidebar();
     const pathname = usePathname();
     const router = useRouter();
     const [optimisticPath, setOptimisticPath] = useOptimistic(pathname);
@@ -34,39 +37,17 @@ export function NavMain({
     };
 
     return (
-        <SidebarGroup>
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
             <SidebarGroupContent
                 className="flex flex-col gap-2"
                 data-pending={isPending ? '' : undefined}
             >
-                {/* Quick create button */}
-                {/* <SidebarMenu>
-                    <SidebarMenuItem className="flex items-center gap-2 mb-4">
-                        <SidebarMenuButton
-                            tooltip="Quick Create"
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
-                        >
-                            <CirclePlus />
-                            <span>Quick Create</span>
-                        </SidebarMenuButton>
-                        <Button
-                            size="icon"
-                            className="size-8 group-data-[collapsible=icon]:opacity-0"
-                            variant="outline"
-                        >
-                            <Mail />
-                            <span className="sr-only">Inbox</span>
-                        </Button>
-                    </SidebarMenuItem>
-                </SidebarMenu> */}
-                {/* Main navigation items */}
+                <SidebarGroupLabel>Admin</SidebarGroupLabel>
                 <SidebarMenu>
                     {items.map((item) => {
-                        // Use optimistic path for instant feedback
                         const isActive =
                             optimisticPath === item.url ||
                             (optimisticPath === '/' && item.url === '/');
-
                         return (
                             <SidebarMenuItem key={item.title}>
                                 <SidebarMenuButton

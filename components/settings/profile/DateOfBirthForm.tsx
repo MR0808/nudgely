@@ -25,12 +25,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { authClient, useSession } from '@/lib/auth-client';
-import { SubmitButton } from '@/components/Form/Buttons';
-import FormError from '@/components/Form/FormError';
-import { DateOfBirthSchema } from '@/schemas/personal';
-import { DateOfBirthProps } from '@/types/personal';
+import { SubmitButton } from '@/components/form/Buttons';
+import FormError from '@/components/form/FormError';
+import { DateOfBirthSchema } from '@/schemas/profile';
+import { DateOfBirthProps } from '@/types/profile';
 import { cn } from '@/lib/utils';
-import { logPersonalUpdated } from '@/actions/audit/audit-personal';
+import { logProfileUpdated } from '@/actions/audit/audit-profile';
 
 const DateOfBirthForm = ({
     dateOfBirthProp,
@@ -72,7 +72,7 @@ const DateOfBirthForm = ({
                     onSuccess: async (ctx) => {
                         setDate(values.dateOfBirth);
                         if (userSession)
-                            await logPersonalUpdated(
+                            await logProfileUpdated(
                                 userSession?.user.id,
                                 'user.dateofbirth_updated',
                                 ['dateofbirth'],
@@ -93,12 +93,10 @@ const DateOfBirthForm = ({
     };
 
     return (
-        <div className="mt-8">
+        <div className="border-b border-b-gray-200 pb-8 mt-8">
             <div className="w-full md:w-3/5 flex flex-col gap-5">
                 <div className="flex justify-between">
-                    <h3 className="font-semibold text-base">
-                        Date of Birth (must be over 18)
-                    </h3>
+                    <h3 className="font-semibold text-base">Date of Birth</h3>
                     <div
                         className="cursor-pointer text-base font-normal hover:underline"
                         onClick={cancel}

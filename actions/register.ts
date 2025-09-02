@@ -3,7 +3,7 @@
 import * as z from 'zod';
 import { auth } from '@/lib/auth';
 import { APIError } from 'better-auth/api';
-import { InvitationStatus } from '@/generated/prisma';
+import GithubSlugger from 'github-slugger';
 
 import { RegisterSchema } from '@/schemas/register';
 import { prisma } from '@/lib/prisma';
@@ -18,6 +18,7 @@ import { EmailCheckResult } from '@/types/register';
 let cachedDomains: string[] | null = null;
 let lastFetched: number | null = null;
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const slugger = new GithubSlugger();
 
 export const registerInitial = async (
     values: z.infer<typeof RegisterSchema>
@@ -28,7 +29,8 @@ export const registerInitial = async (
         return { error: 'Invalid fields!' };
     }
 
-    const { name, lastName, email, password } = validatedFields.data;
+    const { name, lastName, email, password, companyName } =
+        validatedFields.data;
 
     try {
         const isEmailDisposable = await checkEmail(email);
@@ -65,6 +67,37 @@ export const registerInitial = async (
 
         const otp = generateOTP();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        let slug = slugger.slug(values.companyName);
+        let slugExists = true;
+
+        while (slugExists) {
+            const checkSlug = await prisma.company.findUnique({
+                where: { slug }
+            });
+            if (!checkSlug) {
+                slugExists = false;
+                break;
+            } else {
+                slug = slugger.slug(values.companyName);
+            }
+        }
+
+        const company = await prisma.company.create({
+            data: {
+                slug,
+                name: values.name,
+                creatorId: data.user.id
+            }
+        });
+
+        await prisma.companyMember.create({
+            data: {
+                companyId: company.id,
+                userId: data.user.id,
+                role: 'COMPANY_ADMIN'
+            }
+        });
 
         await prisma.verification.create({
             data: {
