@@ -68,8 +68,8 @@ const data = {
             icon: UsersRound
         },
         {
-            title: 'Settings',
-            url: '/settings',
+            title: 'Company Settings',
+            url: '/company',
             icon: Settings
         }
     ]
@@ -114,8 +114,8 @@ export function AppSidebar({
                 <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>
             <SidebarFooter>
-                {/* <NavUser /> */}
-                <TeamSelector teams={teams} company={company} />
+                <NavUser />
+                {/* <TeamSelector teams={teams} company={company} /> */}
             </SidebarFooter>
         </Sidebar>
     );

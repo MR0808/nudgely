@@ -62,7 +62,7 @@ enum Gender {
 }
 
 enum ImageType {
-  EVENT
+  COMPANY
 }
 
 enum InvitationStatus {
@@ -111,7 +111,7 @@ model User {
   status             UserStatus          @default(ACTIVE)
   timezone           String? // IANA timezone identifier
   locale             String? // Language/locale preference
-  country            Country?            @relation(fields: [countryId], references: [id])
+  country            Country?            @relation(fields: [countryId], references: [id], onDelete: Cascade)
   countryId          String?
   region             Region?             @relation(fields: [regionId], references: [id], onDelete: Cascade)
   regionId           String?
@@ -281,28 +281,30 @@ model Country {
   flag        String
   latitude    Float
   longitude   Float
-  currency    Currency  @relation(fields: [currencyId], references: [id])
+  currency    Currency  @relation(fields: [currencyId], references: [id], onDelete: Cascade)
   currencyId  String
-  continent   Continent @relation(fields: [continentId], references: [id])
+  continent   Continent @relation(fields: [continentId], references: [id], onDelete: Cascade)
   continentId String
   phonePrefix String? // International dialing code
   regions     Region[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   users       User[]
+  companies   Company[]
 
   @@map("countries")
 }
 
 model Region {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   code      String // State/Province/Region code
   name      String
-  country   Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  country   Country   @relation(fields: [countryId], references: [id], onDelete: Cascade)
   countryId String
   users     User[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  companies Company[]
 
   @@unique([countryId, code])
   @@map("regions")
@@ -321,23 +323,61 @@ model Image {
   @@map("images")
 }
 
+model Industry {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  name      String    @unique
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+  companies Company[]
+
+  @@map("industries")
+}
+
+model CompanySize {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  name      String    @unique
+  size      String
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+  companies Company[]
+
+  @@map("companySizes")
+}
+
 model Company {
   id        String   @id @default(uuid())
   slug      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name        String
-  description String?
-  plan        PlanType  @default(FREE)
-  trialEndsAt DateTime?
+  name          String
+  address1      String?
+  address2      String?
+  city          String?
+  region        Region?      @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  regionId      String?
+  postalCode    String?
+  country       Country?     @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  countryId     String?
+  contactEmail  String?
+  contactPhone  String?
+  website       String?
+  image         String?
+  companySize   CompanySize? @relation(fields: [companySizeId], references: [id], onDelete: Cascade)
+  companySizeId String?
+  industry      Industry?    @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  industryId    String?
+  plan          PlanType     @default(FREE)
+  trialEndsAt   DateTime?
 
   // Stripe billing - now at company level
   stripeCustomerId String? @unique
   stripeSubId      String? @unique
 
   // Relations
-  creator   User            @relation(fields: [creatorId], references: [id])
+  creator   User            @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId String
   members   CompanyMember[]
   teams     Team[]
@@ -394,7 +434,7 @@ model Team {
   // Relations
   company    Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId  String
-  creator    User           @relation(fields: [creatorId], references: [id])
+  creator    User           @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId  String
   members    TeamMember[]
   tasks      Task[]
@@ -439,7 +479,7 @@ model Task {
 
   team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId      String
-  creator     User             @relation(fields: [creatorId], references: [id])
+  creator     User             @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId   String
   recipients  TaskRecipient[]
   instances   TaskInstance[]

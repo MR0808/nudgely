@@ -25,7 +25,8 @@ function getPageTitle(pathname: string) {
     const staticRoutes: { [key: string]: string } = {
         '/': 'Dashboard',
         '/settings': 'Settings',
-        '/team/create': 'Create a Team'
+        '/team/create': 'Create a Team',
+        '/company': 'Company Settings'
     };
 
     // Define dynamic route patterns
