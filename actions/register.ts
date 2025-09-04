@@ -14,6 +14,7 @@ import {
 import { generateOTP } from '@/lib/otp';
 import { sendVerificationEmail } from '@/lib/mail';
 import { EmailCheckResult } from '@/types/register';
+import { logCompanyCreated } from '@/actions/audit/audit-company';
 
 let cachedDomains: string[] | null = null;
 let lastFetched: number | null = null;
@@ -89,6 +90,11 @@ export const registerInitial = async (
                 name: values.name,
                 creatorId: data.user.id
             }
+        });
+
+        await logCompanyCreated(data.user.id, {
+            companyId: company.id,
+            companyName: company.name
         });
 
         await prisma.companyMember.create({

@@ -339,6 +339,7 @@ model CompanySize {
   slug      String    @unique
   name      String    @unique
   size      String
+  order     Int
   createdAt DateTime? @default(now())
   updatedAt DateTime? @updatedAt
   companies Company[]

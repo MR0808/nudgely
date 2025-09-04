@@ -27,11 +27,12 @@ import {
 import { locales, type Locale } from '@/lib/locales';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { CompanyOnboardingData } from '@/schemas/onboarding';
 
 const LocaleField = () => {
     const [open, setOpen] = useState(false);
 
-    const form = useFormContext();
+    const form = useFormContext<CompanyOnboardingData>();
 
     const groupedLocales = locales.reduce(
         (acc, locale) => {

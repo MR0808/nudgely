@@ -8,7 +8,8 @@ export type AuditCategory =
     | 'system'
     | 'billing'
     | 'admin'
-    | 'team';
+    | 'team'
+    | 'company';
 
 export type AuditAction =
     // Authentication actions
@@ -54,6 +55,10 @@ export type AuditAction =
     // Team actions
     | 'team.team_created'
 
+    // Company actions
+    | 'company.company_created'
+    | 'company.company_updated'
+
     // Data actions
     | 'data.exported'
     | 'data.imported'
@@ -69,11 +74,7 @@ export type AuditAction =
     | 'admin.user_deleted'
     | 'admin.user_suspended'
     | 'admin.role_assigned'
-    | 'admin.permission_granted'
-
-    // Event actions
-    | 'event.event_created'
-    | 'event.activity_created';
+    | 'admin.permission_granted';
 
 export interface CreateAuditLogParams {
     userId?: string;

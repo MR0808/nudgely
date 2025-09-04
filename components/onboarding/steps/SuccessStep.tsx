@@ -56,7 +56,7 @@ const SuccessStep = () => {
 
                         <Button
                             onClick={handleContinue}
-                            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                         >
                             Continue to Dashboard
                             <ArrowRight className="w-4 h-4 ml-2" />

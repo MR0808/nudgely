@@ -1,6 +1,9 @@
 'use client';
 
 import { useFormContext } from 'react-hook-form';
+import { Country } from 'react-phone-number-input';
+import { Country as CountryDb } from '@prisma/client';
+
 import {
     FormField,
     FormItem,
@@ -11,8 +14,9 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { CompanyOnboardingData } from '@/schemas/onboarding';
+import { PhoneInput } from '@/components/ui/phone-input';
 
-export function ContactStep() {
+const ContactStep = ({ defaultCountry }: { defaultCountry: CountryDb }) => {
     const form = useFormContext<CompanyOnboardingData>();
 
     return (
@@ -31,7 +35,7 @@ export function ContactStep() {
                                 type="email"
                                 placeholder="contact@yourcompany.com"
                                 {...field}
-                                className="bg-input border-border text-foreground"
+                                className="border-border text-foreground"
                             />
                         </FormControl>
                         <FormDescription className="text-muted-foreground">
@@ -53,11 +57,18 @@ export function ContactStep() {
                             Contact Phone *
                         </FormLabel>
                         <FormControl>
-                            <Input
+                            {/* <Input
                                 type="tel"
                                 placeholder="+1 (555) 123-4567"
                                 {...field}
-                                className="bg-input border-border text-foreground"
+                                className=" border-border text-foreground"
+                            /> */}
+                            <PhoneInput
+                                {...field}
+                                defaultCountry={
+                                    defaultCountry.isoCode as Country
+                                }
+                                placeholder="Enter a phone number"
                             />
                         </FormControl>
                         <FormDescription className="text-muted-foreground">
@@ -69,4 +80,6 @@ export function ContactStep() {
             />
         </div>
     );
-}
+};
+
+export default ContactStep;

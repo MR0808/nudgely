@@ -30,13 +30,14 @@ import {
     type CompanyOnboardingData,
     CompanyOnboardingSchema
 } from '@/schemas/onboarding';
-import SuccessStep from '@/components/onboarding/steps/SuccessStep';
-import BasicInfoStep from './steps/BasicInfoStep';
-import AddressStep from '@/components/onboarding/steps/AddressStep';
 import { CompanyOnboardingWizardProps } from '@/types/onboarding';
-import { ContactStep } from '@/components/onboarding/steps/ContactStep';
-// import { AdditionalInfoStep } from "./steps/additional-info-step"
-// import { SuccessStep } from "./steps/success-step"
+import SuccessStep from '@/components/onboarding/steps/SuccessStep';
+import BasicInfoStep from '@/components/onboarding/steps/BasicInfoStep';
+import AddressStep from '@/components/onboarding/steps/AddressStep';
+import ContactStep from '@/components/onboarding/steps/ContactStep';
+import AdditionalInfoStep from '@/components/onboarding/steps/AdditionalInfoStep';
+import { updateCompany } from '@/actions/onboarding';
+import { logCompanyUpdated } from '@/actions/audit/audit-company';
 
 const steps = [
     {
@@ -69,6 +70,8 @@ const CompanyOnboardingWizard = ({
     countryProp,
     countries,
     regions,
+    companySizes,
+    industries,
     userSession
 }: CompanyOnboardingWizardProps) => {
     const [currentStep, setCurrentStep] = useState(1);
@@ -78,11 +81,11 @@ const CompanyOnboardingWizard = ({
     const form = useForm<z.infer<typeof CompanyOnboardingSchema>>({
         resolver: zodResolver(CompanyOnboardingSchema),
         defaultValues: {
-            name: '',
+            name: userSession?.company.name || '',
             address1: '',
             address2: '',
             city: '',
-            state: '',
+            region: '',
             postalCode: '',
             country: countryProp?.id || '',
             timezone: '',
@@ -99,28 +102,15 @@ const CompanyOnboardingWizard = ({
         formState: { errors }
     } = form;
 
-    useEffect(() => {
-        // Log or handle errors whenever they change
-        if (Object.keys(errors).length > 0) {
-            console.log('Form errors:', errors);
-            // Example: Show a toast notification or update UI
-            // toast.error('Please fix the form errors');
-        } else {
-            console.log('No form errors');
-        }
-    }, [errors]);
-
     const nextStep = async () => {
         const fieldsToValidate = getFieldsForStep(currentStep);
         const isValid = await form.trigger(fieldsToValidate);
-        console.log('FUCK');
 
         if (isValid) {
             if (currentStep < steps.length) {
                 setCurrentStep(currentStep + 1);
-                console.log('here');
             } else {
-                // await handleSubmit();
+                onSubmit(form.getValues());
             }
         } else {
             console.log('Validation errors:', errors);
@@ -143,7 +133,7 @@ const CompanyOnboardingWizard = ({
                 return [
                     'address1',
                     'city',
-                    'state',
+                    'region',
                     'postalCode',
                     'country',
                     'timezone',
@@ -160,21 +150,19 @@ const CompanyOnboardingWizard = ({
 
     const onSubmit = (values: z.infer<typeof CompanyOnboardingSchema>) => {
         startTransition(async () => {
-            // try {
-            //   const data = form.getValues()
-            //   const result = await createCompany(data)
-            //   if (result.success) {
-            //     setIsComplete(true)
-            //     toast.success(result.message)
-            //   } else {
-            //     toast.error("Failed to create company. Please try again.")
-            //   }
-            // } catch (error) {
-            //   console.error("[v0] Error creating company:", error)
-            //   toast.error("An unexpected error occurred. Please try again.")
-            // } finally {
-            //   setIsSubmitting(false)
-            // }
+            const data = await updateCompany(values);
+            if (data.error) {
+                toast.error(data.error);
+            }
+            if (data.data) {
+                if (userSession) {
+                    await logCompanyUpdated(userSession.user.id, {
+                        companyId: data.data.id
+                    });
+                }
+                setIsComplete(true);
+                toast.success('Team successfully created');
+            }
         });
     };
 
@@ -285,8 +273,15 @@ const CompanyOnboardingWizard = ({
                                     regions={regions}
                                 />
                             )}
-                            {currentStep === 3 && <ContactStep />}
-                            {/*{currentStep === 4 && <AdditionalInfoStep />} */}
+                            {currentStep === 3 && (
+                                <ContactStep defaultCountry={countryProp!} />
+                            )}
+                            {currentStep === 4 && (
+                                <AdditionalInfoStep
+                                    companySizes={companySizes}
+                                    industries={industries}
+                                />
+                            )}
 
                             {/* Navigation */}
                             <div className="flex justify-between pt-6">

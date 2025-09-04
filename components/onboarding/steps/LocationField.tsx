@@ -29,13 +29,14 @@ import {
 import { LocationProps } from '@/types/onboarding';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { CompanyOnboardingData } from '@/schemas/onboarding';
 
 const LocationField = ({ countries, regions }: LocationProps) => {
     const [countriesList, setCountriesList] = useState<Country[]>(countries);
     const [regionsList, setStatesList] = useState<Region[]>(regions);
     const [openCountry, setOpenCountry] = useState(false);
     const [openState, setOpenState] = useState(false);
-    const form = useFormContext();
+    const form = useFormContext<CompanyOnboardingData>();
 
     useEffect(() => {
         const fetchStates = async () => {
@@ -43,7 +44,11 @@ const LocationField = ({ countries, regions }: LocationProps) => {
                 const result = await getRegionsByCountry(
                     form.getValues('country')
                 );
-                form.setValue('region', '');
+                if (!result || result.length === 0) {
+                    form.setValue('region', 'blank');
+                } else {
+                    form.setValue('region', '');
+                }
                 setStatesList(result!);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -159,7 +164,9 @@ const LocationField = ({ countries, regions }: LocationProps) => {
                                         aria-expanded={openState}
                                         className="h-9 w-full justify-between px-6 py-3 text-sm font-normal"
                                     >
-                                        {field.value && field.value !== ''
+                                        {field.value &&
+                                        field.value !== '' &&
+                                        field.value !== 'blank'
                                             ? regionsList.find(
                                                   (region) =>
                                                       region.id === field.value

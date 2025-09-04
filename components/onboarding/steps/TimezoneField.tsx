@@ -27,11 +27,12 @@ import {
 import { timezones, type Timezone } from '@/lib/timezones';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { CompanyOnboardingData } from '@/schemas/onboarding';
 
 const TimezoneField = () => {
     const [openTimezone, setOpenTimezone] = useState(false);
 
-    const form = useFormContext();
+    const form = useFormContext<CompanyOnboardingData>();
 
     const groupedTimezones = timezones.reduce(
         (acc, timezone) => {

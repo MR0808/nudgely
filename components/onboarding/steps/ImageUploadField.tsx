@@ -116,6 +116,8 @@ const ImageUploadField = ({
                         // Call server action
                         const result = await uploadImage(formData);
 
+                        console.log(result);
+
                         // Clear progress simulation
                         clearInterval(progressInterval);
 
@@ -146,7 +148,6 @@ const ImageUploadField = ({
                                     message: 'Preparing...'
                                 });
                             }, 1500);
-                            console.log(url);
                         }
                     } catch (uploadError) {
                         clearInterval(progressInterval);

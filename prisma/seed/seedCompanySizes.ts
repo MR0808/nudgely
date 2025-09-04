@@ -2,11 +2,11 @@ import { PrismaClient } from '@prisma/client';
 import GithubSlugger from 'github-slugger';
 
 const companySizes = [
-    { name: 'Sole Proprietor', size: '1 employee' },
-    { name: 'Small Business', size: '2-50 employees' },
-    { name: 'Medium Business', size: '51-250 employees' },
-    { name: 'Large Business', size: '251-1,000 employees' },
-    { name: 'Enterprise', size: '1,001+ employees' }
+    { name: 'Sole Proprietor', size: '1 employee', order: 1 },
+    { name: 'Small Business', size: '2-50 employees', order: 2 },
+    { name: 'Medium Business', size: '51-250 employees', order: 3 },
+    { name: 'Large Business', size: '251-1,000 employees', order: 4 },
+    { name: 'Enterprise', size: '1,001+ employees', order: 5 }
 ];
 
 const prisma = new PrismaClient();
@@ -21,7 +21,12 @@ async function seedCompanySizes() {
         for (const companySize of companySizes) {
             let slug = slugger.slug(companySize.name);
             await prisma.companySize.create({
-                data: { slug, name: companySize.name, size: companySize.size }
+                data: {
+                    slug,
+                    name: companySize.name,
+                    size: companySize.size,
+                    order: companySize.order
+                }
             });
             console.log(`Seeded ${count} / ${totalLength} Company Sizes`);
             count++;

@@ -1,4 +1,4 @@
-import { Country, Region } from '@/generated/prisma';
+import { CompanySize, Country, Industry, Region } from '@/generated/prisma';
 
 import { auth } from '@/lib/auth';
 
@@ -9,6 +9,8 @@ export interface CompanyOnboardingWizardProps {
     countryProp?: Country;
     countries: Country[];
     regions: Region[];
+    companySizes: CompanySize[];
+    industries: Industry[];
     userSession: SessionType | null;
 }
 

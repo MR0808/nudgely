@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import libphonenumber from 'google-libphonenumber';
+import { prisma } from '@/lib/prisma';
 
 const phoneUtil = libphonenumber.PhoneNumberUtil.getInstance();
 
@@ -40,10 +41,7 @@ export const CompanyOnboardingSchema = z.object({
         .string()
         .min(1, 'City is required')
         .max(100, 'City must be less than 100 characters'),
-    state: z
-        .string()
-        .min(1, 'State/Province is required')
-        .max(100, 'State must be less than 100 characters'),
+    region: z.string().min(1, 'State is required'),
     postalCode: z
         .string()
         .min(1, 'Postal code is required')
@@ -57,11 +55,7 @@ export const CompanyOnboardingSchema = z.object({
     contactPhone: phoneNumberSchema,
 
     // Step 4: Additional Information
-    website: z
-        .string()
-        .url('Please enter a valid URL')
-        .optional()
-        .or(z.literal('')),
+    website: z.url('Please enter a valid URL').optional().or(z.literal('')),
     companySize: z.string().optional(),
     industry: z.string().optional()
 });
@@ -78,7 +72,7 @@ export const step2Schema = CompanyOnboardingSchema.pick({
     address1: true,
     address2: true,
     city: true,
-    state: true,
+    region: true,
     postalCode: true,
     country: true,
     timezone: true,

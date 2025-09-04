@@ -2,7 +2,6 @@
 
 import * as z from 'zod';
 import GithubSlugger from 'github-slugger';
-import { randomBytes } from 'crypto';
 
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';

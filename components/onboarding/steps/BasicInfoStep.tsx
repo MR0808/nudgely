@@ -33,7 +33,7 @@ const BasicInfoStep = () => {
                         <FormControl>
                             <ImageUploadField
                                 bucket="logos"
-                                name="image"
+                                name="logo"
                                 setUrl={setUrl}
                                 url={url}
                             />
