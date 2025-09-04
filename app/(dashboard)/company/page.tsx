@@ -46,7 +46,7 @@ const CompanyPage = async () => {
     const userSession = await authCheck('/company');
     const { user } = userSession;
 
-    const { company, userCompany } = await getCompany();
+    const { company, userCompany, image } = await getCompany();
 
     if (!company || userCompany.role !== 'COMPANY_ADMIN') {
         return (
@@ -73,7 +73,11 @@ const CompanyPage = async () => {
             </div>
             <Separator className="my-4 lg:my-6" />
             <div className="grid gap-6">
-                <CompanyDetails company={company} userRole={userCompany.role} />
+                <CompanyDetails
+                    company={company}
+                    userRole={userCompany.role}
+                    image={image}
+                />
                 {/* 
                 <div className="grid md:grid-cols-2 gap-6">
                     <CompanyMembersCard />

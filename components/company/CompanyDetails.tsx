@@ -2,6 +2,7 @@
 
 import { differenceInDays } from 'date-fns';
 import { useState } from 'react';
+import parsePhoneNumber, { PhoneNumber } from 'libphonenumber-js';
 
 import {
     Card,
@@ -23,12 +24,16 @@ import {
 } from 'lucide-react';
 import { CompanyProps } from '@/types/company';
 import EditCompanyDialog from '@/components/company/EditCompanyDialog';
+import Image from 'next/image';
 
-const CompanyDetails = ({ company, userRole }: CompanyProps) => {
+const CompanyDetails = ({ company, userRole, image }: CompanyProps) => {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     let isTrialing = false;
     let trialDaysLeft = 0;
     const today = new Date();
+    const phoneNumber = company.contactPhone
+        ? parsePhoneNumber(company.contactPhone)
+        : undefined;
 
     if (company.trialEndsAt && company.trialEndsAt > today) {
         isTrialing = true;
@@ -61,9 +66,19 @@ const CompanyDetails = ({ company, userRole }: CompanyProps) => {
                     {/* Company Header */}
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
-                                <Building2 className="h-8 w-8 text-primary-foreground" />
-                            </div>
+                            {image ? (
+                                <Image
+                                    src={image.image}
+                                    alt={company.name}
+                                    width={200}
+                                    height={200}
+                                    className="h-8"
+                                />
+                            ) : (
+                                <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
+                                    <Building2 className="h-8 w-8 text-primary-foreground" />
+                                </div>
+                            )}
                             <div>
                                 <h3 className="text-xl font-semibold">
                                     {company.name}
@@ -134,7 +149,9 @@ const CompanyDetails = ({ company, userRole }: CompanyProps) => {
                                 <div>
                                     <p className="text-sm font-medium">Phone</p>
                                     <p className="text-sm text-muted-foreground">
-                                        {company.creator.phoneNumber}
+                                        {phoneNumber
+                                            ? phoneNumber.formatNational()
+                                            : ''}
                                     </p>
                                 </div>
                             </div>

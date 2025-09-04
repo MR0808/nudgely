@@ -34,6 +34,7 @@ export const getCompany = async () => {
         if (!userSession) {
             return {
                 company: null,
+                image: null,
                 userCompany: null,
                 error: 'Not authorised'
             };
@@ -48,6 +49,7 @@ export const getCompany = async () => {
         if (!userCompany) {
             return {
                 company: null,
+                image: null,
                 userCompany: null,
                 error: 'Error getting company'
             };
@@ -67,9 +69,21 @@ export const getCompany = async () => {
             }
         });
 
-        return { company, userCompany, error: null };
+        if (!company)
+            return {
+                company: null,
+                image: null,
+                userCompany: null,
+                error: 'Error getting company'
+            };
+
+        const image = await prisma.image.findFirst({
+            where: { relatedEntity: company.id }
+        });
+
+        return { company, image, userCompany, error: null };
     } catch (error) {
-        return { company: null, userCompany: null, error };
+        return { company: null, image: null, userCompany: null, error };
     }
 };
 
