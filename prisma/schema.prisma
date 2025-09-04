@@ -352,25 +352,26 @@ model Company {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name          String
-  address1      String?
-  address2      String?
-  city          String?
-  region        Region?      @relation(fields: [regionId], references: [id], onDelete: Cascade)
-  regionId      String?
-  postalCode    String?
-  country       Country?     @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  countryId     String?
-  contactEmail  String?
-  contactPhone  String?
-  website       String?
-  image         String?
-  companySize   CompanySize? @relation(fields: [companySizeId], references: [id], onDelete: Cascade)
-  companySizeId String?
-  industry      Industry?    @relation(fields: [industryId], references: [id], onDelete: Cascade)
-  industryId    String?
-  plan          PlanType     @default(FREE)
-  trialEndsAt   DateTime?
+  name             String
+  address1         String?
+  address2         String?
+  city             String?
+  region           Region?      @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  regionId         String?
+  postalCode       String?
+  country          Country?     @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  countryId        String?
+  contactEmail     String?
+  contactPhone     String?
+  website          String?
+  image            String?
+  companySize      CompanySize? @relation(fields: [companySizeId], references: [id], onDelete: Cascade)
+  companySizeId    String?
+  industry         Industry?    @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  industryId       String?
+  plan             PlanType     @default(FREE)
+  trialEndsAt      DateTime?
+  profileCompleted Boolean      @default(false)
 
   // Stripe billing - now at company level
   stripeCustomerId String? @unique

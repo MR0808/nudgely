@@ -17,7 +17,6 @@ const phoneNumberSchema = z
         },
         { message: 'Phone mobile number' }
     );
-// Phone number validation that accepts multiple formats
 
 export const EditCompanySchema = z.object({
     name: z

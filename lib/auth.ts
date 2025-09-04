@@ -10,6 +10,7 @@ import { hashPassword, verifyPassword } from '@/lib/argon2';
 import { sendVerificationEmail, sendResetEmail } from '@/lib/mail';
 import { ac, roles } from '@/lib/permissions';
 import { logPasswordResetRequested } from '@/actions/audit/audit-auth';
+import { error } from 'console';
 
 const options = {
     database: prismaAdapter(prisma, {
@@ -149,12 +150,20 @@ export const auth = betterAuth({
             const accounts = await prisma.account.findMany({
                 where: { id: user.id }
             });
+            const userCompany = await prisma.companyMember.findFirst({
+                where: { userId: user.id },
+                include: { company: true }
+            });
+            if (!userCompany) throw error('no company found');
+            const company = userCompany.company;
             return {
                 session,
                 user: {
                     ...user
                 },
-                accounts
+                accounts,
+                company,
+                userCompany
             };
         }, options),
         openAPI()

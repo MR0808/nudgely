@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
                 hostname: 'kclmhivisljytznhkmwv.supabase.co'
             }
         ]
+    },
+    experimental: {
+        serverActions: {
+            bodySizeLimit: '5mb'
+        }
     }
 };
 
