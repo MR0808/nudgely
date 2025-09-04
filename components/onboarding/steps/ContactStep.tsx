@@ -2,7 +2,7 @@
 
 import { useFormContext } from 'react-hook-form';
 import { Country } from 'react-phone-number-input';
-import { Country as CountryDb } from '@prisma/client';
+import { Country as CountryDb } from '@/generated/prisma';
 
 import {
     FormField,
