@@ -66,15 +66,26 @@ const CompanyDetails = ({
                             Manage your company information and settings
                         </CardDescription>
                     </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 bg-transparent cursor-pointer"
-                        onClick={() => setIsEditDialogOpen(true)}
-                    >
-                        <Edit className="h-4 w-4" />
-                        Edit Details
-                    </Button>
+                    <div className="flex flex-row gap-4">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2 bg-transparent cursor-pointer"
+                            onClick={() => setIsEditDialogOpen(true)}
+                        >
+                            <Edit className="h-4 w-4" />
+                            Update Logo
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2 bg-transparent cursor-pointer"
+                            onClick={() => setIsEditDialogOpen(true)}
+                        >
+                            <Edit className="h-4 w-4" />
+                            Edit Details
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     {/* Company Header */}
