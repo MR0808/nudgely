@@ -47,7 +47,9 @@ const LocationField = ({ countries, regions }: LocationProps) => {
                 if (!result || result.length === 0) {
                     form.setValue('region', 'blank');
                 } else {
-                    form.setValue('region', '');
+                    const region = form.getValues('region');
+                    const hasId = result.some((item) => item.id === region);
+                    if (!hasId) form.setValue('region', '');
                 }
                 setStatesList(result!);
             } catch (error) {

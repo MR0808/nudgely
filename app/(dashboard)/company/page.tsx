@@ -7,6 +7,14 @@ import siteMetadata from '@/utils/siteMetaData';
 import { getCompany } from '@/actions/company';
 import { Separator } from '@/components/ui/separator';
 import CompanyDetails from '@/components/company/CompanyDetails';
+import {
+    getAllCountries,
+    getCountryByName,
+    getRegionsByCountry,
+    getCountryById
+} from '@/lib/location';
+import { getAllCompanySizes } from '@/lib/companySize';
+import { getAllIndustries } from '@/lib/industries';
 
 export async function generateMetadata(): Promise<Metadata> {
     const { company } = await getCompany();
@@ -61,6 +69,11 @@ const CompanyPage = async () => {
         );
     }
 
+    const countries = await getAllCountries();
+    const regions = await getRegionsByCountry(company.countryId!);
+    const companySizes = await getAllCompanySizes();
+    const industries = await getAllIndustries();
+
     return (
         <div className="px-4 py-6 flex grow flex-col overflow-hidden mx-auto w-3/4 ">
             <div className="space-y-0.5">
@@ -77,6 +90,11 @@ const CompanyPage = async () => {
                     company={company}
                     userRole={userCompany.role}
                     image={image}
+                    countries={countries!}
+                    regions={regions!}
+                    industries={industries!}
+                    companySizes={companySizes!}
+                    userSession={userSession}
                 />
                 {/* 
                 <div className="grid md:grid-cols-2 gap-6">

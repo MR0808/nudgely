@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { Country } from 'react-phone-number-input';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +25,6 @@ import {
     DialogTitle
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -33,13 +33,25 @@ import {
     SelectValue
 } from '@/components/ui/select';
 import { Building2, Loader2 } from 'lucide-react';
-import { Company, EditCompanyDialogProps } from '@/types/company';
+import { EditCompanyDialogProps } from '@/types/company';
 import { EditCompanySchema } from '@/schemas/company';
+import LocaleField from '@/components/onboarding/steps/LocaleField';
+import LocationField from '@/components/onboarding/steps/LocationField';
+import { Separator } from '@/components/ui/separator';
+import TimezoneField from '@/components/onboarding/steps/TimezoneField';
+import { PhoneInput } from '@/components/ui/phone-input';
+import { updateCompany } from '@/actions/company';
+import { logCompanyUpdated } from '@/actions/audit/audit-company';
 
 const EditCompanyDialog = ({
     open,
     onOpenChange,
-    company
+    company,
+    countries,
+    regions,
+    companySizes,
+    industries,
+    userSession
 }: EditCompanyDialogProps) => {
     const [isPending, startTransition] = useTransition();
 
@@ -47,6 +59,7 @@ const EditCompanyDialog = ({
         resolver: zodResolver(EditCompanySchema),
         defaultValues: {
             name: company.name,
+            contactEmail: company.contactEmail || '',
             contactPhone: company.contactPhone || '',
             address1: company.address1 || '',
             address2: company.address2 || '',
@@ -56,36 +69,30 @@ const EditCompanyDialog = ({
             postalCode: company.postalCode || '',
             website: company.website || '',
             industry: company.industryId || '',
-            companySize: company.companySizeId || ''
+            companySize: company.companySizeId || '',
+            timezone: company.timezone || '',
+            locale: company.locale || ''
         }
     });
 
+    let countryCode = 'AU';
+    if (company.country) countryCode = company.country.isoCode;
+
     const onSubmit = (values: z.infer<typeof EditCompanySchema>) => {
         startTransition(async () => {
-            // const info = getDateTime();
-            // if (info) {
-            //     const newValues = { ...values, date: info.startDateTime };
-            //     const data = await createEvent(newValues);
-            //     if (!data.success) {
-            //         toast.error(
-            //             'There was an error creating your event, please try again'
-            //         );
-            //     }
-            //     if (data.success && data.data) {
-            //         if (userSession)
-            //             await logEventCreated(userSession?.user.id, {
-            //                 eventId: data.data.id,
-            //                 eventName: data.data.title,
-            //                 eventDate: data.data.date
-            //             });
-            //         toast.success('Event successfully created');
-            //         router.push(`/event/${data.data.slug}`);
-            //     }
-            // } else {
-            //     toast.error(
-            //         'There was an error creating your event, please try again'
-            //     );
-            // }
+            const data = await updateCompany(values);
+            if (data.error) {
+                toast.error(data.error);
+            }
+            if (data.data) {
+                if (userSession) {
+                    await logCompanyUpdated(userSession.user.id, {
+                        companyId: data.data.id
+                    });
+                }
+                onOpenChange(false);
+                toast.success('Team successfully created');
+            }
         });
     };
 
@@ -108,7 +115,6 @@ const EditCompanyDialog = ({
                         className="space-y-6"
                     >
                         <div className="grid gap-4">
-                            {/* Company Name */}
                             <div className="space-y-2">
                                 <FormField
                                     control={form.control}
@@ -126,7 +132,97 @@ const EditCompanyDialog = ({
                                     )}
                                 />
                             </div>
+                            <Separator />
+                            <div className="space-y-2">
+                                <FormField
+                                    control={form.control}
+                                    name="address1"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-card-foreground">
+                                                Address Line 1 *
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="Street address, P.O. box, company name"
+                                                    {...field}
+                                                    className="border-border text-foreground"
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
 
+                            <div className="space-y-2">
+                                <FormField
+                                    control={form.control}
+                                    name="address2"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-card-foreground">
+                                                Address Line 2 (Optional)
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="Apartment, suite, unit, building, floor, etc."
+                                                    {...field}
+                                                    className="border-border text-foreground"
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="city"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-card-foreground">
+                                                City *
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="City"
+                                                    {...field}
+                                                    className="border-border text-foreground"
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="postalCode"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-card-foreground">
+                                                Postal Code *
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="ZIP or Postal Code"
+                                                    {...field}
+                                                    className="border-border text-foreground"
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                            <LocationField
+                                countries={countries}
+                                regions={regions}
+                            />
+                            <Separator />
                             {/* Contact Information */}
                             <div className="grid md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -159,7 +255,13 @@ const EditCompanyDialog = ({
                                                     Contact Phone Number *
                                                 </FormLabel>
                                                 <FormControl>
-                                                    <Input {...field} />
+                                                    <PhoneInput
+                                                        {...field}
+                                                        defaultCountry={
+                                                            countryCode as Country
+                                                        }
+                                                        placeholder="Enter a phone number"
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -167,37 +269,6 @@ const EditCompanyDialog = ({
                                     />
                                 </div>
                             </div>
-
-                            {/* Address */}
-                            {/* <div className="space-y-2">
-                                <Label htmlFor="address">Street Address</Label>
-                                <Input
-                                    id="address"
-                                    value={formData.address}
-                                    onChange={(e) =>
-                                        handleInputChange(
-                                            'address',
-                                            e.target.value
-                                        )
-                                    }
-                                    placeholder="123 Business Ave, Suite 100"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="city">City, State, ZIP</Label>
-                                <Input
-                                    id="city"
-                                    value={formData.city}
-                                    onChange={(e) =>
-                                        handleInputChange(
-                                            'city',
-                                            e.target.value
-                                        )
-                                    }
-                                    placeholder="San Francisco, CA 94105"
-                                />
-                            </div> */}
 
                             {/* Website */}
                             <div className="space-y-2">
@@ -215,83 +286,94 @@ const EditCompanyDialog = ({
                                     )}
                                 />
                             </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <TimezoneField />
+                                <LocaleField />
+                            </div>
+                            <Separator />
 
                             {/* Company Details */}
-                            {/* <div className="grid md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="industry">Industry</Label>
-                                    <Select
-                                        value={formData.industry}
-                                        onValueChange={(value) =>
-                                            handleInputChange('industry', value)
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select industry" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Technology">
-                                                Technology
-                                            </SelectItem>
-                                            <SelectItem value="Healthcare">
-                                                Healthcare
-                                            </SelectItem>
-                                            <SelectItem value="Finance">
-                                                Finance
-                                            </SelectItem>
-                                            <SelectItem value="Education">
-                                                Education
-                                            </SelectItem>
-                                            <SelectItem value="Retail">
-                                                Retail
-                                            </SelectItem>
-                                            <SelectItem value="Manufacturing">
-                                                Manufacturing
-                                            </SelectItem>
-                                            <SelectItem value="Consulting">
-                                                Consulting
-                                            </SelectItem>
-                                            <SelectItem value="Other">
-                                                Other
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                            <div className="space-y-2">
+                                <FormField
+                                    control={form.control}
+                                    name="companySize"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-card-foreground">
+                                                Company Size (Optional)
+                                            </FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger className="w-full border-border text-foreground">
+                                                        <SelectValue placeholder="Select company size" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {companySizes.map(
+                                                        (size) => (
+                                                            <SelectItem
+                                                                key={size.id}
+                                                                value={size.id}
+                                                            >
+                                                                <span className="font-bold">
+                                                                    {size.name}
+                                                                </span>{' '}
+                                                                ({size.size})
+                                                            </SelectItem>
+                                                        )
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                {/* Industry */}
+                                <FormField
+                                    control={form.control}
+                                    name="industry"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-card-foreground">
+                                                Industry (Optional)
+                                            </FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger className="w-full border-border text-foreground">
+                                                        <SelectValue placeholder="Select your industry" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {industries.map(
+                                                        (industry) => (
+                                                            <SelectItem
+                                                                key={
+                                                                    industry.id
+                                                                }
+                                                                value={
+                                                                    industry.id
+                                                                }
+                                                            >
+                                                                {industry.name}
+                                                            </SelectItem>
+                                                        )
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="size">Company Size</Label>
-                                    <Select
-                                        value={formData.size}
-                                        onValueChange={(value) =>
-                                            handleInputChange('size', value)
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select size" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="1-10 employees">
-                                                1-10 employees
-                                            </SelectItem>
-                                            <SelectItem value="11-50 employees">
-                                                11-50 employees
-                                            </SelectItem>
-                                            <SelectItem value="51-200 employees">
-                                                51-200 employees
-                                            </SelectItem>
-                                            <SelectItem value="201-500 employees">
-                                                201-500 employees
-                                            </SelectItem>
-                                            <SelectItem value="501-1000 employees">
-                                                501-1000 employees
-                                            </SelectItem>
-                                            <SelectItem value="1000+ employees">
-                                                1000+ employees
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div> 
-                            </div>*/}
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
                         </div>
 
                         <DialogFooter>

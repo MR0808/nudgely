@@ -15,14 +15,7 @@ import {
     CardHeader,
     CardTitle
 } from '@/components/ui/card';
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage
-} from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Building2, MapPin, Phone, Globe } from 'lucide-react';
@@ -161,7 +154,7 @@ const CompanyOnboardingWizard = ({
                     });
                 }
                 setIsComplete(true);
-                toast.success('Team successfully created');
+                toast.success('Company successfully created');
             }
         });
     };

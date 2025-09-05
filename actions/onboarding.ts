@@ -82,6 +82,8 @@ export const updateCompany = async (
                 website: values.website,
                 companySizeId: values.companySize,
                 industryId: values.industry,
+                timezone: values.timezone,
+                locale: values.locale,
                 image: values.logo,
                 profileCompleted: true
             }

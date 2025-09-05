@@ -370,6 +370,8 @@ model Company {
   companySizeId    String?
   industry         Industry?    @relation(fields: [industryId], references: [id], onDelete: Cascade)
   industryId       String?
+  timezone         String? // IANA timezone identifier
+  locale           String?
   plan             PlanType     @default(FREE)
   trialEndsAt      DateTime?
   profileCompleted Boolean      @default(false)

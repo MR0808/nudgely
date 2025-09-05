@@ -20,13 +20,27 @@ import {
     Phone,
     Edit,
     Crown,
-    Clock
+    Clock,
+    Globe,
+    Factory,
+    Users,
+    Earth,
+    Languages
 } from 'lucide-react';
 import { CompanyProps } from '@/types/company';
 import EditCompanyDialog from '@/components/company/EditCompanyDialog';
 import Image from 'next/image';
 
-const CompanyDetails = ({ company, userRole, image }: CompanyProps) => {
+const CompanyDetails = ({
+    company,
+    userRole,
+    image,
+    countries,
+    regions,
+    companySizes,
+    industries,
+    userSession
+}: CompanyProps) => {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     let isTrialing = false;
     let trialDaysLeft = 0;
@@ -70,9 +84,9 @@ const CompanyDetails = ({ company, userRole, image }: CompanyProps) => {
                                 <Image
                                     src={image.image}
                                     alt={company.name}
-                                    width={200}
-                                    height={200}
-                                    className="h-8"
+                                    width={500}
+                                    height={500}
+                                    className="max-h-10 max-w-2xs"
                                 />
                             ) : (
                                 <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
@@ -112,8 +126,8 @@ const CompanyDetails = ({ company, userRole, image }: CompanyProps) => {
                     </div>
 
                     {/* Company Info Grid */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
+                    <div className="flex flex-col space-y-4 justify-center w-full">
+                        <div className="w-full grid grid-cols-2 gap-6">
                             <div className="flex items-start gap-3">
                                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                                 <div>
@@ -135,6 +149,19 @@ const CompanyDetails = ({ company, userRole, image }: CompanyProps) => {
                             </div>
 
                             <div className="flex items-center gap-3">
+                                <Globe className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                    <p className="text-sm font-medium">
+                                        Website
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {company.website}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="w-full grid grid-cols-2 gap-6">
+                            <div className="flex items-center gap-3">
                                 <Mail className="h-4 w-4 text-muted-foreground" />
                                 <div>
                                     <p className="text-sm font-medium">Email</p>
@@ -143,7 +170,6 @@ const CompanyDetails = ({ company, userRole, image }: CompanyProps) => {
                                     </p>
                                 </div>
                             </div>
-
                             <div className="flex items-center gap-3">
                                 <Phone className="h-4 w-4 text-muted-foreground" />
                                 <div>
@@ -156,32 +182,62 @@ const CompanyDetails = ({ company, userRole, image }: CompanyProps) => {
                                 </div>
                             </div>
                         </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <p className="text-sm font-medium">Website</p>
-                                <p className="text-sm text-muted-foreground">
-                                    {company.website}
-                                </p>
+                        <div className="w-full grid grid-cols-2 gap-6">
+                            <div className="flex items-center gap-3">
+                                <Earth className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                    <p className="text-sm font-medium">
+                                        Timezone
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {company.timezone || <br />}
+                                    </p>
+                                </div>
                             </div>
-
-                            <div>
-                                <p className="text-sm font-medium">Industry</p>
-                                <p className="text-sm text-muted-foreground">
-                                    {company.industry?.name}
-                                </p>
+                            <div className="flex items-center gap-3">
+                                <Languages className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                    <p className="text-sm font-medium">
+                                        Locale
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {company.locale || <br />}
+                                    </p>
+                                </div>
                             </div>
-
-                            <div>
-                                <p className="text-sm font-medium">
-                                    Company Size
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                    <span className="font-bold">
-                                        {company.companySize?.name}
-                                    </span>
-                                    &nbsp;{company.companySize?.size}
-                                </p>
+                        </div>
+                        <div className="w-full grid grid-cols-2 gap-6">
+                            <div className="flex items-center gap-3">
+                                <Factory className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                    <p className="text-sm font-medium">
+                                        Industry
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {company.industry?.name || <br />}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Users className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                    <p className="text-sm font-medium">
+                                        Company Size
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {company.companySize ? (
+                                            <>
+                                                <span className="font-bold">
+                                                    {company.companySize?.name}
+                                                </span>
+                                                &nbsp;
+                                                {company.companySize?.size}
+                                            </>
+                                        ) : (
+                                            <br />
+                                        )}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -191,6 +247,11 @@ const CompanyDetails = ({ company, userRole, image }: CompanyProps) => {
                 open={isEditDialogOpen}
                 onOpenChange={setIsEditDialogOpen}
                 company={company}
+                countries={countries}
+                regions={regions}
+                companySizes={companySizes}
+                industries={industries}
+                userSession={userSession}
             />
         </>
     );

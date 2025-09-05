@@ -1,5 +1,16 @@
 import { getCompany } from '@/actions/company';
-import { Image } from '@/generated/prisma';
+import {
+    Image,
+    CompanySize,
+    Country,
+    Industry,
+    Region
+} from '@/generated/prisma';
+
+import { auth } from '@/lib/auth';
+
+export type Session = typeof auth.$Infer.Session;
+export type SessionType = Awaited<ReturnType<typeof auth.api.getSession>>;
 
 export type CompanyData = Awaited<ReturnType<typeof getCompany>>;
 
@@ -11,10 +22,20 @@ export interface CompanyProps {
     company: Company;
     userRole: 'COMPANY_ADMIN' | 'COMPANY_MEMBER';
     image: Image | null;
+    countries: Country[];
+    regions: Region[];
+    companySizes: CompanySize[];
+    industries: Industry[];
+    userSession: SessionType | null;
 }
 
 export interface EditCompanyDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     company: Company;
+    countries: Country[];
+    regions: Region[];
+    companySizes: CompanySize[];
+    industries: Industry[];
+    userSession: SessionType | null;
 }

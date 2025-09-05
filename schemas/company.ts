@@ -22,7 +22,6 @@ export const EditCompanySchema = z.object({
     name: z
         .string()
         .min(1, 'Company name is required')
-        .min(2, 'Company name must be at least 2 characters')
         .max(100, 'Company name must be less than 100 characters'),
     contactEmail: z.email('Please enter a valid email address'),
     contactPhone: phoneNumberSchema,
@@ -50,5 +49,7 @@ export const EditCompanySchema = z.object({
             }
         }, 'Please enter a valid website URL'),
     industry: z.string(),
-    companySize: z.string()
+    companySize: z.string(),
+    timezone: z.string().min(1, 'Timezone is required'),
+    locale: z.string({ message: 'Locale/Language is required' })
 });
