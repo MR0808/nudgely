@@ -1,4 +1,5 @@
 import { getCompany } from '@/actions/company';
+import { getCompanyAdminMembers } from '@/actions/companyMembers';
 import {
     Image,
     CompanySize,
@@ -13,6 +14,12 @@ export type Session = typeof auth.$Infer.Session;
 export type SessionType = Awaited<ReturnType<typeof auth.api.getSession>>;
 
 export type CompanyData = Awaited<ReturnType<typeof getCompany>>;
+
+export type MembersData = Awaited<ReturnType<typeof getCompanyAdminMembers>>;
+
+export type Members = NonNullable<
+    MembersData extends { data: infer T } ? T : never
+>;
 
 export type Company = NonNullable<
     CompanyData extends { company: infer T } ? T : never
@@ -45,4 +52,17 @@ export interface UpdateLogoDialogProps {
     onOpenChange: (open: boolean) => void;
     currentLogo?: string;
     userSession: SessionType | null;
+}
+
+export interface InviteCompanyMemberDialogProps {
+    companyId: string;
+    companyName: string;
+    companyPlan: 'FREE' | 'PRO';
+    currentMemberCount: number;
+    trigger?: React.ReactNode;
+}
+
+export interface CompanyMembersCardProps {
+    company: Company;
+    membersData: Members;
 }

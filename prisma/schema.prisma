@@ -78,6 +78,18 @@ enum UserStatus {
   BANNED
 }
 
+enum CompanyStatus {
+  ACTIVE
+  DISABLED
+  BANNED
+}
+
+enum TeamStatus {
+  ACTIVE
+  DISABLED
+  BANNED
+}
+
 enum TaskInstanceStatus {
   PENDING
   COMPLETED
@@ -357,24 +369,25 @@ model Company {
   address1         String?
   address2         String?
   city             String?
-  region           Region?      @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  region           Region?       @relation(fields: [regionId], references: [id], onDelete: Cascade)
   regionId         String?
   postalCode       String?
-  country          Country?     @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  country          Country?      @relation(fields: [countryId], references: [id], onDelete: Cascade)
   countryId        String?
   contactEmail     String?
   contactPhone     String?
   website          String?
   image            String?
-  companySize      CompanySize? @relation(fields: [companySizeId], references: [id], onDelete: Cascade)
+  companySize      CompanySize?  @relation(fields: [companySizeId], references: [id], onDelete: Cascade)
   companySizeId    String?
-  industry         Industry?    @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  industry         Industry?     @relation(fields: [industryId], references: [id], onDelete: Cascade)
   industryId       String?
   timezone         String? // IANA timezone identifier
   locale           String?
-  plan             PlanType     @default(FREE)
+  plan             PlanType      @default(FREE)
   trialEndsAt      DateTime?
-  profileCompleted Boolean      @default(false)
+  profileCompleted Boolean       @default(false)
+  status           CompanyStatus @default(ACTIVE)
 
   // Stripe billing - now at company level
   stripeCustomerId String? @unique
@@ -433,7 +446,8 @@ model Team {
 
   name        String
   description String?
-  isFrozen    Boolean @default(false)
+  isFrozen    Boolean    @default(false)
+  status      TeamStatus @default(ACTIVE)
 
   // Relations
   company    Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)

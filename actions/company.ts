@@ -144,13 +144,6 @@ export const updateCompany = async (
 
     const { user, company, userCompany } = userSession;
 
-    if (company.creatorId !== user.id) {
-        return {
-            data: null,
-            message: 'Not authorised'
-        };
-    }
-
     if (userCompany.role !== 'COMPANY_ADMIN') {
         return {
             data: null,
@@ -236,13 +229,6 @@ export const updateCompanyLogo = async (imageId: string) => {
 
     const { user, company, userCompany } = userSession;
 
-    if (company.creatorId !== user.id) {
-        return {
-            data: null,
-            error: 'Not authorised'
-        };
-    }
-
     if (userCompany.role !== 'COMPANY_ADMIN') {
         return {
             data: null,
@@ -264,6 +250,20 @@ export const updateCompanyLogo = async (imageId: string) => {
             }
 
             await deleteImage(oldImage?.image, 'images', oldImage.id);
+        }
+
+        if (imageId === 'removedLogo') {
+            await prisma.company.update({
+                where: { id: company.id },
+                data: { image: null }
+            });
+
+            revalidatePath('/company');
+
+            return {
+                data: company,
+                error: null
+            };
         }
 
         await prisma.company.update({

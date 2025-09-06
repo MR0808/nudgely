@@ -7,14 +7,11 @@ import siteMetadata from '@/utils/siteMetaData';
 import { getCompany } from '@/actions/company';
 import { Separator } from '@/components/ui/separator';
 import CompanyDetails from '@/components/company/CompanyDetails';
-import {
-    getAllCountries,
-    getCountryByName,
-    getRegionsByCountry,
-    getCountryById
-} from '@/lib/location';
+import { getAllCountries, getRegionsByCountry } from '@/lib/location';
 import { getAllCompanySizes } from '@/lib/companySize';
 import { getAllIndustries } from '@/lib/industries';
+import CompanyMembersCard from '@/components/company/CompanyMembersCard';
+import { getCompanyAdminMembers } from '@/actions/companyMembers';
 
 export async function generateMetadata(): Promise<Metadata> {
     const { company } = await getCompany();
@@ -62,7 +59,7 @@ const CompanyPage = async () => {
                 <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                        Failed to load team data
+                        Failed to load company data
                     </AlertDescription>
                 </Alert>
             </div>
@@ -73,6 +70,20 @@ const CompanyPage = async () => {
     const regions = await getRegionsByCountry(company.countryId!);
     const companySizes = await getAllCompanySizes();
     const industries = await getAllIndustries();
+    const members = await getCompanyAdminMembers();
+
+    if (!members.data) {
+        return (
+            <div className="container mx-auto py-8">
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                        Failed to load company data
+                    </AlertDescription>
+                </Alert>
+            </div>
+        );
+    }
 
     return (
         <div className="px-4 py-6 flex grow flex-col overflow-hidden mx-auto w-3/4 ">
@@ -96,15 +107,18 @@ const CompanyPage = async () => {
                     companySizes={companySizes!}
                     userSession={userSession}
                 />
-                {/* 
+
                 <div className="grid md:grid-cols-2 gap-6">
-                    <CompanyMembersCard />
-                    <CompanyTeamsCard />
+                    <CompanyMembersCard
+                        company={company}
+                        membersData={members.data}
+                    />
+                    {/* <CompanyTeamsCard /> */}
                 </div>
 
-                <CompanyBillingCard />
+                {/* <CompanyBillingCard /> */}
 
-                <CompanyDangerZone /> */}
+                {/* <CompanyDangerZone /> */}
             </div>
         </div>
     );

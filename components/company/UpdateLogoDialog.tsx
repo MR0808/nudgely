@@ -156,6 +156,7 @@ export function UpdateLogoDialog({
     const removeLogo = () => {
         setLogoPreview(null);
         setSelectedFile(null);
+        setImageId('removedLogo');
     };
 
     const handleSave = async () => {
@@ -180,15 +181,16 @@ export function UpdateLogoDialog({
     };
 
     const handleCancel = () => {
-        setLogoPreview(currentLogo || null);
-        setSelectedFile(null);
         onOpenChange(false);
+        setSelectedFile(null);
+        setImageId('');
+        setLogoPreview(currentLogo || null);
     };
 
     const hasChanges = selectedFile !== null || logoPreview !== currentLogo;
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={handleCancel}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">

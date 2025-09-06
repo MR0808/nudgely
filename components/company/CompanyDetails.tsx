@@ -78,15 +78,6 @@ const CompanyDetails = ({
                             onClick={() => setIsEditDialogOpen(true)}
                         >
                             <Edit className="h-4 w-4" />
-                            Update Logo
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-2 bg-transparent cursor-pointer"
-                            onClick={() => setIsEditDialogOpen(true)}
-                        >
-                            <Edit className="h-4 w-4" />
                             Edit Details
                         </Button>
                     </div>
