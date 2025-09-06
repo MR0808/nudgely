@@ -28,3 +28,16 @@ export async function logCompanyUpdated(
         metadata: { ...metadata }
     });
 }
+
+export async function logCompanyLogoUpdated(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'company.company_logo_updated',
+        category: 'company',
+        description: `Company logo updated`,
+        metadata: { ...metadata }
+    });
+}

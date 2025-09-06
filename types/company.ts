@@ -39,3 +39,10 @@ export interface EditCompanyDialogProps {
     industries: Industry[];
     userSession: SessionType | null;
 }
+
+export interface UpdateLogoDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    currentLogo?: string;
+    userSession: SessionType | null;
+}

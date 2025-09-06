@@ -25,11 +25,13 @@ import {
     Factory,
     Users,
     Earth,
-    Languages
+    Languages,
+    Camera
 } from 'lucide-react';
 import { CompanyProps } from '@/types/company';
 import EditCompanyDialog from '@/components/company/EditCompanyDialog';
 import Image from 'next/image';
+import { UpdateLogoDialog } from '@/components/company/UpdateLogoDialog';
 
 const CompanyDetails = ({
     company,
@@ -42,6 +44,8 @@ const CompanyDetails = ({
     userSession
 }: CompanyProps) => {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false);
+
     let isTrialing = false;
     let trialDaysLeft = 0;
     const today = new Date();
@@ -91,19 +95,33 @@ const CompanyDetails = ({
                     {/* Company Header */}
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
-                            {image ? (
-                                <Image
-                                    src={image.image}
-                                    alt={company.name}
-                                    width={500}
-                                    height={500}
-                                    className="max-h-10 max-w-2xs"
-                                />
-                            ) : (
-                                <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
-                                    <Building2 className="h-8 w-8 text-primary-foreground" />
-                                </div>
-                            )}
+                            <div className="relative group">
+                                {image ? (
+                                    <Image
+                                        src={image.image}
+                                        alt={company.name}
+                                        height={64}
+                                        width={64}
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                        className="h-16 rounded-xl object-cover border border-border cursor-pointer transition-opacity group-hover:opacity-75"
+                                        onClick={() =>
+                                            setIsLogoDialogOpen(true)
+                                        }
+                                    />
+                                ) : (
+                                    <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
+                                        <Building2 className="h-8 w-8 text-primary-foreground" />
+                                    </div>
+                                )}
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm cursor-pointer"
+                                    onClick={() => setIsLogoDialogOpen(true)}
+                                >
+                                    <Camera className="w-3 h-3" />
+                                </Button>
+                            </div>
                             <div>
                                 <h3 className="text-xl font-semibold">
                                     {company.name}
@@ -262,6 +280,12 @@ const CompanyDetails = ({
                 regions={regions}
                 companySizes={companySizes}
                 industries={industries}
+                userSession={userSession}
+            />
+            <UpdateLogoDialog
+                open={isLogoDialogOpen}
+                onOpenChange={setIsLogoDialogOpen}
+                currentLogo={image?.image || ''}
                 userSession={userSession}
             />
         </>

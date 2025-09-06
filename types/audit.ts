@@ -58,6 +58,7 @@ export type AuditAction =
     // Company actions
     | 'company.company_created'
     | 'company.company_updated'
+    | 'company.company_logo_updated'
 
     // Data actions
     | 'data.exported'

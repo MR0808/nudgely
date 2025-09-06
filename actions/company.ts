@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { EditCompanySchema } from '@/schemas/company';
 import { revalidatePath } from 'next/cache';
+import { deleteImage } from '@/actions/supabase';
 
 const slugger = new GithubSlugger();
 
@@ -217,6 +218,70 @@ export const updateCompany = async (
         revalidatePath('/company');
 
         return { data: companyDb, error: null };
+    } catch (error) {
+        console.log(error);
+        return { data: null, error: 'Failed to create company' };
+    }
+};
+
+export const updateCompanyLogo = async (imageId: string) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { user, company, userCompany } = userSession;
+
+    if (company.creatorId !== user.id) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    try {
+        if (company.image) {
+            const oldImage = await prisma.image.findUnique({
+                where: { id: company.image }
+            });
+
+            if (!oldImage) {
+                return {
+                    data: null,
+                    error: 'Original image not found.'
+                };
+            }
+
+            await deleteImage(oldImage?.image, 'images', oldImage.id);
+        }
+
+        await prisma.company.update({
+            where: { id: company.id },
+            data: { image: imageId }
+        });
+
+        await prisma.image.update({
+            where: { id: imageId },
+            data: { relatedEntity: company.id }
+        });
+
+        revalidatePath('/company');
+
+        return {
+            data: company,
+            error: null
+        };
     } catch (error) {
         console.log(error);
         return { data: null, error: 'Failed to create company' };

@@ -3,7 +3,7 @@
 import type * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { Country } from 'react-phone-number-input';
 
@@ -87,7 +87,8 @@ const EditCompanyDialog = ({
             if (data.data) {
                 if (userSession) {
                     await logCompanyUpdated(userSession.user.id, {
-                        companyId: data.data.id
+                        companyId: data.data.id,
+                        values
                     });
                 }
                 onOpenChange(false);
