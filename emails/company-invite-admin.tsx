@@ -1,16 +1,20 @@
 import {
     Body,
+    Column,
     Container,
     Head,
     Heading,
     Html,
     Img,
+    Button,
     Preview,
     Section,
     Text
 } from '@react-email/components';
 
-interface PasswordResetConfirmationEmailTemplateProps {
+interface CompanyInviteAdminEmailTemplateProps {
+    link?: string;
+    companyName?: string;
     name?: string;
 }
 
@@ -18,14 +22,16 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL
     ? process.env.NEXT_PUBLIC_APP_URL
     : 'http://localhost:3000';
 
-export const PasswordResetConfirmationEmailTemplate = ({
+export const CompanyInviteAdminEmailTemplate = ({
+    link,
+    companyName,
     name
-}: PasswordResetConfirmationEmailTemplateProps) => {
+}: CompanyInviteAdminEmailTemplateProps) => {
     return (
         <Html>
             <Head />
             <Body style={main}>
-                <Preview>Your password has been successfully reset.</Preview>
+                <Preview>Your company admin invite link is available</Preview>
                 <Container style={container}>
                     <Section style={logoContainer}>
                         <Img
@@ -35,15 +41,24 @@ export const PasswordResetConfirmationEmailTemplate = ({
                             alt="Nudgely"
                         />
                     </Section>
-                    <Heading style={h1}>Password Reset</Heading>
+                    <Heading style={h1}>Accept Your Invite</Heading>
                     <Text style={text}>Hi {name},</Text>
                     <Text style={text}>
-                        Your password has been successfully reset.
+                        You have been invited to be an admin for {companyName}{' '}
+                        on Nudgely
+                    </Text>
+
+                    <Button style={button} href={link}>
+                        Accept Invite
+                    </Button>
+
+                    <Text style={text}>
+                        This invite will expire 7 days from the original invite.
                     </Text>
 
                     <Text style={text}>
-                        If this was not you and you didn&apos;t request this,
-                        please contact us immediately to look into this..
+                        To keep your account secure, please don&apos;t forward
+                        this email to anyone.
                     </Text>
 
                     <Text style={text}>Cheers</Text>
@@ -64,11 +79,12 @@ export const PasswordResetConfirmationEmailTemplate = ({
     );
 };
 
-PasswordResetConfirmationEmailTemplate.PreviewProps = {
-    name: 'Alan'
-} as PasswordResetConfirmationEmailTemplateProps;
+CompanyInviteAdminEmailTemplate.PreviewProps = {
+    link: 'http://www.reset.com/',
+    companyName: 'nudge Co'
+} as CompanyInviteAdminEmailTemplateProps;
 
-export default PasswordResetConfirmationEmailTemplate;
+export default CompanyInviteAdminEmailTemplate;
 
 const footerText = {
     fontSize: '12px',
@@ -103,8 +119,27 @@ const h1 = {
     lineHeight: '42px'
 };
 
+const heroText = {
+    fontSize: '20px',
+    lineHeight: '28px',
+    marginBottom: '30px'
+};
+
 const text = {
     color: '#000',
     fontSize: '14px',
     lineHeight: '24px'
+};
+
+const button = {
+    backgroundColor: '#007ee6',
+    borderRadius: '4px',
+    color: '#fff',
+    fontFamily: "'Open Sans', 'Helvetica Neue', Arial",
+    fontSize: '15px',
+    textDecoration: 'none',
+    textAlign: 'center' as const,
+    display: 'block',
+    width: '210px',
+    padding: '14px 7px'
 };

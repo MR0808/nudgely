@@ -10,22 +10,24 @@ import {
     Text
 } from '@react-email/components';
 
-interface PasswordResetConfirmationEmailTemplateProps {
+interface CompanyAddedAdminEmailTemplateProps {
     name?: string;
+    companyName?: string;
 }
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL
     ? process.env.NEXT_PUBLIC_APP_URL
     : 'http://localhost:3000';
 
-export const PasswordResetConfirmationEmailTemplate = ({
-    name
-}: PasswordResetConfirmationEmailTemplateProps) => {
+export const CompanyAddedAdminEmailTemplate = ({
+    name,
+    companyName
+}: CompanyAddedAdminEmailTemplateProps) => {
     return (
         <Html>
             <Head />
             <Body style={main}>
-                <Preview>Your password has been successfully reset.</Preview>
+                <Preview>You are now an admin.</Preview>
                 <Container style={container}>
                     <Section style={logoContainer}>
                         <Img
@@ -35,15 +37,10 @@ export const PasswordResetConfirmationEmailTemplate = ({
                             alt="Nudgely"
                         />
                     </Section>
-                    <Heading style={h1}>Password Reset</Heading>
+                    <Heading style={h1}>New Admin</Heading>
                     <Text style={text}>Hi {name},</Text>
                     <Text style={text}>
-                        Your password has been successfully reset.
-                    </Text>
-
-                    <Text style={text}>
-                        If this was not you and you didn&apos;t request this,
-                        please contact us immediately to look into this..
+                        You have been added as an admin to {companyName}.
                     </Text>
 
                     <Text style={text}>Cheers</Text>
@@ -64,11 +61,12 @@ export const PasswordResetConfirmationEmailTemplate = ({
     );
 };
 
-PasswordResetConfirmationEmailTemplate.PreviewProps = {
-    name: 'Alan'
-} as PasswordResetConfirmationEmailTemplateProps;
+CompanyAddedAdminEmailTemplate.PreviewProps = {
+    name: 'Alan',
+    companyName: 'nudge Co'
+} as CompanyAddedAdminEmailTemplateProps;
 
-export default PasswordResetConfirmationEmailTemplate;
+export default CompanyAddedAdminEmailTemplate;
 
 const footerText = {
     fontSize: '12px',

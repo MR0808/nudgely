@@ -11,7 +11,10 @@ import { getAllCountries, getRegionsByCountry } from '@/lib/location';
 import { getAllCompanySizes } from '@/lib/companySize';
 import { getAllIndustries } from '@/lib/industries';
 import CompanyMembersCard from '@/components/company/CompanyMembersCard';
-import { getCompanyAdminMembers } from '@/actions/companyMembers';
+import {
+    getCompanyAdminMembers,
+    getCompanyInvitations
+} from '@/actions/companyMembers';
 
 export async function generateMetadata(): Promise<Metadata> {
     const { company } = await getCompany();
@@ -71,6 +74,7 @@ const CompanyPage = async () => {
     const companySizes = await getAllCompanySizes();
     const industries = await getAllIndustries();
     const members = await getCompanyAdminMembers();
+    const invitations = await getCompanyInvitations();
 
     if (!members.data) {
         return (
@@ -112,6 +116,7 @@ const CompanyPage = async () => {
                     <CompanyMembersCard
                         company={company}
                         membersData={members.data}
+                        invitesData={invitations.data || []}
                     />
                     {/* <CompanyTeamsCard /> */}
                 </div>

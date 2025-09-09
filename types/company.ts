@@ -1,5 +1,8 @@
 import { getCompany } from '@/actions/company';
-import { getCompanyAdminMembers } from '@/actions/companyMembers';
+import {
+    getCompanyAdminMembers,
+    getCompanyInvitations
+} from '@/actions/companyMembers';
 import {
     Image,
     CompanySize,
@@ -17,8 +20,16 @@ export type CompanyData = Awaited<ReturnType<typeof getCompany>>;
 
 export type MembersData = Awaited<ReturnType<typeof getCompanyAdminMembers>>;
 
+export type CompanyInvitesData = Awaited<
+    ReturnType<typeof getCompanyInvitations>
+>;
+
 export type Members = NonNullable<
     MembersData extends { data: infer T } ? T : never
+>;
+
+export type CompanyInvites = NonNullable<
+    CompanyInvitesData extends { data: infer T } ? T : never
 >;
 
 export type Company = NonNullable<
@@ -65,4 +76,5 @@ export interface InviteCompanyMemberDialogProps {
 export interface CompanyMembersCardProps {
     company: Company;
     membersData: Members;
+    invitesData: CompanyInvites;
 }

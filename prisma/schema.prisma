@@ -425,6 +425,7 @@ model CompanyInvite {
   updatedAt DateTime @updatedAt
 
   email     String
+  name      String
   role      CompanyRole      @default(COMPANY_MEMBER)
   status    InvitationStatus @default(PENDING)
   token     String           @unique

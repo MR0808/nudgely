@@ -41,3 +41,29 @@ export async function logCompanyLogoUpdated(
         metadata: { ...metadata }
     });
 }
+
+export async function logCompanyAdminAdded(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'company.company_admin_added',
+        category: 'company',
+        description: `Company admin added`,
+        metadata: { ...metadata }
+    });
+}
+
+export async function logCompanyAdminInvited(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'company.company_admin_invited',
+        category: 'company',
+        description: `Company admin invited`,
+        metadata: { ...metadata }
+    });
+}

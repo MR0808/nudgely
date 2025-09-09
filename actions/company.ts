@@ -2,11 +2,11 @@
 
 import * as z from 'zod';
 import GithubSlugger from 'github-slugger';
+import { revalidatePath } from 'next/cache';
 
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { EditCompanySchema } from '@/schemas/company';
-import { revalidatePath } from 'next/cache';
 import { deleteImage } from '@/actions/supabase';
 
 const slugger = new GithubSlugger();

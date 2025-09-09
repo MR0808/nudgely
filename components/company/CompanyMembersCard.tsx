@@ -1,4 +1,6 @@
 'use client';
+import { useState, useEffect, useTransition } from 'react';
+import { toast } from 'sonner';
 
 import {
     Card,
@@ -10,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, Crown, MoreHorizontal, Mail } from 'lucide-react';
+import { Users, Crown, MoreHorizontal, Mail, Loader2 } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -26,15 +28,17 @@ import {
     cancelCompanyInvitation,
     resendCompanyInvitation
 } from '@/actions/companyMembers';
-import { useState, useEffect } from 'react';
 import { CompanyMembersCardProps } from '@/types/company';
 
 const CompanyMembersCard = ({
     company,
-    membersData
+    membersData,
+    invitesData
 }: CompanyMembersCardProps) => {
+    const [isPendingResend, startTransitionResend] = useTransition();
+
     const [members, setMembers] = useState(membersData);
-    const [pendingInvites, setPendingInvites] = useState<any[]>([]);
+    const [pendingInvites, setPendingInvites] = useState(invitesData);
     const [isLoading, setIsLoading] = useState(false);
 
     const handleRemoveMember = async (memberId: string) => {
@@ -66,7 +70,15 @@ const CompanyMembersCard = ({
     };
 
     const handleResendInvite = async (inviteId: string) => {
-        await resendCompanyInvitation(inviteId);
+        startTransitionResend(async () => {
+            const data = await resendCompanyInvitation(inviteId);
+            if (data.error) {
+                toast.error(data.error);
+            }
+            if (data.data) {
+                toast.success('User invite resent');
+            }
+        });
     };
 
     return (
@@ -75,19 +87,19 @@ const CompanyMembersCard = ({
                 <div>
                     <CardTitle className="flex items-center gap-2">
                         <Users className="h-5 w-5" />
-                        Company Members
+                        Company Admins
                         <Badge variant="secondary">{members.length}</Badge>
                     </CardTitle>
-                    <CardDescription>
-                        Manage company members and their roles
-                    </CardDescription>
+                    <CardDescription>Manage company admins.</CardDescription>
                 </div>
-                <InviteCompanyMemberDialog
-                    companyId="company_1"
-                    companyName="Acme Corporation"
-                    companyPlan="FREE"
-                    currentMemberCount={members.length}
-                />
+                {company.plan === 'PRO' && (
+                    <InviteCompanyMemberDialog
+                        companyId={company.id}
+                        companyName={company.name}
+                        companyPlan={company.plan}
+                        currentMemberCount={members.length}
+                    />
+                )}
             </CardHeader>
             <CardContent className="space-y-4">
                 {isLoading ? (
@@ -155,22 +167,25 @@ const CompanyMembersCard = ({
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem
-                                                    onClick={() =>
-                                                        handleChangeRole(
-                                                            member.id,
-                                                            member.role ===
-                                                                'COMPANY_ADMIN'
-                                                                ? 'COMPANY_MEMBER'
-                                                                : 'COMPANY_ADMIN'
-                                                        )
-                                                    }
-                                                >
-                                                    {member.role ===
-                                                    'COMPANY_ADMIN'
-                                                        ? 'Remove Admin'
-                                                        : 'Make Admin'}
-                                                </DropdownMenuItem>
+                                                {company.creatorId !==
+                                                    member.user.id && (
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            handleChangeRole(
+                                                                member.id,
+                                                                member.role ===
+                                                                    'COMPANY_ADMIN'
+                                                                    ? 'COMPANY_MEMBER'
+                                                                    : 'COMPANY_ADMIN'
+                                                            )
+                                                        }
+                                                    >
+                                                        {member.role ===
+                                                        'COMPANY_ADMIN'
+                                                            ? 'Remove Admin'
+                                                            : 'Make Admin'}
+                                                    </DropdownMenuItem>
+                                                )}
                                                 <DropdownMenuItem>
                                                     View Profile
                                                 </DropdownMenuItem>
@@ -208,7 +223,7 @@ const CompanyMembersCard = ({
                                     >
                                         <div>
                                             <p className="text-sm font-medium">
-                                                {invite.email}
+                                                {`${invite.name} - ${invite.email}`}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                                 Invited{' '}
@@ -229,8 +244,15 @@ const CompanyMembersCard = ({
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
+                                                        disabled={
+                                                            isPendingResend
+                                                        }
                                                     >
-                                                        <MoreHorizontal className="h-4 w-4" />
+                                                        {isPendingResend ? (
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        )}
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">

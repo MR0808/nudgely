@@ -2,87 +2,174 @@
 
 import * as z from 'zod';
 import { randomBytes } from 'crypto';
+import { revalidatePath } from 'next/cache';
 
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
-import { Meera_Inimai } from 'next/font/google';
-import { error } from 'console';
+import {
+    sendCompanyAddedAdminEmail,
+    sendCompanyInviteAdminEmail
+} from '@/lib/mail';
+import { InviteCompanyAdminSchema } from '@/schemas/companyMember';
+import {
+    logCompanyAdminAdded,
+    logCompanyAdminInvited
+} from '@/actions/audit/audit-company';
 
-export async function inviteCompanyMember(data: {
-    companyId: string;
-    email: string;
-    role: 'COMPANY_ADMIN' | 'COMPANY_MEMBER';
-}) {
+export const inviteCompanyAdmin = async (
+    values: z.infer<typeof InviteCompanyAdminSchema>,
+    companyId: string
+) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            message: 'Not authorised'
+        };
+    }
+
+    const { user, company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            message: 'Not authorised'
+        };
+    }
+
     try {
-        console.log('[v0] Mock: Inviting company member', data);
+        // Validate input
+        const validatedFields = InviteCompanyAdminSchema.safeParse(values);
 
-        // Mock validation
-        if (!data.email?.trim()) {
-            return { success: false, error: 'Email is required' };
-        }
-
-        if (!data.email.includes('@')) {
+        if (!validatedFields.success) {
             return {
-                success: false,
-                error: 'Please enter a valid email address'
+                data: null,
+                message: 'Invalid fields'
             };
         }
 
-        // Mock: Check if user is already a company member
-        const mockExistingMembers = [
-            'john@acme.com',
-            'sarah@acme.com',
-            'mike@acme.com'
-        ];
-        if (mockExistingMembers.includes(data.email.toLowerCase().trim())) {
-            return {
-                success: false,
-                error: 'This user is already a company member'
-            };
-        }
-
-        // Mock: Check if there's already a pending invitation
-        const mockPendingInvites = ['alex@acme.com'];
-        if (mockPendingInvites.includes(data.email.toLowerCase().trim())) {
-            return {
-                success: false,
-                error: 'An invitation has already been sent to this email'
-            };
-        }
-
-        // Mock: Generate secure invitation token
-        const token = randomBytes(32).toString('hex');
-        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-        console.log('[v0] Mock: Created invitation', {
-            email: data.email,
-            role: data.role,
-            token,
-            expiresAt
+        const existingMember = await prisma.user.findUnique({
+            where: { email: values.email }
         });
 
-        // Mock: Send email (would integrate with real email service)
-        const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invite/${token}`;
-        console.log(
-            '[v0] Mock: Would send email to',
-            data.email,
-            'with URL:',
-            inviteUrl
-        );
+        if (existingMember) {
+            const companyMember = await prisma.companyMember.findFirst({
+                where: { userId: existingMember.id }
+            });
 
-        // Mock: Create audit log
-        console.log(
-            '[v0] Mock: Created audit log for company member invitation'
-        );
+            if (!companyMember)
+                return {
+                    success: false,
+                    error: 'Error in adding user, please contact support - Error 1021'
+                };
 
-        return { success: true, inviteId: `inv_${Date.now()}`, token };
+            if (companyMember.companyId !== companyId)
+                return {
+                    success: false,
+                    error: 'User belongs to a different company, unable to add them'
+                };
+
+            if (companyMember.role === 'COMPANY_ADMIN')
+                return {
+                    success: false,
+                    error: 'This user is already a company admin'
+                };
+
+            const updateAdmin = await prisma.companyMember.update({
+                where: { id: companyMember.id },
+                data: { role: 'COMPANY_ADMIN' }
+            });
+
+            if (!updateAdmin)
+                return {
+                    success: false,
+                    error: 'Error in adding user, please contact support - Error 1022'
+                };
+
+            const updateTeams = await prisma.teamMember.updateMany({
+                where: { team: { companyId }, userId: user.id },
+                data: { role: 'TEAM_ADMIN' }
+            });
+
+            if (!updateTeams)
+                return {
+                    success: false,
+                    error: 'Error in adding user, please contact support - Error 1023'
+                };
+
+            revalidatePath('/company');
+
+            await sendCompanyAddedAdminEmail({
+                email: existingMember.email,
+                name: existingMember.name,
+                companyName: company.name
+            });
+
+            await logCompanyAdminAdded(userSession.user.id, {
+                companyId: company.id,
+                userId: existingMember.id
+            });
+
+            return {
+                success: true,
+                method: 'added',
+                error: null
+            };
+        } else {
+            const pendingInvites = await prisma.companyInvite.findFirst({
+                where: { companyId, email: values.email }
+            });
+
+            if (pendingInvites)
+                return {
+                    success: false,
+                    error: 'An invitation has already been sent to this email'
+                };
+
+            const token = randomBytes(32).toString('hex');
+            const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+            const invite = await prisma.companyInvite.create({
+                data: {
+                    email: values.email,
+                    name: values.name,
+                    role: 'COMPANY_ADMIN',
+                    token,
+                    expiresAt,
+                    companyId,
+                    invitedBy: user.id
+                }
+            });
+            const link = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`;
+            await sendCompanyInviteAdminEmail({
+                email: values.email,
+                companyName: company.name,
+                link,
+                name: values.name
+            });
+
+            await logCompanyAdminInvited(userSession.user.id, {
+                companyId: company.id,
+                name: values.name,
+                email: values.email
+            });
+
+            return {
+                success: true,
+                method: 'invited',
+                inviteId: `inv_${Date.now()}`,
+                token,
+                error: null
+            };
+        }
     } catch (error) {
         console.error('Failed to invite company member:', error);
         return { success: false, error: 'Failed to send invitation' };
     }
-}
+};
 
-export async function getCompanyAdminMembers() {
+export const getCompanyAdminMembers = async () => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
@@ -92,7 +179,7 @@ export async function getCompanyAdminMembers() {
         };
     }
 
-    const { user, company, userCompany } = userSession;
+    const { company, userCompany } = userSession;
 
     if (userCompany.role !== 'COMPANY_ADMIN') {
         return {
@@ -115,33 +202,59 @@ export async function getCompanyAdminMembers() {
         console.error('Failed to fetch company members:', error);
         return { data: null, error: 'Error fetching members' };
     }
-}
+};
 
-export async function getCompanyInvitations(companyId: string) {
-    try {
-        console.log('[v0] Mock: Fetching company invitations for', companyId);
+export const getCompanyInvitations = async () => {
+    const userSession = await authCheckServer();
 
-        // Mock invitations data
-        const mockInvitations = [
-            {
-                id: 'inv_1',
-                email: 'alex@acme.com',
-                role: 'COMPANY_MEMBER' as const,
-                status: 'PENDING' as const,
-                expiresAt: new Date('2024-03-07'),
-                createdAt: new Date('2024-02-28'),
-                companyName: 'Acme Corporation'
-            }
-        ];
-
-        return mockInvitations;
-    } catch (error) {
-        console.error('Failed to fetch company invitations:', error);
-        return null;
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
     }
-}
+
+    const { company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    try {
+        const invitations = await prisma.companyInvite.findMany({
+            where: { companyId: company.id }
+        });
+
+        return { data: invitations, error: null };
+    } catch (error) {
+        return {
+            data: null,
+            error: `Failed to fetch company invitations: ${error}`
+        };
+    }
+};
 
 export async function cancelCompanyInvitation(inviteId: string) {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
     try {
         console.log('[v0] Mock: Cancelling company invitation', inviteId);
 
@@ -159,6 +272,23 @@ export async function cancelCompanyInvitation(inviteId: string) {
 }
 
 export async function removeCompanyMember(memberId: string) {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
     try {
         console.log('[v0] Mock: Removing company member', memberId);
 
@@ -187,6 +317,23 @@ export async function changeCompanyMemberRole(
     memberId: string,
     newRole: 'COMPANY_ADMIN' | 'COMPANY_MEMBER'
 ) {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
     try {
         console.log('[v0] Mock: Changing company member role', {
             memberId,
@@ -206,16 +353,56 @@ export async function changeCompanyMemberRole(
     }
 }
 
-export async function resendCompanyInvitation(inviteId: string) {
-    try {
-        console.log('[v0] Mock: Resending company invitation', inviteId);
+export const resendCompanyInvitation = async (id: string) => {
+    const userSession = await authCheckServer();
 
-        // Mock: Resend email
-        console.log('[v0] Mock: Resent invitation email');
-
-        return { success: true };
-    } catch (error) {
-        console.error('Failed to resend invitation:', error);
-        return { success: false, error: 'Failed to resend invitation' };
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
     }
-}
+
+    const { company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+    try {
+        const invite = await prisma.companyInvite.findUnique({ where: { id } });
+
+        if (!invite) {
+            return {
+                data: null,
+                error: 'Invite not found'
+            };
+        }
+
+        if (new Date() > invite.expiresAt) {
+            await prisma.companyInvite.update({
+                where: { id },
+                data: { status: 'EXPIRED' }
+            });
+            return {
+                data: null,
+                error: 'Invite expired'
+            };
+        }
+
+        const link = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${invite.token}`;
+
+        await sendCompanyInviteAdminEmail({
+            email: invite.email,
+            companyName: company.name,
+            link,
+            name: invite.name
+        });
+
+        return { data: true, error: null };
+    } catch (error) {
+        return { data: null, error: `Failed to resend invitation - ${error}` };
+    }
+};
