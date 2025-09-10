@@ -36,7 +36,6 @@ const CompanyMembersCard = ({
     const [isPendingResend, startTransitionResend] = useTransition();
     const [members, setMembers] = useState(membersData);
     const [pendingInvites, setPendingInvites] = useState(invitesData);
-    const [isLoading, setIsLoading] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [inviteId, setInviteId] = useState('');
     const [name, setName] = useState('');
@@ -109,197 +108,180 @@ const CompanyMembersCard = ({
                 )}
             </CardHeader>
             <CardContent className="space-y-4">
-                {isLoading ? (
-                    <div className="text-center py-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                    </div>
-                ) : (
-                    <>
-                        {/* Active Members */}
-                        <div className="space-y-3">
-                            {members.map((member) => (
-                                <div
-                                    key={member.id}
-                                    className="flex items-center justify-between p-3 border rounded-lg"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="relative">
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage
-                                                    src={
-                                                        member.user.image || ''
-                                                    }
-                                                    alt={`${member.user.name} ${member.user.lastName}`}
-                                                />
-                                                <AvatarFallback>
-                                                    {`${member.user.name[0]} ${member.user.lastName[0]}`}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <p className="text-sm font-medium">
-                                                    {`${member.user.name} ${member.user.lastName}`}
-                                                </p>
-                                                {company.creatorId ===
-                                                    member.user.id && (
-                                                    <Crown className="h-3 w-3 text-amber-500" />
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-muted-foreground">
-                                                {member.user.email}
-                                            </p>
-                                        </div>
-                                    </div>
+                {/* Active Members */}
+                <div className="space-y-3">
+                    {members.map((member) => (
+                        <div
+                            key={member.id}
+                            className="flex items-center justify-between p-3 border rounded-lg"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="relative">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage
+                                            src={member.user.image || ''}
+                                            alt={`${member.user.name} ${member.user.lastName}`}
+                                        />
+                                        <AvatarFallback>
+                                            {`${member.user.name[0]} ${member.user.lastName[0]}`}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </div>
+                                <div>
                                     <div className="flex items-center gap-2">
-                                        <Badge
-                                            variant={
-                                                member.role === 'COMPANY_ADMIN'
-                                                    ? 'default'
-                                                    : 'secondary'
-                                            }
-                                            className="text-xs"
-                                        >
-                                            {member.role === 'COMPANY_ADMIN'
-                                                ? 'Admin'
-                                                : 'Member'}
-                                        </Badge>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                >
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                {company.creatorId !==
-                                                    member.user.id && (
-                                                    <DropdownMenuItem
-                                                        onClick={() =>
-                                                            handleChangeRole(
-                                                                member.id,
-                                                                member.role ===
-                                                                    'COMPANY_ADMIN'
-                                                                    ? 'COMPANY_MEMBER'
-                                                                    : 'COMPANY_ADMIN'
-                                                            )
-                                                        }
-                                                    >
-                                                        {member.role ===
-                                                        'COMPANY_ADMIN'
-                                                            ? 'Remove Admin'
-                                                            : 'Make Admin'}
-                                                    </DropdownMenuItem>
-                                                )}
-                                                <DropdownMenuItem>
-                                                    View Profile
-                                                </DropdownMenuItem>
-                                                {member.user.status !==
-                                                    'ACTIVE' && (
-                                                    <DropdownMenuItem
-                                                        className="text-destructive"
-                                                        onClick={() =>
-                                                            handleRemoveMember(
-                                                                member.id
-                                                            )
-                                                        }
-                                                    >
-                                                        Remove Member
-                                                    </DropdownMenuItem>
-                                                )}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                        <p className="text-sm font-medium">
+                                            {`${member.user.name} ${member.user.lastName}`}
+                                        </p>
+                                        {company.creatorId ===
+                                            member.user.id && (
+                                            <Crown className="h-3 w-3 text-amber-500" />
+                                        )}
                                     </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        {member.user.email}
+                                    </p>
                                 </div>
-                            ))}
-                        </div>
-
-                        {/* Pending Invites */}
-                        {pendingInvites.length > 0 && (
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                    <Mail className="h-4 w-4" />
-                                    Pending Invites
-                                </div>
-                                {pendingInvites.map((invite) => (
-                                    <div
-                                        key={invite.id}
-                                        className="flex items-center justify-between p-3 border rounded-lg border-dashed"
-                                    >
-                                        <div>
-                                            <p className="text-sm font-medium">
-                                                {`${invite.name} - ${invite.email}`}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                Invited{' '}
-                                                {invite.createdAt.toLocaleDateString()}{' '}
-                                                • Expires{' '}
-                                                {invite.expiresAt.toLocaleDateString()}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Badge
-                                                variant="outline"
-                                                className="text-xs"
-                                            >
-                                                Pending
-                                            </Badge>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        disabled={
-                                                            isPendingResend
-                                                        }
-                                                    >
-                                                        {isPendingResend ? (
-                                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                                        ) : (
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        )}
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem
-                                                        onClick={() =>
-                                                            handleResendInvite(
-                                                                invite.id
-                                                            )
-                                                        }
-                                                    >
-                                                        Resend Invite
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        className="text-destructive"
-                                                        onClick={() =>
-                                                            handleCancelInvite(
-                                                                invite.id,
-                                                                invite.name,
-                                                                invite.email
-                                                            )
-                                                        }
-                                                    >
-                                                        Cancel Invite
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-                                    </div>
-                                ))}
-                                <CancelInviteDialog
-                                    name={name}
-                                    email={email}
-                                    inviteId={inviteId}
-                                    setPendingInvites={setPendingInvites}
-                                    open={cancelDialogOpen}
-                                    onOpenChange={setCancelDialogOpen}
-                                />
                             </div>
-                        )}
-                    </>
+                            <div className="flex items-center gap-2">
+                                <Badge
+                                    variant={
+                                        member.role === 'COMPANY_ADMIN'
+                                            ? 'default'
+                                            : 'secondary'
+                                    }
+                                    className="text-xs"
+                                >
+                                    {member.role === 'COMPANY_ADMIN'
+                                        ? 'Admin'
+                                        : 'Member'}
+                                </Badge>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        {company.creatorId !==
+                                            member.user.id && (
+                                            <DropdownMenuItem
+                                                onClick={() =>
+                                                    handleChangeRole(
+                                                        member.id,
+                                                        member.role ===
+                                                            'COMPANY_ADMIN'
+                                                            ? 'COMPANY_MEMBER'
+                                                            : 'COMPANY_ADMIN'
+                                                    )
+                                                }
+                                            >
+                                                {member.role === 'COMPANY_ADMIN'
+                                                    ? 'Remove Admin'
+                                                    : 'Make Admin'}
+                                            </DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuItem>
+                                            View Profile
+                                        </DropdownMenuItem>
+                                        {member.user.status !== 'ACTIVE' && (
+                                            <DropdownMenuItem
+                                                className="text-destructive"
+                                                onClick={() =>
+                                                    handleRemoveMember(
+                                                        member.id
+                                                    )
+                                                }
+                                            >
+                                                Remove Member
+                                            </DropdownMenuItem>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Pending Invites */}
+                {pendingInvites.length > 0 && (
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                            <Mail className="h-4 w-4" />
+                            Pending Invites
+                        </div>
+                        {pendingInvites.map((invite) => (
+                            <div
+                                key={invite.id}
+                                className="flex items-center justify-between p-3 border rounded-lg border-dashed"
+                            >
+                                <div>
+                                    <p className="text-sm font-medium">
+                                        {`${invite.name} - ${invite.email}`}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Invited{' '}
+                                        {invite.createdAt.toLocaleDateString()}{' '}
+                                        • Expires{' '}
+                                        {invite.expiresAt.toLocaleDateString()}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                    >
+                                        Pending
+                                    </Badge>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                disabled={isPendingResend}
+                                            >
+                                                {isPendingResend ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                )}
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem
+                                                onClick={() =>
+                                                    handleResendInvite(
+                                                        invite.id
+                                                    )
+                                                }
+                                            >
+                                                Resend Invite
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                className="text-destructive"
+                                                onClick={() =>
+                                                    handleCancelInvite(
+                                                        invite.id,
+                                                        invite.name,
+                                                        invite.email
+                                                    )
+                                                }
+                                            >
+                                                Cancel Invite
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            </div>
+                        ))}
+                        <CancelInviteDialog
+                            name={name}
+                            email={email}
+                            inviteId={inviteId}
+                            setPendingInvites={setPendingInvites}
+                            open={cancelDialogOpen}
+                            onOpenChange={setCancelDialogOpen}
+                        />
+                    </div>
                 )}
             </CardContent>
         </Card>

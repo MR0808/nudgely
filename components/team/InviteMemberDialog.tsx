@@ -80,7 +80,7 @@ export function InviteMemberDialog({
         }
     }
 
-    const canInviteMembers = companyPlan === 'PRO' || currentMemberCount < 3;
+    const canInviteMembers = companyPlan === 'GROWTH' || currentMemberCount < 3;
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -198,7 +198,7 @@ export function InviteMemberDialog({
                             <div className="flex items-center gap-2">
                                 <Badge
                                     variant={
-                                        companyPlan === 'PRO'
+                                        companyPlan === 'GROWTH'
                                             ? 'default'
                                             : 'secondary'
                                     }

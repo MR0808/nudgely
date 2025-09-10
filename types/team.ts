@@ -1,4 +1,5 @@
 import { getCurrentTeamBySlug } from '@/actions/team';
+import { PlanType } from '@/generated/prisma';
 import { auth } from '@/lib/auth';
 
 export type Session = typeof auth.$Infer.Session;
@@ -49,7 +50,7 @@ export interface TeamMainProps {
 export interface InviteMemberDialogProps {
     teamId: string;
     teamName: string;
-    companyPlan: 'FREE' | 'PRO';
+    companyPlan: PlanType;
     currentMemberCount: number;
     trigger?: React.ReactNode;
 }
