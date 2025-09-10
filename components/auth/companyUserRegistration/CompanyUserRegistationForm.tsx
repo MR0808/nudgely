@@ -115,6 +115,7 @@ const CompanyUserRegistationForm = ({
                                 email={registrationData.email}
                                 userId={registrationData.userId}
                                 password={registrationData.password}
+                                name={registrationData.name}
                                 onNext={(userId) => {
                                     updateRegistrationData({ userId });
                                     goToStep('complete');
@@ -123,10 +124,7 @@ const CompanyUserRegistationForm = ({
                         )}
 
                         {currentStep === 'complete' && (
-                            <CompanyUserRegistationComplete
-                                name={registrationData.name}
-                                email={registrationData.email}
-                            />
+                            <CompanyUserRegistationComplete />
                         )}
                     </div>
                 </CardContent>

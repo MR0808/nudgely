@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Mail, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 import {
     Form,
@@ -19,15 +19,21 @@ import {
     InputOTPGroup,
     InputOTPSlot
 } from '@/components/ui/input-otp';
-import { verifyEmailOTP, resendEmailOTP } from '@/actions/verify-email';
+import {
+    verifyEmailOTP,
+    resendEmailOTP,
+    sendEmailAfterVerification
+} from '@/actions/verify-email';
 import { EmailVerificationFormProps } from '@/types/register';
 import { OTPSchema } from '@/schemas/register';
 import { SubmitButtonAuth } from '@/components/form/FormInputs';
+import { authClient } from '@/lib/auth-client';
 
 const CompanyUserEmailVerificationForm = ({
     email,
     userId,
     password,
+    name,
     onNext
 }: EmailVerificationFormProps) => {
     const [isPending, startTransition] = useTransition();
@@ -54,16 +60,25 @@ const CompanyUserEmailVerificationForm = ({
         }
 
         startTransition(async () => {
-            const result = await verifyEmailOTP(
-                userId,
-                values.otp,
-                email,
-                password
-            );
+            toast.dismiss();
+            const result = await verifyEmailOTP(userId, values.otp);
             if (result.error) {
                 toast.error(result.error, { position: 'top-center' });
                 form.setError('otp', { message: result.error });
             } else {
+                if (email && password) {
+                    await sendEmailAfterVerification(email, name);
+                    const { data, error } = await authClient.signIn.email({
+                        email,
+                        password,
+                        rememberMe: true
+                    });
+                    if (error) {
+                        toast.error(
+                            'There was an error signing you in, please go to the login page'
+                        );
+                    }
+                }
                 onNext(userId);
             }
         });

@@ -43,6 +43,7 @@ export interface EmailVerificationFormProps {
     email: string;
     userId?: string;
     password: string;
+    name: string;
     onNext: (userId: string) => void;
 }
 

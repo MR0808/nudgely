@@ -66,6 +66,22 @@ export const verifyEmailOTP = async (
     }
 };
 
+export const sendEmailAfterVerification = async (
+    email: string,
+    name: string
+) => {
+    try {
+        await sendWelcomeEmail({
+            email,
+            name: name
+        });
+        return { success: true };
+    } catch (error) {
+        console.error('Sign in error:', error);
+        return { error: 'Failed to sign in. Please try again.' };
+    }
+};
+
 export const resendEmailOTP = async (userId: string) => {
     try {
         // Get user details

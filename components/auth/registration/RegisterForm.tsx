@@ -43,6 +43,7 @@ const RegisterForm = () => {
                     email={registrationData.email}
                     userId={registrationData.userId}
                     password={registrationData.password}
+                    name={registrationData.name}
                     onNext={(userId) => {
                         updateRegistrationData({ userId });
                         goToStep('complete');

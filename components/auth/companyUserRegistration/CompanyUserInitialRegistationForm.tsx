@@ -49,6 +49,7 @@ const CompanyUserInitialRegistationForm = ({
     });
 
     const onSubmit = (values: z.infer<typeof CompanyUserRegisterSchema>) => {
+        toast.dismiss();
         startTransition(async () => {
             const result = await companyUserRegisterInitial(
                 values,
@@ -69,6 +70,7 @@ const CompanyUserInitialRegistationForm = ({
     const onError: SubmitErrorHandler<
         z.infer<typeof CompanyUserRegisterSchema>
     > = (errors) => {
+        toast.dismiss();
         const errorMessages = Object.entries(errors).map(([field, error]) => (
             <li key={field}>{error.message || `Invalid ${field}`}</li>
         ));

@@ -33,6 +33,7 @@ export function generateMetadata(): Metadata {
 
 const RegisterPage = async (props: { params: ParamsToken }) => {
     await isLoggedIn();
+    console.log('no');
 
     const { token } = await props.params;
     const invitation = await getCompanyInvitationByToken(token);
