@@ -6,3 +6,5 @@ export type ActionResult<T = any> = {
 };
 
 export type ParamsSlug = Promise<{ slug: string }>;
+
+export type ParamsToken = Promise<{ token: string }>;

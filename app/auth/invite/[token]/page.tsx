@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import AuthTemplate from '@/components/auth/AuthTemplate';
 import LoginForm from '@/components/auth/LoginForm';
 import { isLoggedIn } from '@/lib/authCheck';
+import { ParamsToken } from '@/types/global';
 
 export function generateMetadata(): Metadata {
     return {
@@ -11,8 +12,8 @@ export function generateMetadata(): Metadata {
     };
 }
 
-const RegisterPage = async () => {
-    await isLoggedIn();
+const RegisterPage = async (props: { params: ParamsToken }) => {
+    const { token } = await props.params;
 
     return (
         <AuthTemplate>
