@@ -12,9 +12,31 @@ export interface RegistrationData {
     terms: boolean;
 }
 
+export interface CompanyUserRegistrationData {
+    userId?: string;
+    name: string;
+    lastName: string;
+    email: string;
+    password: string;
+    terms: boolean;
+}
+
 export interface InitialRegistrationFormProps {
     data: RegistrationData;
     onNext: (data: RegistrationData & { userId: string }) => void;
+}
+
+export interface CompanyUserRegistationFormProps {
+    companyId: string;
+    inviteId: string;
+    email: string;
+}
+
+export interface CompanyUserInitialRegistationFormProps {
+    companyId: string;
+    inviteId: string;
+    data: CompanyUserRegistrationData;
+    onNext: (data: CompanyUserRegistrationData & { userId: string }) => void;
 }
 
 export interface EmailVerificationFormProps {

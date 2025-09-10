@@ -24,7 +24,7 @@ import { EmailVerificationFormProps } from '@/types/register';
 import { OTPSchema } from '@/schemas/register';
 import { SubmitButtonAuth } from '@/components/form/FormInputs';
 
-const EmailVerificationForm = ({
+const CompanyUserEmailVerificationForm = ({
     email,
     userId,
     password,
@@ -89,19 +89,6 @@ const EmailVerificationForm = ({
 
     return (
         <div>
-            <div className="text-center mb-5">
-                <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-5">
-                    <Mail className="w-8 h-8 text-blue-600" />
-                </div>
-                <h4 className="font-medium text-lg mb-2">Verify Your Email</h4>
-                <div className="text-default-500  text-base">
-                    We&apos;ve sent a 6-digit code to <strong>{email}</strong>
-                </div>
-                <div className="text-default-500  text-base">
-                    Please enter it below
-                </div>
-            </div>
-
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
@@ -163,4 +150,4 @@ const EmailVerificationForm = ({
     );
 };
 
-export default EmailVerificationForm;
+export default CompanyUserEmailVerificationForm;

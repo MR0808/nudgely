@@ -149,7 +149,7 @@ export const inviteCompanyAdmin = async (
                 }
             });
 
-            const link = `${process.env.NEXT_PUBLIC_APP_URL}/auth/invite/${token}`;
+            const link = `${process.env.NEXT_PUBLIC_APP_URL}/auth/invite/company/${token}`;
             await sendCompanyInviteAdminEmail({
                 email: values.email,
                 companyName: company.name,
@@ -410,7 +410,7 @@ export const resendCompanyInvitation = async (id: string) => {
             };
         }
 
-        const link = `${process.env.NEXT_PUBLIC_APP_URL}/auth/invite/${invite.token}`;
+        const link = `${process.env.NEXT_PUBLIC_APP_URL}/auth/invite/company/${invite.token}`;
 
         await sendCompanyInviteAdminEmail({
             email: invite.email,

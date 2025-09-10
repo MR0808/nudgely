@@ -9,7 +9,8 @@ export type AuditCategory =
     | 'billing'
     | 'admin'
     | 'team'
-    | 'company';
+    | 'company'
+    | 'invite';
 
 export type AuditAction =
     // Authentication actions
@@ -61,6 +62,10 @@ export type AuditAction =
     | 'company.company_logo_updated'
     | 'company.company_admin_invited'
     | 'company.company_admin_added'
+
+    // Invite actions
+    | 'invite.company_accept_invite'
+    | 'invite.company_decline_invite'
 
     // Data actions
     | 'data.exported'

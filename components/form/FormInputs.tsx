@@ -45,6 +45,23 @@ export const InputAuth = forwardRef<HTMLInputElement, FormInputProps>(
     }
 );
 
+export const InputAuthCompanyUser = forwardRef<
+    HTMLInputElement,
+    FormInputProps
+>(function PasswordInputAuth(
+    { label, name, type, defaultValue, ...props },
+    ref
+) {
+    return (
+        <Input
+            type={type}
+            name={name}
+            {...props}
+            className="block peer w-full px-4 py-3 border border-gray-300  text-gray-800 placeholder-gray-400 dark:bg-gray-700 dark:text-white dark:border-gray-600 transition-colors focus:border-indigo-500 focus:outline-0 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-500"
+        />
+    );
+});
+
 export const PasswordInputAuth = forwardRef<HTMLInputElement, FormInputProps>(
     function PasswordInputAuth(
         { label, name, type, defaultValue, ...props },
@@ -81,6 +98,44 @@ export const PasswordInputAuth = forwardRef<HTMLInputElement, FormInputProps>(
         );
     }
 );
+
+export const PasswordInputAuthCompanyUser = forwardRef<
+    HTMLInputElement,
+    FormInputProps
+>(function PasswordInputAuth(
+    { label, name, type, defaultValue, ...props },
+    ref
+) {
+    const [showPassword, setShowPassword] = useState(false);
+    return (
+        <>
+            <Input
+                type={showPassword ? 'text' : 'password'}
+                name={name}
+                className="block peer w-full px-4 py-3 border border-gray-300  text-gray-800 dark:bg-gray-700 dark:text-white dark:border-gray-600 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:outline-0 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-500"
+                {...props}
+            />
+            <div
+                className="absolute translate-y-8 right-1 cursor-pointer"
+                tabIndex={-1}
+            >
+                <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => {
+                        setShowPassword((prev) => !prev);
+                    }}
+                >
+                    {showPassword ? (
+                        <Eye className="size-5" />
+                    ) : (
+                        <EyeOff className="size-5" />
+                    )}
+                </Button>
+            </div>
+        </>
+    );
+});
 
 export const SubmitButtonAuth = ({
     className = '',

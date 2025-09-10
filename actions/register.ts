@@ -5,7 +5,7 @@ import { auth } from '@/lib/auth';
 import { APIError } from 'better-auth/api';
 import GithubSlugger from 'github-slugger';
 
-import { RegisterSchema } from '@/schemas/register';
+import { CompanyUserRegisterSchema, RegisterSchema } from '@/schemas/register';
 import { prisma } from '@/lib/prisma';
 import {
     logUserRegistered,
@@ -182,5 +182,111 @@ export const checkEmail = async (email: string): Promise<EmailCheckResult> => {
     } catch (error) {
         console.error('Error checking email:', error);
         return { isDisposable: false, error: 'Server error occurred' };
+    }
+};
+
+export const companyUserRegisterInitial = async (
+    values: z.infer<typeof CompanyUserRegisterSchema>,
+    companyId: string,
+    inviteId: string
+) => {
+    const validatedFields = CompanyUserRegisterSchema.safeParse(values);
+
+    if (!validatedFields.success) {
+        return { error: 'Invalid fields!' };
+    }
+
+    const { name, lastName, email, password } = validatedFields.data;
+
+    try {
+        const isEmailDisposable = await checkEmail(email);
+
+        if (isEmailDisposable.error) {
+            return {
+                error: `Email is invalid - ${isEmailDisposable.error}`
+            };
+        } else {
+            if (isEmailDisposable.isDisposable) {
+                return {
+                    error: `Email is invalid`
+                };
+            }
+        }
+
+        const existingUser = await prisma.user.findUnique({
+            where: { email }
+        });
+
+        if (existingUser) {
+            return { error: 'An account with this email already exists.' };
+        }
+
+        const data = await auth.api.signUpEmail({
+            body: {
+                name,
+                lastName,
+                email,
+                password,
+                role: 'USER'
+            }
+        });
+
+        const otp = generateOTP();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        const company = await prisma.company.findUnique({
+            where: { id: companyId }
+        });
+
+        if (!company) {
+            return { error: 'Company not found' };
+        }
+
+        await prisma.companyMember.create({
+            data: {
+                companyId: company.id,
+                userId: data.user.id,
+                role: 'COMPANY_ADMIN',
+                companyInviteId: inviteId
+            }
+        });
+
+        await prisma.verification.create({
+            data: {
+                identifier: `email-otp:${data.user.id}`,
+                value: otp,
+                expiresAt
+            }
+        });
+
+        const emailSent = await sendVerificationEmail({ email, otp, name });
+
+        if (emailSent.error) {
+            return {
+                error: 'Failed to send verification email'
+            };
+        }
+
+        await prisma.companyInvite.update({
+            where: { id: inviteId },
+            data: {
+                status: 'ACCEPTED'
+            }
+        });
+
+        await logUserRegistered(data.user.id, {
+            registrationMethod: 'email',
+            emailVerified: false
+        });
+
+        await logEmailVerifyRequested(data.user.id, data.user.email);
+
+        return { userId: data.user.id, error: null };
+    } catch (err) {
+        if (err instanceof APIError) {
+            return { error: err.message };
+        }
+
+        return { error: 'Internal Server Error' };
     }
 };

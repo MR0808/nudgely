@@ -412,10 +412,12 @@ model CompanyMember {
 
   role CompanyRole @default(COMPANY_MEMBER)
 
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
+  company         Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId       String
+  companyInvite   CompanyInvite? @relation(fields: [companyInviteId], references: [id], onDelete: Cascade)
+  companyInviteId String?        @unique
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
 
   @@unique([companyId, userId])
   @@map("company_members")
@@ -433,9 +435,10 @@ model CompanyInvite {
   token     String           @unique
   expiresAt DateTime
 
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId String
-  invitedBy String // User ID who sent the invite
+  company        Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId      String
+  invitedBy      String // User ID who sent the invite
+  companyMembers CompanyMember?
 
   @@unique([companyId, email])
   @@map("company_invites")
