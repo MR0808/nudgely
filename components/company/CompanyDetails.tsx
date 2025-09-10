@@ -120,13 +120,13 @@ const CompanyDetails = ({
                                 <div className="flex items-center gap-2 mt-1">
                                     <Badge
                                         variant={
-                                            company.plan === 'PRO'
+                                            company.plan === 'GROWTH'
                                                 ? 'default'
                                                 : 'secondary'
                                         }
                                         className="gap-1"
                                     >
-                                        {company.plan === 'PRO' && (
+                                        {company.plan === 'GROWTH' && (
                                             <Crown className="h-3 w-3" />
                                         )}
                                         {company.plan}

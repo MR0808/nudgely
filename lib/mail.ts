@@ -101,17 +101,24 @@ export const sendCompanyInviteAdminEmail = async ({
     email,
     link,
     companyName,
-    name
+    name,
+    expiresAt
 }: {
     email: string;
     link: string;
     companyName: string;
     name: string;
+    expiresAt: Date;
 }) => {
     await resend.emails.send({
         from: fromNudgely,
         to: email,
         subject: 'Nudgely - Invite to be an admin',
-        react: CompanyInviteAdminEmailTemplate({ link, companyName, name })
+        react: CompanyInviteAdminEmailTemplate({
+            link,
+            companyName,
+            name,
+            expiresAt
+        })
     });
 };

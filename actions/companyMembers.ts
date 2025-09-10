@@ -111,9 +111,16 @@ export const inviteCompanyAdmin = async (
                 userId: existingMember.id
             });
 
+            const members = await prisma.companyMember.findMany({
+                where: { companyId: company.id, role: 'COMPANY_ADMIN' },
+                include: { user: true },
+                orderBy: { user: { name: 'asc' } }
+            });
+
             return {
                 success: true,
                 method: 'added',
+                members,
                 error: null
             };
         } else {
@@ -130,7 +137,7 @@ export const inviteCompanyAdmin = async (
             const token = randomBytes(32).toString('hex');
             const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-            const invite = await prisma.companyInvite.create({
+            await prisma.companyInvite.create({
                 data: {
                     email: values.email,
                     name: values.name,
@@ -141,12 +148,14 @@ export const inviteCompanyAdmin = async (
                     invitedBy: user.id
                 }
             });
+
             const link = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`;
             await sendCompanyInviteAdminEmail({
                 email: values.email,
                 companyName: company.name,
                 link,
-                name: values.name
+                name: values.name,
+                expiresAt
             });
 
             await logCompanyAdminInvited(userSession.user.id, {
@@ -155,11 +164,17 @@ export const inviteCompanyAdmin = async (
                 email: values.email
             });
 
+            const invitations = await prisma.companyInvite.findMany({
+                where: { companyId: company.id },
+                orderBy: { createdAt: 'asc' }
+            });
+
+            revalidatePath('/company');
+
             return {
                 success: true,
                 method: 'invited',
-                inviteId: `inv_${Date.now()}`,
-                token,
+                invitations,
                 error: null
             };
         }
@@ -191,7 +206,8 @@ export const getCompanyAdminMembers = async () => {
     try {
         const members = await prisma.companyMember.findMany({
             where: { companyId: company.id, role: 'COMPANY_ADMIN' },
-            include: { user: true }
+            include: { user: true },
+            orderBy: { user: { name: 'asc' } }
         });
 
         if (!members) {
@@ -225,7 +241,8 @@ export const getCompanyInvitations = async () => {
 
     try {
         const invitations = await prisma.companyInvite.findMany({
-            where: { companyId: company.id }
+            where: { companyId: company.id },
+            orderBy: { createdAt: 'asc' }
         });
 
         return { data: invitations, error: null };
@@ -237,7 +254,7 @@ export const getCompanyInvitations = async () => {
     }
 };
 
-export async function cancelCompanyInvitation(inviteId: string) {
+export const cancelCompanyInvitation = async (id: string) => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
@@ -256,20 +273,21 @@ export async function cancelCompanyInvitation(inviteId: string) {
         };
     }
     try {
-        console.log('[v0] Mock: Cancelling company invitation', inviteId);
+        await prisma.companyInvite.delete({ where: { id } });
 
-        // Mock: Delete the invitation
-        console.log('[v0] Mock: Deleted invitation', inviteId);
+        const data = await prisma.companyInvite.findMany({
+            where: { companyId: company.id },
+            orderBy: { createdAt: 'asc' }
+        });
 
-        // Mock: Create audit log
-        console.log('[v0] Mock: Created audit log for cancelled invitation');
+        revalidatePath('/company');
 
-        return { success: true };
+        return { data, error: null };
     } catch (error) {
         console.error('Failed to cancel invitation:', error);
-        return { success: false, error: 'Failed to cancel invitation' };
+        return { data: null, error: 'Failed to cancel invitation' };
     }
-}
+};
 
 export async function removeCompanyMember(memberId: string) {
     const userSession = await authCheckServer();
@@ -398,7 +416,8 @@ export const resendCompanyInvitation = async (id: string) => {
             email: invite.email,
             companyName: company.name,
             link,
-            name: invite.name
+            name: invite.name,
+            expiresAt: invite.expiresAt
         });
 
         return { data: true, error: null };

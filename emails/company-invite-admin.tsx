@@ -16,6 +16,7 @@ interface CompanyInviteAdminEmailTemplateProps {
     link?: string;
     companyName?: string;
     name?: string;
+    expiresAt?: Date;
 }
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL
@@ -25,7 +26,8 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL
 export const CompanyInviteAdminEmailTemplate = ({
     link,
     companyName,
-    name
+    name,
+    expiresAt
 }: CompanyInviteAdminEmailTemplateProps) => {
     return (
         <Html>
@@ -53,7 +55,8 @@ export const CompanyInviteAdminEmailTemplate = ({
                     </Button>
 
                     <Text style={text}>
-                        This invite will expire 7 days from the original invite.
+                        This invite will expire on{' '}
+                        {expiresAt?.toLocaleDateString()}.
                     </Text>
 
                     <Text style={text}>

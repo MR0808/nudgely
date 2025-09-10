@@ -36,6 +36,8 @@ const InviteCompanyMemberDialog = ({
     companyName,
     companyPlan,
     currentMemberCount,
+    setMembers,
+    setPendingInvites,
     trigger
 }: InviteCompanyMemberDialogProps) => {
     const [isPending, startTransition] = useTransition();
@@ -59,10 +61,14 @@ const InviteCompanyMemberDialog = ({
                 toast.error(data.error);
             }
             if (data.success) {
-                if (data.method === 'added')
+                if (data.method === 'added') {
+                    if (data.members) setMembers(data.members);
                     toast.success('User successfully added');
-                if (data.method === 'invited')
+                }
+                if (data.method === 'invited') {
+                    if (data.invitations) setPendingInvites(data.invitations);
                     toast.success('User successfully invited');
+                }
                 setOpen(false);
                 form.reset();
             }
@@ -139,7 +145,7 @@ const InviteCompanyMemberDialog = ({
                             <div className="flex items-center gap-2">
                                 <Badge
                                     variant={
-                                        companyPlan === 'PRO'
+                                        companyPlan === 'GROWTH'
                                             ? 'default'
                                             : 'secondary'
                                     }

@@ -51,7 +51,9 @@ enum IntervalUnit {
 
 enum PlanType {
   FREE
-  PRO
+  STARTER
+  GROWTH
+  SCALE
 }
 
 enum Gender {

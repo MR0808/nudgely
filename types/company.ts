@@ -8,7 +8,9 @@ import {
     CompanySize,
     Country,
     Industry,
-    Region
+    Region,
+    PlanType,
+    CompanyRole
 } from '@/generated/prisma';
 
 import { auth } from '@/lib/auth';
@@ -38,7 +40,7 @@ export type Company = NonNullable<
 
 export interface CompanyProps {
     company: Company;
-    userRole: 'COMPANY_ADMIN' | 'COMPANY_MEMBER';
+    userRole: CompanyRole;
     image: Image | null;
     countries: Country[];
     regions: Region[];
@@ -68,8 +70,20 @@ export interface UpdateLogoDialogProps {
 export interface InviteCompanyMemberDialogProps {
     companyId: string;
     companyName: string;
-    companyPlan: 'FREE' | 'PRO';
+    companyPlan: PlanType;
     currentMemberCount: number;
+    setMembers: (members: Members) => void;
+    setPendingInvites: (pendingInvites: CompanyInvites) => void;
+    trigger?: React.ReactNode;
+}
+
+export interface CancelInviteDialogProps {
+    name: string;
+    email: string;
+    inviteId: string;
+    setPendingInvites: (pendingInvites: CompanyInvites) => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
     trigger?: React.ReactNode;
 }
 

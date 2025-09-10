@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -21,14 +21,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import InviteCompanyMemberDialog from '@/components/company/InviteCompanyMemberDialog';
 import {
-    getCompanyAdminMembers,
-    getCompanyInvitations,
     removeCompanyMember,
     changeCompanyMemberRole,
-    cancelCompanyInvitation,
     resendCompanyInvitation
 } from '@/actions/companyMembers';
 import { CompanyMembersCardProps } from '@/types/company';
+import CancelInviteDialog from '@/components/company/CancelInviteDialog';
 
 const CompanyMembersCard = ({
     company,
@@ -36,10 +34,13 @@ const CompanyMembersCard = ({
     invitesData
 }: CompanyMembersCardProps) => {
     const [isPendingResend, startTransitionResend] = useTransition();
-
     const [members, setMembers] = useState(membersData);
     const [pendingInvites, setPendingInvites] = useState(invitesData);
     const [isLoading, setIsLoading] = useState(false);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [inviteId, setInviteId] = useState('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
 
     const handleRemoveMember = async (memberId: string) => {
         const result = await removeCompanyMember(memberId);
@@ -62,11 +63,15 @@ const CompanyMembersCard = ({
         }
     };
 
-    const handleCancelInvite = async (inviteId: string) => {
-        const result = await cancelCompanyInvitation(inviteId);
-        if (result.success) {
-            setPendingInvites((prev) => prev.filter((i) => i.id !== inviteId));
-        }
+    const handleCancelInvite = async (
+        inviteId: string,
+        name: string,
+        email: string
+    ) => {
+        setInviteId(inviteId);
+        setName(name);
+        setEmail(email);
+        setCancelDialogOpen(true);
     };
 
     const handleResendInvite = async (inviteId: string) => {
@@ -92,12 +97,14 @@ const CompanyMembersCard = ({
                     </CardTitle>
                     <CardDescription>Manage company admins.</CardDescription>
                 </div>
-                {company.plan === 'PRO' && (
+                {company.plan !== 'FREE' && (
                     <InviteCompanyMemberDialog
                         companyId={company.id}
                         companyName={company.name}
                         companyPlan={company.plan}
                         currentMemberCount={members.length}
+                        setMembers={setMembers}
+                        setPendingInvites={setPendingInvites}
                     />
                 )}
             </CardHeader>
@@ -269,7 +276,9 @@ const CompanyMembersCard = ({
                                                         className="text-destructive"
                                                         onClick={() =>
                                                             handleCancelInvite(
-                                                                invite.id
+                                                                invite.id,
+                                                                invite.name,
+                                                                invite.email
                                                             )
                                                         }
                                                     >
@@ -280,6 +289,14 @@ const CompanyMembersCard = ({
                                         </div>
                                     </div>
                                 ))}
+                                <CancelInviteDialog
+                                    name={name}
+                                    email={email}
+                                    inviteId={inviteId}
+                                    setPendingInvites={setPendingInvites}
+                                    open={cancelDialogOpen}
+                                    onOpenChange={setCancelDialogOpen}
+                                />
                             </div>
                         )}
                     </>
