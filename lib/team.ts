@@ -94,7 +94,8 @@ export async function checkCompanyLimits(userId: string, companyId?: string) {
 
         return {
             canCreateCompany: ownedCompanies.length === 0,
-            canCreateTeam: company.plan === 'PRO' || company.teams.length === 0,
+            canCreateTeam:
+                company.plan === 'GROWTH' || company.teams.length === 0,
             currentPlan: company.plan,
             isCompanyAdmin: user.companyMember.some(
                 (m) => m.companyId === companyId && m.role === 'COMPANY_ADMIN'

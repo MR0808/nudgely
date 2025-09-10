@@ -6,12 +6,12 @@ import { isLoggedIn } from '@/lib/authCheck';
 
 export function generateMetadata(): Metadata {
     return {
-        title: 'Login',
-        description: 'Nudgely Login'
+        title: 'Invite',
+        description: 'Nudgely Invite'
     };
 }
 
-const LoginPage = async () => {
+const RegisterPage = async () => {
     await isLoggedIn();
 
     return (
@@ -20,4 +20,4 @@ const LoginPage = async () => {
         </AuthTemplate>
     );
 };
-export default LoginPage;
+export default RegisterPage;
