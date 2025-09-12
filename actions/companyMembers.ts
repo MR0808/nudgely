@@ -13,7 +13,8 @@ import {
 import { InviteCompanyAdminSchema } from '@/schemas/companyMember';
 import {
     logCompanyAdminAdded,
-    logCompanyAdminInvited
+    logCompanyAdminInvited,
+    logCompanyAdminRemoved
 } from '@/actions/audit/audit-company';
 
 export const inviteCompanyAdmin = async (
@@ -87,16 +88,28 @@ export const inviteCompanyAdmin = async (
                     error: 'Error in adding user, please contact support - Error 1022'
                 };
 
-            const updateTeams = await prisma.teamMember.updateMany({
-                where: { team: { companyId }, userId: user.id },
-                data: { role: 'TEAM_ADMIN' }
-            });
+            const teams = await prisma.team.findMany({ where: { companyId } });
 
-            if (!updateTeams)
-                return {
-                    success: false,
-                    error: 'Error in adding user, please contact support - Error 1023'
-                };
+            for (const team of teams) {
+                const updateTeam = await prisma.teamMember.findFirst({
+                    where: { teamId: team.id, userId: user.id }
+                });
+
+                if (updateTeam) {
+                    await prisma.teamMember.update({
+                        where: { id: updateTeam.id },
+                        data: { role: 'TEAM_ADMIN' }
+                    });
+                } else {
+                    await prisma.teamMember.create({
+                        data: {
+                            teamId: team.id,
+                            userId: existingMember.id,
+                            role: 'TEAM_ADMIN'
+                        }
+                    });
+                }
+            }
 
             revalidatePath('/company');
 
@@ -165,7 +178,7 @@ export const inviteCompanyAdmin = async (
             });
 
             const invitations = await prisma.companyInvite.findMany({
-                where: { companyId: company.id },
+                where: { companyId: company.id, NOT: { status: 'ACCEPTED' } },
                 orderBy: { createdAt: 'asc' }
             });
 
@@ -241,7 +254,7 @@ export const getCompanyInvitations = async () => {
 
     try {
         const invitations = await prisma.companyInvite.findMany({
-            where: { companyId: company.id },
+            where: { companyId: company.id, NOT: { status: 'ACCEPTED' } },
             orderBy: { createdAt: 'asc' }
         });
 
@@ -289,47 +302,71 @@ export const cancelCompanyInvitation = async (id: string) => {
     }
 };
 
-export async function removeCompanyMember(memberId: string) {
+export const removeCompanyAdminMember = async (memberId: string) => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
         return {
-            data: null,
+            success: false,
+            members: null,
             error: 'Not authorised'
         };
     }
 
-    const { company, userCompany } = userSession;
+    const { company, userCompany, user } = userSession;
 
     if (userCompany.role !== 'COMPANY_ADMIN') {
         return {
-            data: null,
+            success: false,
+            members: null,
             error: 'Not authorised'
         };
     }
     try {
-        console.log('[v0] Mock: Removing company member', memberId);
-
         // Mock: Prevent removing yourself
-        if (memberId === '1') {
+        if (memberId === user.id) {
             return {
                 success: false,
+                members: null,
                 error: 'Cannot remove yourself from the company'
             };
         }
 
-        // Mock: Remove the member
-        console.log('[v0] Mock: Removed member', memberId);
+        const companyMember = await prisma.companyMember.update({
+            where: { id: memberId },
+            data: { role: 'COMPANY_MEMBER' }
+        });
 
-        // Mock: Create audit log
-        console.log('[v0] Mock: Created audit log for removed member');
+        await prisma.teamMember.updateMany({
+            where: { userId: companyMember.id },
+            data: { role: 'TEAM_MEMBER' }
+        });
 
-        return { success: true };
+        await logCompanyAdminRemoved(userSession.user.id, {
+            companyId: company.id,
+            adminRemoved: memberId
+        });
+
+        const members = await prisma.companyMember.findMany({
+            where: { companyId: company.id, role: 'COMPANY_ADMIN' },
+            include: { user: true },
+            orderBy: { user: { name: 'asc' } }
+        });
+
+        return {
+            success: true,
+            members,
+            error: null
+        };
     } catch (error) {
         console.error('Failed to remove company member:', error);
-        return { success: false, error: 'Failed to remove company member' };
+        return {
+            success: false,
+            members: null,
+            error: 'Failed to remove company member'
+        };
     }
-}
+};
 
 export async function changeCompanyMemberRole(
     memberId: string,

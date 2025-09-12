@@ -15,6 +15,8 @@ import {
     getCompanyAdminMembers,
     getCompanyInvitations
 } from '@/actions/companyMembers';
+import CompanyTeamsCard from '@/components/company/CompanyTeamsCard';
+import { getCompanyTeams } from '@/actions/team';
 
 export async function generateMetadata(): Promise<Metadata> {
     const { company } = await getCompany();
@@ -52,7 +54,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const CompanyPage = async () => {
     const userSession = await authCheck('/company');
-    const { user } = userSession;
 
     const { company, userCompany, image } = await getCompany();
 
@@ -75,6 +76,7 @@ const CompanyPage = async () => {
     const industries = await getAllIndustries();
     const members = await getCompanyAdminMembers();
     const invitations = await getCompanyInvitations();
+    const teams = await getCompanyTeams();
 
     if (!members.data) {
         return (
@@ -117,8 +119,12 @@ const CompanyPage = async () => {
                         company={company}
                         membersData={members.data}
                         invitesData={invitations.data || []}
+                        userSession={userSession}
                     />
-                    {/* <CompanyTeamsCard /> */}
+                    <CompanyTeamsCard
+                        teams={teams.data || []}
+                        userSession={userSession}
+                    />
                 </div>
 
                 {/* <CompanyBillingCard /> */}

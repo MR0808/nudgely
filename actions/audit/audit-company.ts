@@ -55,6 +55,19 @@ export async function logCompanyAdminAdded(
     });
 }
 
+export async function logCompanyAdminRemoved(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'company.company_admin_removed',
+        category: 'company',
+        description: `Company admin removed`,
+        metadata: { ...metadata }
+    });
+}
+
 export async function logCompanyAdminInvited(
     userId: string,
     metadata?: Record<string, any>

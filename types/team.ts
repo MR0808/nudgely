@@ -1,9 +1,15 @@
-import { getCurrentTeamBySlug } from '@/actions/team';
+import { getCompanyTeams, getCurrentTeamBySlug } from '@/actions/team';
 import { PlanType } from '@/generated/prisma';
 import { auth } from '@/lib/auth';
 
 export type Session = typeof auth.$Infer.Session;
 export type SessionType = Awaited<ReturnType<typeof auth.api.getSession>>;
+
+export type TeamsData = Awaited<ReturnType<typeof getCompanyTeams>>;
+
+export type Teams = NonNullable<
+    TeamsData extends { data: infer T } ? T : never
+>;
 
 export interface CreateTeamFormProps {
     companyId: string;
@@ -53,4 +59,8 @@ export interface InviteMemberDialogProps {
     companyPlan: PlanType;
     currentMemberCount: number;
     trigger?: React.ReactNode;
+}
+
+export interface TeamFilterProps {
+    teamsDb: Teams;
 }

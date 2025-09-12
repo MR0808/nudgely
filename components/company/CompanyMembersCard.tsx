@@ -20,46 +20,36 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import InviteCompanyMemberDialog from '@/components/company/InviteCompanyMemberDialog';
-import {
-    removeCompanyMember,
-    changeCompanyMemberRole,
-    resendCompanyInvitation
-} from '@/actions/companyMembers';
+import { resendCompanyInvitation } from '@/actions/companyMembers';
 import { CompanyMembersCardProps } from '@/types/company';
 import CancelInviteDialog from '@/components/company/CancelInviteDialog';
+import RemoveAdminMemberDialog from '@/components/company/RemoveAdminMemberDialog';
 
 const CompanyMembersCard = ({
     company,
     membersData,
-    invitesData
+    invitesData,
+    userSession
 }: CompanyMembersCardProps) => {
     const [isPendingResend, startTransitionResend] = useTransition();
     const [members, setMembers] = useState(membersData);
     const [pendingInvites, setPendingInvites] = useState(invitesData);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
     const [inviteId, setInviteId] = useState('');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [memberId, setMemberId] = useState('');
 
-    const handleRemoveMember = async (memberId: string) => {
-        const result = await removeCompanyMember(memberId);
-        if (result.success) {
-            setMembers((prev) => prev.filter((m) => m.id !== memberId));
-        }
-    };
-
-    const handleChangeRole = async (
+    const handleRemoveAdmin = async (
         memberId: string,
-        newRole: 'COMPANY_ADMIN' | 'COMPANY_MEMBER'
+        name: string,
+        email: string
     ) => {
-        const result = await changeCompanyMemberRole(memberId, newRole);
-        if (result.success) {
-            setMembers((prev) =>
-                prev.map((m) =>
-                    m.id === memberId ? { ...m, role: newRole } : m
-                )
-            );
-        }
+        setMemberId(memberId);
+        setName(name);
+        setEmail(email);
+        setRemoveDialogOpen(true);
     };
 
     const handleCancelInvite = async (
@@ -162,39 +152,24 @@ const CompanyMembersCard = ({
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        {company.creatorId !==
-                                            member.user.id && (
-                                            <DropdownMenuItem
-                                                onClick={() =>
-                                                    handleChangeRole(
-                                                        member.id,
-                                                        member.role ===
-                                                            'COMPANY_ADMIN'
-                                                            ? 'COMPANY_MEMBER'
-                                                            : 'COMPANY_ADMIN'
-                                                    )
-                                                }
-                                            >
-                                                {member.role === 'COMPANY_ADMIN'
-                                                    ? 'Remove Admin'
-                                                    : 'Make Admin'}
-                                            </DropdownMenuItem>
-                                        )}
+                                        {company.creatorId !== member.user.id &&
+                                            userSession?.user.id !==
+                                                member.user.id && (
+                                                <DropdownMenuItem
+                                                    onClick={() =>
+                                                        handleRemoveAdmin(
+                                                            member.id,
+                                                            `${member.user.name} ${member.user.lastName}`,
+                                                            member.user.email
+                                                        )
+                                                    }
+                                                >
+                                                    Remove Admin
+                                                </DropdownMenuItem>
+                                            )}
                                         <DropdownMenuItem>
                                             View Profile
                                         </DropdownMenuItem>
-                                        {member.user.status !== 'ACTIVE' && (
-                                            <DropdownMenuItem
-                                                className="text-destructive"
-                                                onClick={() =>
-                                                    handleRemoveMember(
-                                                        member.id
-                                                    )
-                                                }
-                                            >
-                                                Remove Member
-                                            </DropdownMenuItem>
-                                        )}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
@@ -280,6 +255,14 @@ const CompanyMembersCard = ({
                             setPendingInvites={setPendingInvites}
                             open={cancelDialogOpen}
                             onOpenChange={setCancelDialogOpen}
+                        />
+                        <RemoveAdminMemberDialog
+                            name={name}
+                            email={email}
+                            memberId={memberId}
+                            setMembers={setMembers}
+                            open={removeDialogOpen}
+                            onOpenChange={setRemoveDialogOpen}
                         />
                     </div>
                 )}

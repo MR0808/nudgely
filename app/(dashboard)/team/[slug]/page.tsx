@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ParamsSlug } from '@/types/global';
 import { Suspense } from 'react';
-import TeamMain from '@/components/team/TeamMain';
+import TeamMain from '@/components/team/view/TeamMain';
 
 export async function generateMetadata({
     params

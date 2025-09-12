@@ -10,6 +10,51 @@ import { checkCompanyLimits, checkTeamPermission } from '@/lib/team';
 
 const slugger = new GithubSlugger();
 
+export const getCompanyTeams = async () => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { user, company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    try {
+        const teams = await prisma.team.findMany({
+            where: {
+                companyId: company.id
+            },
+            include: {
+                members: { include: { user: true } },
+                tasks: true,
+                company: true
+            }
+        });
+
+        const returnTeams = teams.map((team) => {
+            const members = team.members;
+            const teamAdminCount = members.filter(
+                (member) => member.role === 'TEAM_ADMIN'
+            ).length;
+            return { ...team, admins: teamAdminCount };
+        });
+
+        return { data: returnTeams, error: null };
+    } catch (error) {
+        return { data: null, error: `Error getting teams - ${error}` };
+    }
+};
+
 export const getUserTeams = async () => {
     try {
         const userSession = await authCheckServer();

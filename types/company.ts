@@ -3,6 +3,7 @@ import {
     getCompanyAdminMembers,
     getCompanyInvitations
 } from '@/actions/companyMembers';
+import { getCompanyTeams } from '@/actions/team';
 import {
     Image,
     CompanySize,
@@ -26,6 +27,8 @@ export type CompanyInvitesData = Awaited<
     ReturnType<typeof getCompanyInvitations>
 >;
 
+export type TeamsData = Awaited<ReturnType<typeof getCompanyTeams>>;
+
 export type Members = NonNullable<
     MembersData extends { data: infer T } ? T : never
 >;
@@ -36,6 +39,10 @@ export type CompanyInvites = NonNullable<
 
 export type Company = NonNullable<
     CompanyData extends { company: infer T } ? T : never
+>;
+
+export type Teams = NonNullable<
+    TeamsData extends { data: infer T } ? T : never
 >;
 
 export interface CompanyProps {
@@ -87,8 +94,24 @@ export interface CancelInviteDialogProps {
     trigger?: React.ReactNode;
 }
 
+export interface RemoveAdminMemberDialogProps {
+    name: string;
+    email: string;
+    memberId: string;
+    setMembers: (members: Members) => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    trigger?: React.ReactNode;
+}
+
 export interface CompanyMembersCardProps {
     company: Company;
     membersData: Members;
     invitesData: CompanyInvites;
+    userSession: SessionType | null;
+}
+
+export interface CompanyTeamsCardProps {
+    teams: Teams;
+    userSession: SessionType | null;
 }
