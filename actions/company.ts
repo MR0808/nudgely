@@ -73,7 +73,8 @@ export const getCompany = async () => {
                 companySize: true,
                 industry: true,
                 country: true,
-                region: true
+                region: true,
+                plan: true
             }
         });
 
@@ -107,7 +108,7 @@ export const getCompanyForSelector = async () => {
 
         const company = await prisma.companyMember.findFirst({
             where: { userId: user.id },
-            include: { company: true }
+            include: { company: { include: { plan: true } } }
         });
 
         if (!company) {

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
-import { AlertCircle } from 'lucide-react';
+import Link from 'next/link';
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { authCheck } from '@/lib/authCheck';
 import siteMetadata from '@/utils/siteMetaData';
 import { getCompany } from '@/actions/company';
@@ -17,6 +16,7 @@ import {
 } from '@/actions/companyMembers';
 import CompanyTeamsCard from '@/components/company/CompanyTeamsCard';
 import { getCompanyTeams } from '@/actions/team';
+import { Button } from '@/components/ui/button';
 
 export async function generateMetadata(): Promise<Metadata> {
     const { company } = await getCompany();
@@ -59,13 +59,22 @@ const CompanyPage = async () => {
 
     if (!company || userCompany.role !== 'COMPANY_ADMIN') {
         return (
-            <div className="container mx-auto py-8">
-                <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                        Failed to load company data
-                    </AlertDescription>
-                </Alert>
+            <div className="min-h-screen bg-background">
+                <div className="max-w-4xl mx-auto p-6">
+                    <div className="text-center py-12">
+                        <h2 className="text-2xl font-bold mb-2">
+                            Company data not found
+                        </h2>
+                        <p className="text-muted-foreground mb-4">
+                            The company data you&apos;re looking for
+                            doesn&apos;t exist or you don&apos;t have access to
+                            it. If this is an issue, please contact support.
+                        </p>
+                        <Link href="/">
+                            <Button>Back to Dashboard</Button>
+                        </Link>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -80,13 +89,22 @@ const CompanyPage = async () => {
 
     if (!members.data) {
         return (
-            <div className="container mx-auto py-8">
-                <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                        Failed to load company data
-                    </AlertDescription>
-                </Alert>
+            <div className="min-h-screen bg-background">
+                <div className="max-w-4xl mx-auto p-6">
+                    <div className="text-center py-12">
+                        <h2 className="text-2xl font-bold mb-2">
+                            Company data not found
+                        </h2>
+                        <p className="text-muted-foreground mb-4">
+                            The company data you&apos;re looking for
+                            doesn&apos;t exist or you don&apos;t have access to
+                            it. If this is an issue, please contact support.
+                        </p>
+                        <Link href="/">
+                            <Button>Back to Dashboard</Button>
+                        </Link>
+                    </div>
+                </div>
             </div>
         );
     }

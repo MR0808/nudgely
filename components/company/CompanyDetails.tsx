@@ -119,17 +119,13 @@ const CompanyDetails = ({
                                 </h3>
                                 <div className="flex items-center gap-2 mt-1">
                                     <Badge
-                                        variant={
-                                            company.plan === 'GROWTH'
-                                                ? 'default'
-                                                : 'secondary'
-                                        }
+                                        variant={company.plan.colour}
                                         className="gap-1"
                                     >
-                                        {company.plan === 'GROWTH' && (
+                                        {company.plan.name !== 'Free' && (
                                             <Crown className="h-3 w-3" />
                                         )}
-                                        {company.plan}
+                                        {company.plan.name}
                                     </Badge>
                                     {isTrialing && (
                                         <Badge

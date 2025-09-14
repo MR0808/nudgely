@@ -84,11 +84,19 @@ export const registerInitial = async (
             }
         }
 
+        const plan = await prisma.plan.findUnique({ where: { slug: 'free' } });
+
+        if (!plan)
+            return {
+                error: `Plan is invalid`
+            };
+
         const company = await prisma.company.create({
             data: {
                 slug,
                 name: values.name,
-                creatorId: data.user.id
+                creatorId: data.user.id,
+                planId: plan.id
             }
         });
 

@@ -144,14 +144,10 @@ const InviteCompanyMemberDialog = ({
                         <div className="flex items-center justify-between pt-4 border-t">
                             <div className="flex items-center gap-2">
                                 <Badge
-                                    variant={
-                                        companyPlan === 'GROWTH'
-                                            ? 'default'
-                                            : 'secondary'
-                                    }
+                                    variant={companyPlan.colour}
                                     className="text-xs"
                                 >
-                                    {companyPlan}
+                                    {companyPlan.name}
                                 </Badge>
                                 <span className="text-sm text-muted-foreground">
                                     {currentMemberCount} admin

@@ -10,7 +10,7 @@ export const getCompanyInvitationByToken = async (token: string) => {
     try {
         const invitation = await prisma.companyInvite.findUnique({
             where: { token },
-            include: { company: { include: { members: true } } }
+            include: { company: { include: { plan: true, members: true } } }
         });
 
         if (!invitation) {

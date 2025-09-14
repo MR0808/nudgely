@@ -15,3 +15,16 @@ export async function logTeamCreated(
         metadata: { ...metadata }
     });
 }
+
+export async function logTeamUpdated(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'team.team_updated',
+        category: 'team',
+        description: `Team updated`,
+        metadata: { ...metadata }
+    });
+}

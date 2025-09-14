@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, SiteRole } from '@prisma/client';
 import { hash, verify, type Options } from '@node-rs/argon2';
 
 const prisma = new PrismaClient();
@@ -17,11 +17,12 @@ async function seedUser() {
                 name: 'Mark',
                 lastName: 'Rosenberg',
                 email: 'mark@docketrockit.com',
-                role: ['ADMIN'],
+                role: SiteRole.SITE_ADMIN,
                 phoneNumber: '+61411896030',
                 emailVerified: true,
                 phoneVerified: true,
-                passwordVerified: true
+                createdAt: Date(),
+                updatedAt: Date()
             }
         });
         const password = await hash('mark1234', opts);
@@ -33,15 +34,6 @@ async function seedUser() {
                 accountId: data.id,
                 createdAt: new Date(Date.now()),
                 updatedAt: new Date(Date.now())
-            }
-        });
-        await prisma.businessUserAccess.create({
-            data: {
-                jobTitle: 'CIO',
-                accessLevel: 'ADMIN',
-                userId: data.id,
-                permissions: ['MANAGE_USERS'],
-                createdById: data.id
             }
         });
     } catch (error) {

@@ -17,7 +17,7 @@ async function seedCompanySizes() {
     const totalLength = companySizes.length;
     let count = 1;
     try {
-        console.log('Seeding industries...');
+        console.log('Seeding company sizes...');
         for (const companySize of companySizes) {
             let slug = slugger.slug(companySize.name);
             await prisma.companySize.create({

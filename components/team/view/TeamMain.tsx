@@ -127,7 +127,7 @@ const TeamMain = ({ teamData, userRole }: TeamMainProps) => {
                             <InviteMemberDialog
                                 teamId={teamData.team.id}
                                 teamName={teamData.team.name}
-                                companyPlan={teamData.team.company.plan}
+                                companyPlan={teamData.team.company.plan.name}
                                 currentMemberCount={members.length}
                             />
                         )}

@@ -5,8 +5,9 @@ import GithubSlugger from 'github-slugger';
 
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
-import { CreateTeamSchema } from '@/schemas/team';
+import { TeamSchema } from '@/schemas/team';
 import { checkCompanyLimits, checkTeamPermission } from '@/lib/team';
+import { revalidatePath } from 'next/cache';
 
 const slugger = new GithubSlugger();
 
@@ -36,8 +37,8 @@ export const getCompanyTeams = async () => {
             },
             include: {
                 members: { include: { user: true } },
-                tasks: true,
-                company: true
+                nudges: true,
+                company: { include: { plan: true } }
             }
         });
 
@@ -73,7 +74,7 @@ export const getUserTeams = async () => {
                     include: {
                         company: true,
                         members: true,
-                        tasks: true
+                        nudges: true
                     }
                 }
             }
@@ -84,7 +85,7 @@ export const getUserTeams = async () => {
             name: membership.team.name,
             role: membership.role,
             memberCount: membership.team.members.length,
-            tasksCount: membership.team.tasks.length
+            tasksCount: membership.team.nudges.length
         }));
     } catch (error) {
         return null;
@@ -110,9 +111,9 @@ export const getCurrentTeam = async (teamId?: string) => {
                 include: {
                     team: {
                         include: {
-                            company: true,
+                            company: { include: { plan: true } },
                             members: true,
-                            tasks: true
+                            nudges: true
                         }
                     }
                 }
@@ -126,7 +127,7 @@ export const getCurrentTeam = async (teamId?: string) => {
                 companyPlan: firstMembership.team.company.plan,
                 role: firstMembership.role,
                 memberCount: firstMembership.team.members.length,
-                tasksCount: firstMembership.team.tasks.length,
+                tasksCount: firstMembership.team.nudges.length,
                 isCompanyTrialing: firstMembership.team.company.trialEndsAt
                     ? new Date() < firstMembership.team.company.trialEndsAt
                     : false,
@@ -142,9 +143,9 @@ export const getCurrentTeam = async (teamId?: string) => {
             include: {
                 team: {
                     include: {
-                        company: true,
+                        company: { include: { plan: true } },
                         members: true,
-                        tasks: true
+                        nudges: true
                     }
                 }
             }
@@ -158,7 +159,7 @@ export const getCurrentTeam = async (teamId?: string) => {
             companyPlan: membership.team.company.plan,
             role: membership.role,
             memberCount: membership.team.members.length,
-            tasksCount: membership.team.tasks.length,
+            tasksCount: membership.team.nudges.length,
             isCompanyTrialing: membership.team.company.trialEndsAt
                 ? new Date() < membership.team.company.trialEndsAt
                 : false,
@@ -185,8 +186,8 @@ export const getCurrentTeamBySlug = async (slug: string) => {
                 slug
             },
             include: {
-                company: true,
-                tasks: true
+                company: { include: { plan: true } },
+                nudges: { include: { completions: true } }
             }
         });
 
@@ -231,7 +232,7 @@ export const getCurrentTeamBySlug = async (slug: string) => {
 };
 
 export const createTeam = async (
-    values: z.infer<typeof CreateTeamSchema>,
+    values: z.infer<typeof TeamSchema>,
     companyId: string
 ) => {
     const userSession = await authCheckServer();
@@ -247,7 +248,7 @@ export const createTeam = async (
 
     try {
         // Validate input
-        const validatedFields = CreateTeamSchema.safeParse(values);
+        const validatedFields = TeamSchema.safeParse(values);
 
         if (!validatedFields.success) {
             return {
@@ -336,7 +337,7 @@ export const createTeam = async (
                     include: {
                         company: true,
                         members: true,
-                        tasks: true
+                        nudges: true
                     }
                 }
             }
@@ -352,6 +353,108 @@ export const createTeam = async (
         return { data: { team, teamMember }, error: null };
     } catch (error) {
         return { data: null, error: 'Failed to create team' };
+    }
+};
+
+export const updateTeam = async (
+    values: z.infer<typeof TeamSchema>,
+    teamId: string,
+    companyId: string
+) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            message: 'Not authorised'
+        };
+    }
+
+    const { user } = userSession;
+
+    try {
+        // Validate input
+        const validatedFields = TeamSchema.safeParse(values);
+
+        if (!validatedFields.success) {
+            return {
+                data: null,
+                message: 'Invalid fields'
+            };
+        }
+
+        const name = values.name.trim();
+        const description = values.description?.trim() || null;
+
+        const currentTeam = await prisma.team.findUnique({
+            where: { id: teamId }
+        });
+
+        if (!currentTeam)
+            return {
+                data: null,
+                error: 'An error occurred update the team. Please contact support - Error 93474'
+            };
+
+        // Check if team name already exists in this company
+        const existingTeam = await prisma.team.findFirst({
+            where: {
+                companyId,
+                name
+            }
+        });
+
+        if (existingTeam && existingTeam.id !== teamId) {
+            return {
+                data: null,
+                error: 'A team with this name already exists'
+            };
+        }
+
+        let slug = currentTeam.slug;
+
+        if (values.name !== currentTeam.name) {
+            slug = slugger.slug(name);
+            let slugExists = true;
+
+            while (slugExists) {
+                const checkSlug = await prisma.team.findUnique({
+                    where: { slug }
+                });
+                if (!checkSlug) {
+                    slugExists = false;
+                    break;
+                } else {
+                    slug = slugger.slug(name);
+                }
+            }
+        }
+
+        // Create the team
+        const team = await prisma.team.update({
+            where: { id: teamId },
+            data: {
+                name,
+                slug,
+                description: description || null
+            }
+        });
+
+        if (!team) {
+            return {
+                data: null,
+                error: 'An error occurred creating your team. Please try again. If this continues, please contact support - Error 93475'
+            };
+        }
+
+        revalidatePath(`/team/${slug}`);
+
+        return { data: team, error: null };
+    } catch (error) {
+        return {
+            data: null,
+            error: 'Failed to create team, please contact support - Error 93476'
+        };
     }
 };
 

@@ -110,14 +110,8 @@ const CompanyInvitationForm = ({
                             <h3 className="font-medium">
                                 {invite.company.name}
                             </h3>
-                            <Badge
-                                variant={
-                                    invite.company.plan === 'GROWTH'
-                                        ? 'default'
-                                        : 'secondary'
-                                }
-                            >
-                                {invite.company.plan}
+                            <Badge variant={invite.company.plan.colour}>
+                                {invite.company.plan.name}
                             </Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">

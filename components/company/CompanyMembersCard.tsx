@@ -86,7 +86,7 @@ const CompanyMembersCard = ({
                     </CardTitle>
                     <CardDescription>Manage company admins.</CardDescription>
                 </div>
-                {company.plan !== 'FREE' && (
+                {company.plan.slug !== 'free' && (
                     <InviteCompanyMemberDialog
                         companyId={company.id}
                         companyName={company.name}

@@ -70,8 +70,8 @@ export default function RootLayout({
                 <meta name="apple-mobile-web-app-title" content="Nudgely" />
             </head>
             <body
-                className={`${inter.className} antialiased overscroll-none`}
-                suppressHydrationWarning={true}
+                // className={`${inter.className} antialiased overscroll-none`}
+                suppressHydrationWarning
             >
                 <ThemeProvider
                     attribute="class"

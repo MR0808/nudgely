@@ -10,6 +10,13 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum BadgeColour {
+  outline
+  destructive
+  secondary
+  default
+}
+
 enum UserRole {
   USER
   ADMIN
@@ -30,13 +37,13 @@ enum TeamRole {
   TEAM_MEMBER
 }
 
-enum TaskStatus {
+enum NudgeStatus {
   ACTIVE
   DISABLED
   FROZEN
 }
 
-enum TaskFrequency {
+enum NudgeFrequency {
   DAILY
   WEEKLY
   MONTHLY
@@ -49,11 +56,11 @@ enum IntervalUnit {
   MONTH
 }
 
-enum PlanType {
-  FREE
-  STARTER
-  GROWTH
-  SCALE
+enum Support {
+  COMMUNITYONLY
+  EMAILSUPPORT
+  PRIORITY
+  PRIORITYANDMANAGER
 }
 
 enum Gender {
@@ -92,7 +99,7 @@ enum TeamStatus {
   BANNED
 }
 
-enum TaskInstanceStatus {
+enum NudgeInstanceStatus {
   PENDING
   COMPLETED
   FAILED
@@ -136,8 +143,8 @@ model User {
   companyMember      CompanyMember[]
   teams              Team[]
   teamMembers        TeamMember[]
-  tasks              Task[]
-  taskCompletions    TaskCompletion[]
+  nudges             Nudge[]
+  nudgeCompletions   NudgeCompletion[]
 
   @@map("users")
 }
@@ -386,7 +393,8 @@ model Company {
   industryId       String?
   timezone         String? // IANA timezone identifier
   locale           String?
-  plan             PlanType      @default(FREE)
+  plan             Plan          @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId           String
   trialEndsAt      DateTime?
   profileCompleted Boolean       @default(false)
   status           CompanyStatus @default(ACTIVE)
@@ -461,7 +469,7 @@ model Team {
   creator    User           @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId  String
   members    TeamMember[]
-  tasks      Task[]
+  nudges     Nudge[]
   templates  TeamTemplate[]
   TeamInvite TeamInvite[]
 
@@ -484,7 +492,7 @@ model TeamMember {
   @@map("team_members")
 }
 
-model Task {
+model Nudge {
   id        String   @id @default(uuid())
   slug      String   @unique
   createdAt DateTime @default(now())
@@ -492,8 +500,8 @@ model Task {
 
   title       String
   description String?
-  status      TaskStatus    @default(ACTIVE)
-  frequency   TaskFrequency @default(DAILY)
+  status      NudgeStatus    @default(ACTIVE)
+  frequency   NudgeFrequency @default(DAILY)
 
   intervalCount Int?         @default(1)
   intervalUnit  IntervalUnit @default(DAY)
@@ -501,40 +509,40 @@ model Task {
   dueHour  Int?   @default(8)
   timezone String @default("UTC")
 
-  team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team        Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId      String
-  creator     User             @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creator     User              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId   String
-  recipients  TaskRecipient[]
-  instances   TaskInstance[]
-  completions TaskCompletion[]
+  recipients  NudgeRecipient[]
+  instances   NudgeInstance[]
+  completions NudgeCompletion[]
 
-  @@map("tasks")
+  @@map("nudges")
 }
 
-model TaskInstance {
+model NudgeInstance {
   id        String   @id @default(uuid())
   slug      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   scheduledFor DateTime
-  status       TaskInstanceStatus @default(PENDING)
-  overdueCount Int                @default(0)
+  status       NudgeInstanceStatus @default(PENDING)
+  overdueCount Int                 @default(0)
   completedAt  DateTime?
   failedAt     DateTime?
 
-  task        Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  taskId      String
+  nudge       Nudge             @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
+  nudgeId     String
   reminders   ReminderEvent[]
-  completions TaskCompletion[]
+  completions NudgeCompletion[]
 
   @@index([scheduledFor])
   @@index([status])
-  @@map("task_instances")
+  @@map("nudge_instances")
 }
 
-model TaskRecipient {
+model NudgeRecipient {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -542,11 +550,11 @@ model TaskRecipient {
   name  String
   email String
 
-  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  taskId String
+  nudge   Nudge  @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
+  nudgeId String
 
-  @@unique([taskId, email])
-  @@map("task_recipients")
+  @@unique([nudgeId, email])
+  @@map("nudge_recipients")
 }
 
 model ReminderEvent {
@@ -569,13 +577,13 @@ model ReminderEvent {
   completionIp String?
   completionUa String?
 
-  taskInstance   TaskInstance @relation(fields: [taskInstanceId], references: [id], onDelete: Cascade)
-  taskInstanceId String
+  nudgeInstance   NudgeInstance @relation(fields: [nudgeInstanceId], references: [id], onDelete: Cascade)
+  nudgeInstanceId String
 
   @@map("reminder_events")
 }
 
-model TaskCompletion {
+model NudgeCompletion {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
@@ -585,14 +593,14 @@ model TaskCompletion {
   userAgent       String?
   reminderToken   String?
 
-  task           Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  taskId         String
-  taskInstance   TaskInstance @relation(fields: [taskInstanceId], references: [id], onDelete: Cascade)
-  taskInstanceId String
-  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId         String?
+  nudge           Nudge         @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
+  nudgeId         String
+  nudgeInstance   NudgeInstance @relation(fields: [nudgeInstanceId], references: [id], onDelete: Cascade)
+  nudgeInstanceId String
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId          String?
 
-  @@map("task_completions")
+  @@map("nudge_completions")
 }
 
 model GlobalTemplate {
@@ -647,4 +655,30 @@ model TeamInvite {
 
   @@unique([teamId, email])
   @@map("team_invites")
+}
+
+model Plan {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name            String
+  slug            String      @unique
+  price           Int
+  maxAdmin        Int
+  maxUsers        Int
+  maxTeams        Int
+  maxNudges       Int
+  maxRecipients   Int
+  allTemplates    Boolean
+  customTemplates Boolean
+  nudgeHistory    Int
+  stats           Boolean
+  dataExport      Boolean
+  branding        Boolean
+  support         Support
+  companies       Company[]
+  colour          BadgeColour
+
+  @@map("plans")
 }

@@ -126,7 +126,7 @@ const TeamFilter = ({ teamsDb }: TeamFilterProps) => {
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuItem asChild>
                                                 <Link
-                                                    href={`/teams/${team.id}`}
+                                                    href={`/team/${team.slug}`}
                                                 >
                                                     <Settings className="h-4 w-4 mr-2" />
                                                     Manage Team
@@ -200,14 +200,10 @@ const TeamFilter = ({ teamsDb }: TeamFilterProps) => {
                                             )}
                                         </div>
                                         <Badge
-                                            variant={
-                                                team.company.plan === 'GROWTH'
-                                                    ? 'default'
-                                                    : 'secondary'
-                                            }
+                                            variant={team.company.plan.colour}
                                             className="text-xs"
                                         >
-                                            {team.company.plan}
+                                            {team.company.plan.name}
                                         </Badge>
                                     </div>
 
@@ -220,7 +216,7 @@ const TeamFilter = ({ teamsDb }: TeamFilterProps) => {
                                             className="flex-1 bg-transparent"
                                         >
                                             <Link
-                                                href={`/teams/${team.id}/members`}
+                                                href={`/team/${team.id}/members`}
                                             >
                                                 <Users className="h-4 w-4 mr-2" />
                                                 Members
@@ -231,7 +227,7 @@ const TeamFilter = ({ teamsDb }: TeamFilterProps) => {
                                             size="sm"
                                             className="flex-1"
                                         >
-                                            <Link href={`/teams/${team.id}`}>
+                                            <Link href={`/team/${team.slug}`}>
                                                 <Settings className="h-4 w-4 mr-2" />
                                                 Manage
                                             </Link>

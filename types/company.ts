@@ -10,8 +10,8 @@ import {
     Country,
     Industry,
     Region,
-    PlanType,
-    CompanyRole
+    CompanyRole,
+    Plan
 } from '@/generated/prisma';
 
 import { auth } from '@/lib/auth';
@@ -77,8 +77,8 @@ export interface UpdateLogoDialogProps {
 export interface InviteCompanyMemberDialogProps {
     companyId: string;
     companyName: string;
-    companyPlan: PlanType;
     currentMemberCount: number;
+    companyPlan: Plan;
     setMembers: (members: Members) => void;
     setPendingInvites: (pendingInvites: CompanyInvites) => void;
     trigger?: React.ReactNode;

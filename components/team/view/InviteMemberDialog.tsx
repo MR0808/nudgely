@@ -107,7 +107,7 @@ export function InviteMemberDialog({
                 {!canInviteMembers && (
                     <Alert>
                         <AlertDescription>
-                            {companyPlan === 'FREE'
+                            {companyPlan === 'Free'
                                 ? 'Free plan is limited to 3 members per team. Upgrade to Pro for unlimited members.'
                                 : 'Member limit reached for your current plan.'}
                         </AlertDescription>

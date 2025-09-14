@@ -3,7 +3,7 @@
 import type * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { ReloadIcon } from '@radix-ui/react-icons';
@@ -22,7 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { createTeam } from '@/actions/team';
 import { CreateTeamFormProps } from '@/types/team';
-import { CreateTeamSchema } from '@/schemas/team';
+import { TeamSchema } from '@/schemas/team';
 import { logTeamCreated } from '@/actions/audit/audit-team';
 import { useTeamStore } from '@/stores/teamStore';
 
@@ -31,15 +31,15 @@ const CreateTeamForm = ({ companyId, userSession }: CreateTeamFormProps) => {
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
-    const form = useForm<z.infer<typeof CreateTeamSchema>>({
-        resolver: zodResolver(CreateTeamSchema),
+    const form = useForm<z.infer<typeof TeamSchema>>({
+        resolver: zodResolver(TeamSchema),
         defaultValues: {
             name: '',
             description: ''
         }
     });
 
-    const onSubmit = (values: z.infer<typeof CreateTeamSchema>) => {
+    const onSubmit = (values: z.infer<typeof TeamSchema>) => {
         startTransition(async () => {
             const data = await createTeam(values, companyId);
             if (data.error) {
@@ -57,7 +57,7 @@ const CreateTeamForm = ({ companyId, userSession }: CreateTeamFormProps) => {
                     name: data.data.teamMember.team.name,
                     role: data.data.teamMember.role,
                     memberCount: data.data.teamMember.team.members.length,
-                    tasksCount: data.data.teamMember.team.tasks.length
+                    tasksCount: data.data.teamMember.team.nudges.length
                 };
                 setIsReloadTeam(true);
                 setSelectedTeam(team);
