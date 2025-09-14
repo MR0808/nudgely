@@ -80,7 +80,8 @@ export function InviteMemberDialog({
         }
     }
 
-    const canInviteMembers = companyPlan === 'GROWTH' || currentMemberCount < 3;
+    const canInviteMembers =
+        companyPlan.name === 'GROWTH' || currentMemberCount < 3;
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -107,7 +108,7 @@ export function InviteMemberDialog({
                 {!canInviteMembers && (
                     <Alert>
                         <AlertDescription>
-                            {companyPlan === 'Free'
+                            {companyPlan.name === 'Free'
                                 ? 'Free plan is limited to 3 members per team. Upgrade to Pro for unlimited members.'
                                 : 'Member limit reached for your current plan.'}
                         </AlertDescription>
@@ -197,14 +198,10 @@ export function InviteMemberDialog({
                         <div className="flex items-center justify-between pt-4 border-t">
                             <div className="flex items-center gap-2">
                                 <Badge
-                                    variant={
-                                        companyPlan === 'GROWTH'
-                                            ? 'default'
-                                            : 'secondary'
-                                    }
+                                    variant={companyPlan.colour}
                                     className="text-xs"
                                 >
-                                    {companyPlan}
+                                    {companyPlan.name}
                                 </Badge>
                                 <span className="text-sm text-muted-foreground">
                                     {currentMemberCount} members

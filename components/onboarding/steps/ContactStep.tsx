@@ -28,7 +28,7 @@ const ContactStep = ({ defaultCountry }: { defaultCountry: CountryDb }) => {
                 render={({ field }) => (
                     <FormItem>
                         <FormLabel className="text-card-foreground">
-                            Contact Email *
+                            Company Contact Email *
                         </FormLabel>
                         <FormControl>
                             <Input
@@ -54,7 +54,7 @@ const ContactStep = ({ defaultCountry }: { defaultCountry: CountryDb }) => {
                 render={({ field }) => (
                     <FormItem>
                         <FormLabel className="text-card-foreground">
-                            Contact Phone *
+                            Company Contact Phone *
                         </FormLabel>
                         <FormControl>
                             {/* <Input

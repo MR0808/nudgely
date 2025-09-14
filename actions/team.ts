@@ -8,6 +8,7 @@ import { authCheckServer } from '@/lib/authCheck';
 import { TeamSchema } from '@/schemas/team';
 import { checkCompanyLimits, checkTeamPermission } from '@/lib/team';
 import { revalidatePath } from 'next/cache';
+import { Tenali_Ramakrishna } from 'next/font/google';
 
 const slugger = new GithubSlugger();
 
@@ -191,22 +192,14 @@ export const getCurrentTeamBySlug = async (slug: string) => {
             }
         });
 
-        if (!team) return null;
+        console.log('te', team);
 
-        const membership = await checkTeamPermission(user.id, team.id);
+        if (!team) return null;
 
         const data = await prisma.teamMember.findMany({
             where: { teamId: team.id },
             include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        lastName: true,
-                        email: true,
-                        image: true
-                    }
-                }
+                user: true
             },
             orderBy: [
                 { role: 'asc' }, // Admins first
@@ -217,6 +210,8 @@ export const getCurrentTeamBySlug = async (slug: string) => {
         const members = data.map((member) => ({
             id: member.id,
             name: `${member.user.name} ${member.user.lastName}`.trim(),
+            firstName: member.user.name,
+            lastName: member.user.lastName,
             email: member.user.email,
             role: member.role,
             avatar: member.user.image || undefined,
@@ -224,7 +219,15 @@ export const getCurrentTeamBySlug = async (slug: string) => {
             isCurrentUser: member.user.id === user.id
         }));
 
-        return { team, members, userRole: membership.role };
+        const currentUserMember = members.find(
+            (member) => member.isCurrentUser === true
+        );
+
+        if (!currentUserMember) {
+            return null;
+        }
+
+        return { team, members, userRole: currentUserMember.role };
     } catch (error) {
         console.error('Failed to fetch current team:', error);
         return null;
@@ -244,7 +247,14 @@ export const createTeam = async (
         };
     }
 
-    const { user } = userSession;
+    const { user, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            message: 'Not authorised'
+        };
+    }
 
     try {
         // Validate input
@@ -373,6 +383,17 @@ export const updateTeam = async (
     const { user } = userSession;
 
     try {
+        const teamUser = await prisma.teamMember.findUnique({
+            where: { teamId_userId: { userId: user.id, teamId } }
+        });
+
+        if (!teamUser || teamUser.role !== 'TEAM_ADMIN') {
+            return {
+                data: null,
+                message: 'Not authorised'
+            };
+        }
+
         // Validate input
         const validatedFields = TeamSchema.safeParse(values);
 

@@ -134,7 +134,7 @@ const TeamFilter = ({ teamsDb }: TeamFilterProps) => {
                                             </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
                                                 <Link
-                                                    href={`/teams/${team.id}/members`}
+                                                    href={`/teams/${team.slug}/members`}
                                                 >
                                                     <UserPlus className="h-4 w-4 mr-2" />
                                                     Manage Members
@@ -216,7 +216,7 @@ const TeamFilter = ({ teamsDb }: TeamFilterProps) => {
                                             className="flex-1 bg-transparent"
                                         >
                                             <Link
-                                                href={`/team/${team.id}/members`}
+                                                href={`/team/${team.slug}/members`}
                                             >
                                                 <Users className="h-4 w-4 mr-2" />
                                                 Members

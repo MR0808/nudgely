@@ -1,39 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import {
-    Users,
-    ArrowLeft,
-    Crown,
-    Calendar,
-    Building2,
-    CheckSquare,
-    UserPlus,
-    MoreHorizontal,
-    Trash2
-} from 'lucide-react';
 
 import { authCheck } from '@/lib/authCheck';
 import siteMetadata from '@/utils/siteMetaData';
 import { getCurrentTeamBySlug } from '@/actions/team';
 import { ParamsSlug } from '@/types/global';
 import { Button } from '@/components/ui/button';
-import TeamEditForm from '@/components/team/view/TeamEditForm';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Label } from '@/components/ui/label';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+import TeamMembersList from '@/components/team/view/TeamMembersList';
 
 export async function generateMetadata({
     params
@@ -71,3 +44,54 @@ export async function generateMetadata({
         }
     };
 }
+
+const TeamMembersPage = async (props: { params: ParamsSlug }) => {
+    const { slug } = await props.params;
+    const userSession = await authCheck(`/team/${slug}/members`);
+
+    const data = await getCurrentTeamBySlug(slug);
+
+    console.log(data);
+
+    if (!data) {
+        return (
+            <div className="min-h-screen bg-background">
+                <div className="max-w-4xl mx-auto p-6">
+                    <div className="text-center py-12">
+                        <h2 className="text-2xl font-bold mb-2">
+                            Team Not Found
+                        </h2>
+                        <p className="text-muted-foreground mb-4">
+                            The team you&apos;re looking for doesn&apos;t exist
+                            or you don&apos;t have access to it.
+                        </p>
+                        <Link href="/team">
+                            <Button>Back to Teams</Button>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const { team, members, userRole } = data;
+
+    return (
+        <div className="container mx-auto py-8 space-y-6">
+            <div>
+                <h1 className="text-3xl font-bold">{team.name} Members</h1>
+                <p className="text-muted-foreground">
+                    Manage team members and their roles
+                </p>
+            </div>
+
+            <TeamMembersList
+                team={team}
+                members={members}
+                userRole={userRole}
+            />
+        </div>
+    );
+};
+
+export default TeamMembersPage;

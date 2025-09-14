@@ -90,7 +90,7 @@ const TeamPage = async (props: { params: ParamsSlug }) => {
                             The team you&apos;re looking for doesn&apos;t exist
                             or you don&apos;t have access to it.
                         </p>
-                        <Link href="/teams">
+                        <Link href="/team">
                             <Button>Back to Teams</Button>
                         </Link>
                     </div>

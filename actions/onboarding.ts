@@ -96,10 +96,12 @@ export const updateCompany = async (
             };
         }
 
-        await prisma.image.update({
-            where: { id: values.logo },
-            data: { relatedEntity: companyDb.id }
-        });
+        if (values.logo) {
+            await prisma.image.update({
+                where: { id: values.logo },
+                data: { relatedEntity: companyDb.id }
+            });
+        }
 
         return { data: companyDb, error: null };
     } catch (error) {

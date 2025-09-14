@@ -35,7 +35,10 @@ const RegistrationComplete = ({ name, email }: RegistrationCompleteProps) => {
             </div> */}
 
             <div className="space-y-3">
-                <Button onClick={handleContinue} className="w-full">
+                <Button
+                    onClick={handleContinue}
+                    className="w-full cursor-pointer"
+                >
                     Continue to Dashboard
                 </Button>
             </div>

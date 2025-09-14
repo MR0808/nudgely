@@ -94,7 +94,7 @@ export const registerInitial = async (
         const company = await prisma.company.create({
             data: {
                 slug,
-                name: values.name,
+                name: values.companyName,
                 creatorId: data.user.id,
                 planId: plan.id
             }
@@ -258,6 +258,18 @@ export const companyUserRegisterInitial = async (
                 companyInviteId: inviteId
             }
         });
+
+        const teams = await prisma.team.findMany({ where: { companyId } });
+
+        for (const team of teams) {
+            await prisma.teamMember.create({
+                data: {
+                    teamId: team.id,
+                    userId: data.user.id,
+                    role: 'TEAM_ADMIN'
+                }
+            });
+        }
 
         await prisma.verification.create({
             data: {

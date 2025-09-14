@@ -1,4 +1,5 @@
 import { getCompanyTeams, getCurrentTeamBySlug } from '@/actions/team';
+import { Plan, TeamRole, UserRole } from '@/generated/prisma';
 import { auth } from '@/lib/auth';
 
 export type Session = typeof auth.$Infer.Session;
@@ -35,28 +36,23 @@ export interface TeamSelectorProps {
     company: Company;
 }
 
-export interface TeamMember {
-    id: string;
-    name: string;
-    email: string;
-    role: 'TEAM_ADMIN' | 'TEAM_MEMBER';
-    avatar?: string;
-    joinedAt: Date;
-    isCurrentUser: boolean;
-}
-
 export type TeamData = Awaited<ReturnType<typeof getCurrentTeamBySlug>>;
+
+export type TeamDataTeam = NonNullable<TeamData>['team'];
+
+export type Members = NonNullable<TeamData>['members'];
+export type Member = NonNullable<TeamData>['members'][number];
 
 export interface TeamMainProps {
     teamData: TeamData;
-    userRole: 'TEAM_ADMIN' | 'TEAM_MEMBER';
+    userRole: TeamRole;
 }
 
 export interface InviteMemberDialogProps {
     teamId: string;
     teamName: string;
     currentMemberCount: number;
-    companyPlan: string;
+    companyPlan: Plan;
     trigger?: React.ReactNode;
 }
 
@@ -68,4 +64,10 @@ export interface TeamEditFormProps {
     team: { id: string; name: string; description: string };
     companyId: string;
     userSession: SessionType | null;
+}
+
+export interface TeamMembersListProps {
+    team: TeamDataTeam;
+    members: Members;
+    userRole: TeamRole;
 }
