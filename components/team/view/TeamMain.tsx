@@ -42,22 +42,20 @@ import {
 } from 'lucide-react';
 import { InviteMemberDialog } from './InviteMemberDialog';
 // import { removeTeamMember, changeTeamMemberRole } from '@/actions/team';
-import { TeamMainProps, TeamMember } from '@/types/team';
+import { TeamMainProps, Member } from '@/types/team';
 
 const TeamMain = ({ teamData, userRole }: TeamMainProps) => {
-    const [members, setMembers] = useState<TeamMember[]>(
-        teamData?.members || []
-    );
+    const [members, setMembers] = useState<Member[]>(teamData?.members || []);
     const [error, setError] = useState<string | null>(null);
     const [removingMember, setRemovingMember] = useState<string | null>(null);
     const [changingRole, setChangingRole] = useState<string | null>(null);
     const [showRemoveDialog, setShowRemoveDialog] = useState<{
-        member: TeamMember;
+        member: Member;
     } | null>(null);
 
     if (!teamData) return null;
 
-    const handleRemoveMember = async (member: TeamMember) => {
+    const handleRemoveMember = async (member: Member) => {
         // setRemovingMember(member.id);
         // try {
         //     console.log('[v0] Removing team member:', member.id);
@@ -127,7 +125,7 @@ const TeamMain = ({ teamData, userRole }: TeamMainProps) => {
                             <InviteMemberDialog
                                 teamId={teamData.team.id}
                                 teamName={teamData.team.name}
-                                companyPlan={teamData.team.company.plan.name}
+                                companyPlan={teamData.team.company.plan}
                                 currentMemberCount={members.length}
                             />
                         )}
