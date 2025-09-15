@@ -24,10 +24,8 @@ import { createTeam } from '@/actions/team';
 import { CreateTeamFormProps } from '@/types/team';
 import { TeamSchema } from '@/schemas/team';
 import { logTeamCreated } from '@/actions/audit/audit-team';
-import { useTeamStore } from '@/stores/teamStore';
 
 const CreateTeamForm = ({ companyId, userSession }: CreateTeamFormProps) => {
-    const { setIsReloadTeam, setSelectedTeam } = useTeamStore();
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
@@ -48,21 +46,12 @@ const CreateTeamForm = ({ companyId, userSession }: CreateTeamFormProps) => {
             if (data.data) {
                 if (userSession) {
                     await logTeamCreated(userSession.user.id, {
-                        teamId: data.data.team.id,
-                        teamName: data.data.team.name
+                        teamId: data.data.id,
+                        teamName: data.data.name
                     });
                 }
-                const team = {
-                    id: data.data.teamMember.id,
-                    name: data.data.teamMember.team.name,
-                    role: data.data.teamMember.role,
-                    memberCount: data.data.teamMember.team.members.length,
-                    tasksCount: data.data.teamMember.team.nudges.length
-                };
-                setIsReloadTeam(true);
-                setSelectedTeam(team);
                 toast.success('Team successfully created');
-                router.push(`/`);
+                router.push(`/team/${data.data.slug}`);
             }
         });
     };

@@ -51,8 +51,6 @@ const TeamMembersPage = async (props: { params: ParamsSlug }) => {
 
     const data = await getCurrentTeamBySlug(slug);
 
-    console.log(data);
-
     if (!data) {
         return (
             <div className="min-h-screen bg-background">

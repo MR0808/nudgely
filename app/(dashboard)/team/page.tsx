@@ -8,6 +8,7 @@ import { getCompanyTeams } from '@/actions/team';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import TeamFilter from '@/components/team/list/TeamFilter';
+import { getPlan } from '@/actions/plan';
 
 export async function generateMetadata(): Promise<Metadata> {
     const title = `Teams and Users`;
@@ -38,10 +39,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const TeamPage = async () => {
-    const userSession = await authCheck('/team');
+    const { company } = await authCheck('/team');
     const { data: teams } = await getCompanyTeams();
+    const { plan } = await getPlan();
 
-    if (!teams) {
+    if (!teams || !plan) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -61,6 +63,12 @@ const TeamPage = async () => {
             </div>
         );
     }
+
+    const uniqueUserIds = [
+        ...new Set(
+            teams.flatMap((team) => team.members.map((member) => member.userId))
+        )
+    ];
 
     return (
         <div className="w-full bg-background">
@@ -85,12 +93,15 @@ const TeamPage = async () => {
                                 Company Settings
                             </Button>
                         </Link>
-                        <Link href="/team/create">
-                            <Button className="gap-2 cursor-pointer">
-                                <Plus className="h-4 w-4" />
-                                Create Team
-                            </Button>
-                        </Link>
+                        {(plan.maxTeams > teams.length ||
+                            plan.maxTeams === 0) && (
+                            <Link href="/team/create">
+                                <Button className="gap-2 cursor-pointer">
+                                    <Plus className="h-4 w-4" />
+                                    Create Team
+                                </Button>
+                            </Link>
+                        )}
                     </div>
                 </div>
 
@@ -117,7 +128,7 @@ const TeamPage = async () => {
                                 <Users className="h-5 w-5 text-muted-foreground" />
                                 <div>
                                     <p className="text-2xl font-bold">
-                                        {/* {totalMembers} */}5
+                                        {uniqueUserIds.length}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
                                         Total Members

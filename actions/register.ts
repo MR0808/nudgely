@@ -1,12 +1,12 @@
 'use server';
 
 import * as z from 'zod';
-import { auth } from '@/lib/auth';
 import { APIError } from 'better-auth/api';
 import GithubSlugger from 'github-slugger';
 
 import { CompanyUserRegisterSchema, RegisterSchema } from '@/schemas/register';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 import {
     logUserRegistered,
     logEmailVerifyRequested

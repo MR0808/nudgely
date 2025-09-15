@@ -87,7 +87,11 @@ export function InviteMemberDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button size="sm" disabled={!canInviteMembers}>
+                    <Button
+                        size="sm"
+                        disabled={!canInviteMembers}
+                        className="cursor-pointer"
+                    >
                         <UserPlus className="h-4 w-4 mr-2" />
                         Invite Member
                     </Button>

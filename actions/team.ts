@@ -6,9 +6,8 @@ import GithubSlugger from 'github-slugger';
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { TeamSchema } from '@/schemas/team';
-import { checkCompanyLimits, checkTeamPermission } from '@/lib/team';
+import { checkCompanyTeamLimits } from '@/lib/team';
 import { revalidatePath } from 'next/cache';
-import { Tenali_Ramakrishna } from 'next/font/google';
 
 const slugger = new GithubSlugger();
 
@@ -39,7 +38,7 @@ export const getCompanyTeams = async () => {
             include: {
                 members: { include: { user: true } },
                 nudges: true,
-                company: { include: { plan: true } }
+                company: { include: { plan: true, members: true } }
             }
         });
 
@@ -192,14 +191,12 @@ export const getCurrentTeamBySlug = async (slug: string) => {
             }
         });
 
-        console.log('te', team);
-
         if (!team) return null;
 
         const data = await prisma.teamMember.findMany({
             where: { teamId: team.id },
             include: {
-                user: true
+                user: { include: { companyMember: true } }
             },
             orderBy: [
                 { role: 'asc' }, // Admins first
@@ -216,7 +213,8 @@ export const getCurrentTeamBySlug = async (slug: string) => {
             role: member.role,
             avatar: member.user.image || undefined,
             joinedAt: member.createdAt,
-            isCurrentUser: member.user.id === user.id
+            isCurrentUser: member.user.id === user.id,
+            companyRole: member.user.companyMember[0].role
         }));
 
         const currentUserMember = members.find(
@@ -271,14 +269,7 @@ export const createTeam = async (
         const description = values.description?.trim() || null;
 
         // Check company permissions and limits
-        const limits = await checkCompanyLimits(user.id, companyId);
-
-        if (!limits.isCompanyAdmin) {
-            return {
-                data: null,
-                error: 'Only company admins can create teams'
-            };
-        }
+        const limits = await checkCompanyTeamLimits(companyId);
 
         if (!limits.canCreateTeam) {
             return {
@@ -336,33 +327,25 @@ export const createTeam = async (
         }
 
         // Add creator as team admin
-        const teamMember = await prisma.teamMember.create({
-            data: {
-                teamId: team.id,
-                userId: user.id,
-                role: 'TEAM_ADMIN'
-            },
-            include: {
-                team: {
-                    include: {
-                        company: true,
-                        members: true,
-                        nudges: true
-                    }
-                }
-            }
+        const companyAdmins = await prisma.companyMember.findMany({
+            where: { role: 'COMPANY_ADMIN' },
+            include: { user: true }
         });
 
-        if (!teamMember) {
-            return {
-                data: null,
-                error: 'An error occurred creating your team. Please try again.'
-            };
+        for (const admin of companyAdmins) {
+            await prisma.teamMember.create({
+                data: {
+                    teamId: team.id,
+                    userId: admin.user.id,
+                    role: 'TEAM_ADMIN'
+                }
+            });
         }
 
-        return { data: { team, teamMember }, error: null };
+        return { data: team, error: null };
     } catch (error) {
-        return { data: null, error: 'Failed to create team' };
+        console.log(error);
+        return { data: null, error: `Failed to create team - ${error}` };
     }
 };
 

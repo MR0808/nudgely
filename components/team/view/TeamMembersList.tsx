@@ -207,7 +207,9 @@ const TeamMembersList = ({ team, members, userRole }: TeamMembersListProps) => {
                                     </Badge>
 
                                     {canManageMembers &&
-                                        !member.isCurrentUser && (
+                                        !member.isCurrentUser &&
+                                        member.companyRole !==
+                                            'COMPANY_ADMIN' && (
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button

@@ -59,58 +59,42 @@ export async function checkTeamPermission(
     return membership;
 }
 
-export async function checkCompanyLimits(userId: string, companyId?: string) {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        include: {
-            companyMember: {
-                include: {
-                    company: {
-                        include: {
-                            plan: true,
-                            teams: true,
-                            members: true
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    if (!user) throw new Error('User not found');
-
-    // Check if user can create more companies (Free users limited to 1)
-    const ownedCompanies = user.companyMember.filter(
-        (m) => m.role === 'COMPANY_ADMIN' && m.company.creatorId === userId
-    );
-
-    if (companyId) {
-        const company = user.companyMember.find(
-            (m) => m.companyId === companyId
-        )?.company;
+export const checkCompanyTeamLimits = async (companyId: string) => {
+    try {
+        const company = await prisma.company.findUnique({
+            where: { id: companyId },
+            include: { teams: true }
+        });
 
         if (!company) {
             throw new Error('Company not found');
         }
 
+        const plan = await prisma.plan.findUnique({
+            where: { id: company.planId }
+        });
+
+        if (!plan) {
+            throw new Error('Plan not found');
+        }
+
+        if (plan.maxTeams === 0) {
+            return {
+                canCreateTeam: true,
+                currentPlan: plan,
+                teamCount: company.teams.length
+            };
+        }
+
         return {
-            canCreateCompany: ownedCompanies.length === 0,
-            canCreateTeam:
-                company.plan.name === 'GROWTH' || company.teams.length === 0,
-            currentPlan: company.plan,
-            isCompanyAdmin: user.companyMember.some(
-                (m) => m.companyId === companyId && m.role === 'COMPANY_ADMIN'
-            ),
-            memberCount: company.members.length,
+            canCreateTeam: company.teams.length < plan.maxTeams,
+            currentPlan: plan,
             teamCount: company.teams.length
         };
+    } catch (error) {
+        throw new Error('Failed to check company');
     }
-
-    return {
-        canCreateCompany: ownedCompanies.length === 0,
-        ownedCompaniesCount: ownedCompanies.length
-    };
-}
+};
 
 export async function getUserCompanyRole(userId: string, companyId: string) {
     const membership = await prisma.companyMember.findFirst({
