@@ -72,7 +72,6 @@ export function UpdateLogoDialog({
                         const result = await uploadImage(formData);
 
                         if (result.error) {
-                            console.log(result.error);
                             toast.error(
                                 'Failed to update logo. Please try again.'
                             );
@@ -83,7 +82,6 @@ export function UpdateLogoDialog({
                             setSelectedFile(file);
                         }
                     } catch (uploadError) {
-                        console.log(uploadError);
                         toast.error('Failed to update logo. Please try again.');
                     }
                 };

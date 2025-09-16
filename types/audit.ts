@@ -70,6 +70,8 @@ export type AuditAction =
     // Invite actions
     | 'invite.company_accept_invite'
     | 'invite.company_decline_invite'
+    | 'invite.team_accept_invite'
+    | 'invite.team_decline_invite'
 
     // Data actions
     | 'data.exported'

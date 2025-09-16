@@ -1,4 +1,5 @@
-import { Country } from '@/generated/prisma';
+import { getTeamInvitationByToken } from '@/actions/invitation';
+import { Country, TeamRole } from '@/generated/prisma';
 
 export type RegistrationStep = 'initial' | 'email-verify' | 'complete';
 
@@ -12,7 +13,7 @@ export interface RegistrationData {
     terms: boolean;
 }
 
-export interface CompanyUserRegistrationData {
+export interface InviteUserRegistrationData {
     userId?: string;
     name: string;
     lastName: string;
@@ -32,11 +33,37 @@ export interface CompanyUserRegistationFormProps {
     email: string;
 }
 
+export type TeamInvitationData = Awaited<
+    ReturnType<typeof getTeamInvitationByToken>
+>;
+
+export type TeamInvitation = NonNullable<
+    TeamInvitationData extends { invitation: infer T } ? T : never
+>;
+
+export interface TeamUserRegistationFormProps {
+    invite: TeamInvitation;
+}
+
 export interface CompanyUserInitialRegistationFormProps {
     companyId: string;
     inviteId: string;
-    data: CompanyUserRegistrationData;
-    onNext: (data: CompanyUserRegistrationData & { userId: string }) => void;
+    data: InviteUserRegistrationData;
+    onNext: (
+        data: InviteUserRegistrationData & {
+            userId: string;
+        }
+    ) => void;
+}
+
+export interface TeamUserInitialRegistationFormProps {
+    invite: TeamInvitation;
+    data: InviteUserRegistrationData;
+    onNext: (
+        data: InviteUserRegistrationData & {
+            userId: string;
+        }
+    ) => void;
 }
 
 export interface EmailVerificationFormProps {

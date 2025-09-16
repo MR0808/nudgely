@@ -349,7 +349,6 @@ export const createTeam = async (
 
         return { data: team, error: null };
     } catch (error) {
-        console.log(error);
         return { data: null, error: `Failed to create team - ${error}` };
     }
 };

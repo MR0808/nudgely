@@ -43,7 +43,6 @@ const LoginForm = () => {
     const onSubmit = (values: z.infer<typeof LoginSchema>) => {
         startTransition(async () => {
             const data = await login(values);
-            console.log(data);
             const { error, emailVerified } = data;
             if (error) {
                 toast.error(error, { position: 'top-center' });

@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 
-const CompanyUserRegistationComplete = () => {
+const TeamUserRegistationComplete = () => {
     return (
         <div className="text-center space-y-6">
             <div className="space-y-3">
@@ -15,4 +15,4 @@ const CompanyUserRegistationComplete = () => {
     );
 };
 
-export default CompanyUserRegistationComplete;
+export default TeamUserRegistationComplete;

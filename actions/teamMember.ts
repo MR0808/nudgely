@@ -257,7 +257,7 @@ export const resendTeamInvitation = async (id: string) => {
         }
 
         if (new Date() > invite.expiresAt) {
-            await prisma.companyInvite.update({
+            await prisma.teamInvite.update({
                 where: { id },
                 data: { status: 'EXPIRED' }
             });

@@ -40,7 +40,6 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     } catch (err: any) {
         if (err instanceof APIError) {
             const errCode = err.body ? (err.body.code as ErrorCode) : 'UNKNOWN';
-            console.log(errCode);
 
             switch (errCode) {
                 case 'EMAIL_NOT_VERIFIED':

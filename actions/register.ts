@@ -4,7 +4,7 @@ import * as z from 'zod';
 import { APIError } from 'better-auth/api';
 import GithubSlugger from 'github-slugger';
 
-import { CompanyUserRegisterSchema, RegisterSchema } from '@/schemas/register';
+import { InviteUserRegisterSchema, RegisterSchema } from '@/schemas/register';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import {
@@ -15,6 +15,7 @@ import { generateOTP } from '@/lib/otp';
 import { sendVerificationEmail } from '@/lib/mail';
 import { EmailCheckResult } from '@/types/register';
 import { logCompanyCreated } from '@/actions/audit/audit-company';
+import { TeamRole } from '@/generated/prisma';
 
 let cachedDomains: string[] | null = null;
 let lastFetched: number | null = null;
@@ -194,11 +195,11 @@ export const checkEmail = async (email: string): Promise<EmailCheckResult> => {
 };
 
 export const companyUserRegisterInitial = async (
-    values: z.infer<typeof CompanyUserRegisterSchema>,
+    values: z.infer<typeof InviteUserRegisterSchema>,
     companyId: string,
     inviteId: string
 ) => {
-    const validatedFields = CompanyUserRegisterSchema.safeParse(values);
+    const validatedFields = InviteUserRegisterSchema.safeParse(values);
 
     if (!validatedFields.success) {
         return { error: 'Invalid fields!' };
@@ -308,5 +309,127 @@ export const companyUserRegisterInitial = async (
         }
 
         return { error: 'Internal Server Error' };
+    }
+};
+
+export const teamUserRegisterInitial = async (
+    values: z.infer<typeof InviteUserRegisterSchema>,
+    companyId: string,
+    teamId: string,
+    role: TeamRole,
+    inviteId: string
+) => {
+    const validatedFields = InviteUserRegisterSchema.safeParse(values);
+
+    if (!validatedFields.success) {
+        return { error: 'Invalid fields!' };
+    }
+
+    const { name, lastName, email, password } = validatedFields.data;
+
+    try {
+        const isEmailDisposable = await checkEmail(email);
+
+        if (isEmailDisposable.error) {
+            return {
+                error: `Email is invalid - ${isEmailDisposable.error}`
+            };
+        } else {
+            if (isEmailDisposable.isDisposable) {
+                return {
+                    error: `Email is invalid`
+                };
+            }
+        }
+
+        const existingUser = await prisma.user.findUnique({
+            where: { email }
+        });
+
+        if (existingUser) {
+            return { error: 'An account with this email already exists.' };
+        }
+
+        const data = await auth.api.signUpEmail({
+            body: {
+                name,
+                lastName,
+                email,
+                password,
+                role: 'USER'
+            }
+        });
+
+        const otp = generateOTP();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        const company = await prisma.company.findUnique({
+            where: { id: companyId }
+        });
+
+        if (!company) {
+            return { error: 'Company not found' };
+        }
+
+        await prisma.companyMember.create({
+            data: {
+                companyId: company.id,
+                userId: data.user.id,
+                role: 'COMPANY_MEMBER'
+            }
+        });
+
+        const team = await prisma.team.findUnique({ where: { id: teamId } });
+
+        if (!team) {
+            return { error: 'Team not found' };
+        }
+
+        await prisma.teamMember.create({
+            data: {
+                teamId: team.id,
+                userId: data.user.id,
+                role,
+                teamInviteId: inviteId
+            }
+        });
+
+        await prisma.verification.create({
+            data: {
+                identifier: `email-otp:${data.user.id}`,
+                value: otp,
+                expiresAt
+            }
+        });
+
+        const emailSent = await sendVerificationEmail({ email, otp, name });
+
+        if (emailSent.error) {
+            return {
+                error: 'Failed to send verification email'
+            };
+        }
+
+        await prisma.teamInvite.update({
+            where: { id: inviteId },
+            data: {
+                status: 'ACCEPTED'
+            }
+        });
+
+        await logUserRegistered(data.user.id, {
+            registrationMethod: 'email',
+            emailVerified: false
+        });
+
+        await logEmailVerifyRequested(data.user.id, data.user.email);
+
+        return { userId: data.user.id, error: null };
+    } catch (err) {
+        if (err instanceof APIError) {
+            return { error: err.message };
+        }
+
+        return { error: `Internal Server Error - ${err}` };
     }
 };

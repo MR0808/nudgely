@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { CheckCircle, Mail, Users } from 'lucide-react';
 import {
-    CompanyUserRegistationFormProps,
+    TeamUserRegistationFormProps,
     InviteUserRegistrationData,
     RegistrationStep
 } from '@/types/register';
@@ -15,21 +15,17 @@ import {
     CardHeader,
     CardTitle
 } from '@/components/ui/card';
-import CompanyUserInitialRegistationForm from '@/components/auth/companyUserRegistration/CompanyUserInitialRegistationForm';
-import CompanyUserEmailVerificationForm from '@/components/auth/companyUserRegistration/CompanyUserEmailVerificationForm';
-import CompanyUserRegistationComplete from '@/components/auth/companyUserRegistration/CompanyUserRegistationComplete';
+import TeamUserInitialRegistationForm from '@/components/auth/teamUserRegistration/TeamUserInitialRegistationForm';
+import TeamUserEmailVerificationForm from '@/components/auth/teamUserRegistration/TeamUserEmailVerificationForm';
+import TeamUserRegistationComplete from '@/components/auth/teamUserRegistration/TeamUserRegistationComplete';
 
-const CompanyUserRegistationForm = ({
-    companyId,
-    inviteId,
-    email
-}: CompanyUserRegistationFormProps) => {
+const TeamUserRegistationForm = ({ invite }: TeamUserRegistationFormProps) => {
     const [currentStep, setCurrentStep] = useState<RegistrationStep>('initial');
     const [registrationData, setRegistrationData] =
         useState<InviteUserRegistrationData>({
             name: '',
             lastName: '',
-            email: email,
+            email: invite.email,
             password: '',
             terms: false
         });
@@ -73,7 +69,7 @@ const CompanyUserRegistationForm = ({
                         <CardDescription>
                             <p>
                                 We&apos;ve sent a 6-digit code to{' '}
-                                <strong>{email}</strong>.
+                                <strong>{invite.email}</strong>.
                             </p>
                             <p>Please enter it below.</p>
                         </CardDescription>
@@ -99,9 +95,8 @@ const CompanyUserRegistationForm = ({
                     {/* Role */}
                     <div className="p-4 border rounded-lg">
                         {currentStep === 'initial' && (
-                            <CompanyUserInitialRegistationForm
-                                companyId={companyId}
-                                inviteId={inviteId}
+                            <TeamUserInitialRegistationForm
+                                invite={invite}
                                 data={registrationData}
                                 onNext={(data) => {
                                     updateRegistrationData(data);
@@ -111,7 +106,7 @@ const CompanyUserRegistationForm = ({
                         )}
 
                         {currentStep === 'email-verify' && (
-                            <CompanyUserEmailVerificationForm
+                            <TeamUserEmailVerificationForm
                                 email={registrationData.email}
                                 userId={registrationData.userId}
                                 password={registrationData.password}
@@ -124,7 +119,7 @@ const CompanyUserRegistationForm = ({
                         )}
 
                         {currentStep === 'complete' && (
-                            <CompanyUserRegistationComplete />
+                            <TeamUserRegistationComplete />
                         )}
                     </div>
                 </CardContent>
@@ -132,4 +127,4 @@ const CompanyUserRegistationForm = ({
         </div>
     );
 };
-export default CompanyUserRegistationForm;
+export default TeamUserRegistationForm;

@@ -17,23 +17,24 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import {
     companyUserRegisterInitial,
-    registerInitial
+    registerInitial,
+    teamUserRegisterInitial
 } from '@/actions/register';
 import { InviteUserRegisterSchema } from '@/schemas/register';
-import type { CompanyUserInitialRegistationFormProps } from '@/types/register';
+import type { TeamUserInitialRegistationFormProps } from '@/types/register';
 import {
     InputAuth,
     InputAuthCompanyUser,
     PasswordInputAuthCompanyUser,
     SubmitButtonAuth
 } from '@/components/form/FormInputs';
+import { inviteCompanyAdmin } from '@/actions/companyMembers';
 
-const CompanyUserInitialRegistationForm = ({
-    companyId,
-    inviteId,
+const TeamUserInitialRegistationForm = ({
+    invite,
     data,
     onNext
-}: CompanyUserInitialRegistationFormProps) => {
+}: TeamUserInitialRegistationFormProps) => {
     const [isPending, startTransition] = useTransition();
 
     const form = useForm<z.infer<typeof InviteUserRegisterSchema>>({
@@ -50,17 +51,16 @@ const CompanyUserInitialRegistationForm = ({
     const onSubmit = (values: z.infer<typeof InviteUserRegisterSchema>) => {
         toast.dismiss();
         startTransition(async () => {
-            const result = await companyUserRegisterInitial(
+            const result = await teamUserRegisterInitial(
                 values,
-                companyId,
-                inviteId
+                invite.team.companyId,
+                invite.teamId,
+                invite.role,
+                invite.id
             );
             if (result.error) {
                 toast.error(result.error, { position: 'top-center' });
             } else if (result.userId) {
-                // toast.success('Account created! Please verify your email.', {
-                //     position: 'top-center'
-                // });
                 onNext({ ...values, userId: result.userId });
             }
         });
@@ -222,4 +222,4 @@ const CompanyUserInitialRegistationForm = ({
     );
 };
 
-export default CompanyUserInitialRegistationForm;
+export default TeamUserInitialRegistationForm;

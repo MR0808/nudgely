@@ -105,7 +105,6 @@ export const updateCompany = async (
 
         return { data: companyDb, error: null };
     } catch (error) {
-        console.log(error);
         return { data: null, error: 'Failed to create company' };
     }
 };

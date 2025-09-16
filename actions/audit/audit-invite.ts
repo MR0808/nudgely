@@ -26,3 +26,27 @@ export async function logCompanyDeclineInvite(
         metadata: { ...metadata }
     });
 }
+
+export async function logTeamAcceptInvite(
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId: undefined,
+        action: 'invite.team_accept_invite',
+        category: 'invite',
+        description: `Invite accepted`,
+        metadata: { ...metadata }
+    });
+}
+
+export async function logTeamDeclineInvite(
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId: undefined,
+        action: 'invite.team_decline_invite',
+        category: 'invite',
+        description: `Invite declined`,
+        metadata: { ...metadata }
+    });
+}

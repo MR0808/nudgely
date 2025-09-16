@@ -21,8 +21,8 @@ import {
 import AuthTemplate from '@/components/auth/AuthTemplate';
 import { isLoggedIn } from '@/lib/authCheck';
 import { ParamsToken } from '@/types/global';
-import { getCompanyInvitationByToken } from '@/actions/invitation';
-import CompanyInvitationForm from '@/components/auth/CompanyInvitationForm';
+import { getTeamInvitationByToken } from '@/actions/invitation';
+import TeamInvitationForm from '@/components/auth/TeamInvitationForm';
 
 export function generateMetadata(): Metadata {
     return {
@@ -31,11 +31,11 @@ export function generateMetadata(): Metadata {
     };
 }
 
-const RegisterCompanyAdminPage = async (props: { params: ParamsToken }) => {
+const RegisterTeamPage = async (props: { params: ParamsToken }) => {
     await isLoggedIn();
 
     const { token } = await props.params;
-    const invitation = await getCompanyInvitationByToken(token);
+    const invitation = await getTeamInvitationByToken(token);
 
     return (
         <AuthTemplate>
@@ -64,7 +64,7 @@ const RegisterCompanyAdminPage = async (props: { params: ParamsToken }) => {
                     </div>
                 ))}
             {invitation && invitation.invitation && (
-                <CompanyInvitationForm
+                <TeamInvitationForm
                     invite={invitation.invitation}
                     inviter={invitation.inviter}
                 />
@@ -72,4 +72,4 @@ const RegisterCompanyAdminPage = async (props: { params: ParamsToken }) => {
         </AuthTemplate>
     );
 };
-export default RegisterCompanyAdminPage;
+export default RegisterTeamPage;

@@ -443,10 +443,10 @@ model CompanyInvite {
   token     String           @unique
   expiresAt DateTime
 
-  company        Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId      String
-  invitedBy      String // User ID who sent the invite
-  companyMembers CompanyMember?
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId     String
+  invitedBy     String // User ID who sent the invite
+  companyMember CompanyMember?
 
   @@unique([companyId, email])
   @@map("company_invites")
@@ -483,10 +483,12 @@ model TeamMember {
 
   role TeamRole @default(TEAM_MEMBER)
 
-  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+  team         Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId       String
+  teamInvite   TeamInvite? @relation(fields: [teamInviteId], references: [id], onDelete: Cascade)
+  teamInviteId String?     @unique
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
 
   @@unique([teamId, userId])
   @@map("team_members")
@@ -504,9 +506,10 @@ model TeamInvite {
   token     String           @unique
   expiresAt DateTime
 
-  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId    String
-  invitedBy String // User ID who sent the invite
+  team       Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId     String
+  invitedBy  String // User ID who sent the invite
+  teamMember TeamMember?
 
   @@unique([teamId, email])
   @@map("team_invites")

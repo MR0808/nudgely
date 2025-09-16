@@ -105,8 +105,6 @@ const CompanyOnboardingWizard = ({
             } else {
                 onSubmit(form.getValues());
             }
-        } else {
-            console.log('Validation errors:', errors);
         }
     };
 
@@ -165,15 +163,15 @@ const CompanyOnboardingWizard = ({
         return <SuccessStep />;
     }
 
-    const onError: SubmitErrorHandler<
-        z.infer<typeof CompanyOnboardingSchema>
-    > = (errors) => {
-        console.log(errors);
-    };
+    // const onError: SubmitErrorHandler<
+    //     z.infer<typeof CompanyOnboardingSchema>
+    // > = (errors) => {
+    //     console.log(errors);
+    // };
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit, onError)}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="container mx-auto px-4 py-8 max-w-2xl">
                     <div className="text-center mb-8">
                         <div className="flex flex-row w-full justify-center">

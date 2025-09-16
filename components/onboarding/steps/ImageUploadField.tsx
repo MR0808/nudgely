@@ -116,8 +116,6 @@ const ImageUploadField = ({
                         // Call server action
                         const result = await uploadImage(formData);
 
-                        console.log(result);
-
                         // Clear progress simulation
                         clearInterval(progressInterval);
 

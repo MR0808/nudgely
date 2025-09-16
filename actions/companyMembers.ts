@@ -313,7 +313,7 @@ export const cancelCompanyInvitation = async (id: string) => {
         await prisma.companyInvite.delete({ where: { id } });
 
         const data = await prisma.companyInvite.findMany({
-            where: { companyId: company.id },
+            where: { companyId: company.id, NOT: { status: 'ACCEPTED' } },
             orderBy: { createdAt: 'asc' }
         });
 

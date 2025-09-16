@@ -52,7 +52,7 @@ export const RegisterSchema = z.object({
 //     }
 // });
 
-export const CompanyUserRegisterSchema = z.object({
+export const InviteUserRegisterSchema = z.object({
     email: z.email({
         message: 'Email is required'
     }),

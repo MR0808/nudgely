@@ -12,20 +12,16 @@ import {
     CardHeader,
     CardTitle
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CompanyInvitationFormProps } from '@/types/invitation';
+import { TeamInvitationFormProps } from '@/types/invitation';
 import Link from 'next/link';
 import {
-    acceptCompanyInvitation,
-    declineCompanyInvitation
+    acceptTeamInvitation,
+    declineTeamInvitation
 } from '@/actions/invitation';
-import CompanyUserRegistationForm from '@/components/auth/companyUserRegistration/CompanyUserRegistationForm';
+import TeamUserRegistationForm from '@/components/auth/teamUserRegistration/TeamUserRegistationForm';
 
-const CompanyInvitationForm = ({
-    invite,
-    inviter
-}: CompanyInvitationFormProps) => {
+const TeamInvitationForm = ({ invite, inviter }: TeamInvitationFormProps) => {
     const [status, setStatus] = useState<
         'pending' | 'valid' | 'expired' | 'accepted' | 'declined' | 'error'
     >('pending');
@@ -34,7 +30,7 @@ const CompanyInvitationForm = ({
 
     const handleAccept = async () => {
         startTransitionAccept(async () => {
-            const data = await acceptCompanyInvitation(invite.token);
+            const data = await acceptTeamInvitation(invite.token);
             if (data.error) {
                 toast.error(data.error);
             }
@@ -46,7 +42,7 @@ const CompanyInvitationForm = ({
 
     const handleDecline = async () => {
         startTransitionDecline(async () => {
-            const data = await declineCompanyInvitation(invite.token);
+            const data = await declineTeamInvitation(invite.token);
             if (data.error) {
                 toast.error(data.error);
             }
@@ -66,8 +62,9 @@ const CompanyInvitationForm = ({
                             Invitation Declined
                         </h2>
                         <p className="text-muted-foreground mb-4">
-                            You&apos;ve declined the invitation to join{' '}
-                            <strong>{invite.company.name}</strong>
+                            You&apos;ve declined the invitation to join the{' '}
+                            <strong>{invite.team.name}</strong> team with{' '}
+                            <strong>{invite.team.company.name}</strong>
                         </p>
                         <Link href="/">
                             <Button variant="outline">Go to Nudgely</Button>
@@ -79,13 +76,7 @@ const CompanyInvitationForm = ({
     }
 
     if (status === 'accepted') {
-        return (
-            <CompanyUserRegistationForm
-                companyId={invite.company.id}
-                inviteId={invite.id}
-                email={invite.email}
-            />
-        );
+        return <TeamUserRegistationForm invite={invite} />;
     }
 
     return (
@@ -99,7 +90,8 @@ const CompanyInvitationForm = ({
                         You&apos;re Invited!
                     </CardTitle>
                     <CardDescription>
-                        Join <strong>{invite.company.name}</strong> on Nudgely
+                        Join the <strong>{invite.team.name}</strong> team with{' '}
+                        <strong>{invite.team.company.name}</strong> on Nudgely
                     </CardDescription>
                 </CardHeader>
 
@@ -107,21 +99,18 @@ const CompanyInvitationForm = ({
                     {/* Team Info */}
                     <div className="p-4 bg-muted rounded-lg">
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-medium">
-                                {invite.company.name}
+                            <h3 className="font-medium text-lg">
+                                {invite.team.name}
                             </h3>
-                            <Badge variant={invite.company.plan.colour}>
-                                {invite.company.plan.name}
-                            </Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                                 <Building2 className="h-4 w-4" />
-                                {invite.company.name}
+                                {invite.team.company.name}
                             </div>
                             <div className="flex items-center gap-1">
                                 <Users className="h-4 w-4" />
-                                {invite.company.members.length} members
+                                {invite.team.members.length} members
                             </div>
                         </div>
                     </div>
@@ -156,17 +145,22 @@ const CompanyInvitationForm = ({
                     {/* Role */}
                     <div className="p-4 border rounded-lg">
                         <div className="flex items-center gap-2 mb-2">
-                            <Crown className="h-4 w-4 text-amber-500" />
-
-                            <Users className="h-4 w-4" />
-
+                            {invite.role === 'TEAM_ADMIN' ? (
+                                <Crown className="h-4 w-4 text-amber-500" />
+                            ) : (
+                                <Users className="h-4 w-4" />
+                            )}
                             <span className="font-medium">
-                                Company Admin Role
+                                {invite.role === 'TEAM_ADMIN'
+                                    ? 'Team Admin'
+                                    : 'Team Member'}{' '}
+                                Role
                             </span>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            Full access to manage company settings, invite
-                            members, and oversee all company nudges.
+                            {invite.role === 'TEAM_ADMIN'
+                                ? 'Full access to manage team settings, invite members, and oversee all team tasks'
+                                : 'Can create and manage tasks, collaborate with team members, and track progress'}
                         </p>
                     </div>
 
@@ -210,4 +204,4 @@ const CompanyInvitationForm = ({
         </div>
     );
 };
-export default CompanyInvitationForm;
+export default TeamInvitationForm;
