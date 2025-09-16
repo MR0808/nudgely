@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -40,19 +40,23 @@ import {
     Loader2
 } from 'lucide-react';
 import { InviteMemberDialog } from '@/components/team/view/InviteMemberDialog';
-import { Plan } from '@/generated/prisma';
 import { Member, TeamMembersListProps } from '@/types/team';
-// import { InviteMemberDialog } from './invite-member-dialog';
-// import {
-//     getTeamMembers,
-//     removeTeamMember,
-//     changeTeamMemberRole
-// } from '@/lib/actions/team-invitations';
 
-const TeamMembersList = ({ team, members, userRole }: TeamMembersListProps) => {
+const TeamMembersList = ({
+    team,
+    membersData,
+    invitesData,
+    userRole
+}: TeamMembersListProps) => {
+    const [isPendingResend, startTransitionResend] = useTransition();
+    const [members, setMembers] = useState(membersData);
+    const [pendingInvites, setPendingInvites] = useState(invitesData);
+    const [view, setView] = useState<'members' | 'invites'>('members');
     const [error, setError] = useState<string | null>(null);
     const [removingMember, setRemovingMember] = useState<string | null>(null);
     const [changingRole, setChangingRole] = useState<string | null>(null);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
     const [showRemoveDialog, setShowRemoveDialog] = useState<{
         member: Member;
     } | null>(null);
@@ -105,6 +109,29 @@ const TeamMembersList = ({ team, members, userRole }: TeamMembersListProps) => {
         // }
     };
 
+    const handleCancelInvite = async (
+        inviteId: string,
+        name: string,
+        email: string
+    ) => {
+        // setInviteId(inviteId);
+        // setName(name);
+        // setEmail(email);
+        // setCancelDialogOpen(true);
+    };
+
+    const handleResendInvite = async (inviteId: string) => {
+        // startTransitionResend(async () => {
+        //     const data = await resendCompanyInvitation(inviteId);
+        //     if (data.error) {
+        //         toast.error(data.error);
+        //     }
+        //     if (data.data) {
+        //         toast.success('User invite resent');
+        //     }
+        // });
+    };
+
     const canManageMembers = userRole === 'TEAM_ADMIN';
 
     return (
@@ -112,15 +139,37 @@ const TeamMembersList = ({ team, members, userRole }: TeamMembersListProps) => {
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle className="flex items-center gap-2">
-                                <Users className="h-5 w-5" />
-                                Team Members
-                            </CardTitle>
-                            <CardDescription>
-                                {members.length} member
-                                {members.length !== 1 ? 's' : ''} in {team.name}
-                            </CardDescription>
+                        <div className="flex flex-row space-x-5">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Users className="h-5 w-5" />
+                                    Team Members
+                                </CardTitle>
+                                <CardDescription>
+                                    {members.length} member
+                                    {members.length !== 1 ? 's' : ''} in{' '}
+                                    {team.name}
+                                </CardDescription>
+                            </div>
+                            <Button
+                                type="button"
+                                variant={
+                                    view === 'members' ? 'default' : 'outline'
+                                }
+                                className="cursor-pointer"
+                                onClick={() => setView('members')}
+                            >
+                                Members
+                            </Button>
+                            <Button
+                                variant={
+                                    view === 'invites' ? 'default' : 'outline'
+                                }
+                                className="cursor-pointer"
+                                onClick={() => setView('invites')}
+                            >
+                                Invites
+                            </Button>
                         </div>
                         {canManageMembers && (
                             <InviteMemberDialog
@@ -128,154 +177,279 @@ const TeamMembersList = ({ team, members, userRole }: TeamMembersListProps) => {
                                 teamName={team.name}
                                 companyPlan={team.company.plan}
                                 currentMemberCount={members.length}
+                                setMembers={setMembers}
+                                setPendingInvites={setPendingInvites}
                             />
                         )}
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {error && (
-                        <Alert variant="destructive" className="mb-4">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                    )}
+                    {view === 'members' && (
+                        <>
+                            {error && (
+                                <Alert variant="destructive" className="mb-4">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
+                            )}
 
-                    <div className="space-y-4">
-                        {members.map((member) => (
-                            <div
-                                key={member.id}
-                                className="flex items-center justify-between p-3 border rounded-lg"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="h-10 w-10">
-                                        <AvatarImage
-                                            src={
-                                                member.avatar ||
-                                                '/placeholder.svg'
-                                            }
-                                            alt={member.name}
-                                        />
-                                        <AvatarFallback>
-                                            {member.name
-                                                .split(' ')
-                                                .map((n) => n[0])
-                                                .join('')}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-medium">
-                                                {member.name}
-                                            </span>
-                                            {member.isCurrentUser && (
-                                                <Badge
-                                                    variant="outline"
-                                                    className="text-xs"
-                                                >
-                                                    You
-                                                </Badge>
-                                            )}
-                                            {member.role === 'TEAM_ADMIN' && (
-                                                <Crown className="h-4 w-4 text-amber-500" />
-                                            )}
+                            <div className="space-y-4">
+                                {members.map((member) => (
+                                    <div
+                                        key={member.id}
+                                        className="flex items-center justify-between p-3 border rounded-lg"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-10 w-10">
+                                                <AvatarImage
+                                                    src={
+                                                        member.avatar ||
+                                                        '/placeholder.svg'
+                                                    }
+                                                    alt={member.name}
+                                                />
+                                                <AvatarFallback>
+                                                    {member.name
+                                                        .split(' ')
+                                                        .map((n) => n[0])
+                                                        .join('')}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium">
+                                                        {member.name}
+                                                    </span>
+                                                    {member.isCurrentUser && (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-xs"
+                                                        >
+                                                            You
+                                                        </Badge>
+                                                    )}
+                                                    {member.role ===
+                                                        'TEAM_ADMIN' && (
+                                                        <Crown className="h-4 w-4 text-amber-500" />
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <Mail className="h-3 w-3" />
+                                                    {member.email}
+                                                    <span>•</span>
+                                                    <span>
+                                                        Joined{' '}
+                                                        {new Date(
+                                                            member.joinedAt
+                                                        ).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <Mail className="h-3 w-3" />
-                                            {member.email}
-                                            <span>•</span>
-                                            <span>
-                                                Joined{' '}
-                                                {new Date(
-                                                    member.joinedAt
-                                                ).toLocaleDateString()}
-                                            </span>
+
+                                        <div className="flex items-center gap-2">
+                                            <Badge
+                                                variant={
+                                                    member.role === 'TEAM_ADMIN'
+                                                        ? 'default'
+                                                        : 'secondary'
+                                                }
+                                            >
+                                                {member.role === 'TEAM_ADMIN'
+                                                    ? 'Admin'
+                                                    : 'Member'}
+                                            </Badge>
+
+                                            {canManageMembers &&
+                                                !member.isCurrentUser &&
+                                                member.companyRole !==
+                                                    'COMPANY_ADMIN' && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger
+                                                            asChild
+                                                        >
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                disabled={
+                                                                    removingMember ===
+                                                                        member.id ||
+                                                                    changingRole ===
+                                                                        member.id
+                                                                }
+                                                            >
+                                                                {removingMember ===
+                                                                    member.id ||
+                                                                changingRole ===
+                                                                    member.id ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem
+                                                                onClick={() =>
+                                                                    handleChangeRole(
+                                                                        member.id,
+                                                                        member.role ===
+                                                                            'TEAM_ADMIN'
+                                                                            ? 'TEAM_MEMBER'
+                                                                            : 'TEAM_ADMIN'
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Settings className="h-4 w-4 mr-2" />
+                                                                {member.role ===
+                                                                'TEAM_ADMIN'
+                                                                    ? 'Make Member'
+                                                                    : 'Make Admin'}
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                                className="text-destructive"
+                                                                onClick={() =>
+                                                                    setShowRemoveDialog(
+                                                                        {
+                                                                            member
+                                                                        }
+                                                                    )
+                                                                }
+                                                            >
+                                                                <UserMinus className="h-4 w-4 mr-2" />
+                                                                Remove from Team
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
                                         </div>
                                     </div>
-                                </div>
+                                ))}
 
-                                <div className="flex items-center gap-2">
-                                    <Badge
-                                        variant={
-                                            member.role === 'TEAM_ADMIN'
-                                                ? 'default'
-                                                : 'secondary'
-                                        }
+                                {members.length === 0 && !error && (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                        <p>No team members found</p>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
+                    {view === 'invites' && (
+                        <>
+                            {error && (
+                                <Alert variant="destructive" className="mb-4">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
+                            )}
+
+                            <div className="space-y-4">
+                                {pendingInvites.map((invite) => (
+                                    <div
+                                        key={invite.id}
+                                        className="flex items-center justify-between p-3 border rounded-lg"
                                     >
-                                        {member.role === 'TEAM_ADMIN'
-                                            ? 'Admin'
-                                            : 'Member'}
-                                    </Badge>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-10 w-10">
+                                                <AvatarFallback>
+                                                    {invite.name
+                                                        .split(' ')
+                                                        .map((n) => n[0])
+                                                        .join('')}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium">
+                                                        {invite.name}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <Mail className="h-3 w-3" />
+                                                    {invite.email}
+                                                    <span>•</span>
+                                                    <span>
+                                                        Invited{' '}
+                                                        {invite.createdAt.toLocaleDateString()}{' '}
+                                                        • Expires{' '}
+                                                        {invite.expiresAt.toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                    {canManageMembers &&
-                                        !member.isCurrentUser &&
-                                        member.companyRole !==
-                                            'COMPANY_ADMIN' && (
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        disabled={
-                                                            removingMember ===
-                                                                member.id ||
-                                                            changingRole ===
-                                                                member.id
-                                                        }
-                                                    >
-                                                        {removingMember ===
-                                                            member.id ||
-                                                        changingRole ===
-                                                            member.id ? (
-                                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                                        ) : (
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        )}
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem
-                                                        onClick={() =>
-                                                            handleChangeRole(
-                                                                member.id,
-                                                                member.role ===
-                                                                    'TEAM_ADMIN'
-                                                                    ? 'TEAM_MEMBER'
-                                                                    : 'TEAM_ADMIN'
-                                                            )
-                                                        }
-                                                    >
-                                                        <Settings className="h-4 w-4 mr-2" />
-                                                        {member.role ===
-                                                        'TEAM_ADMIN'
-                                                            ? 'Make Member'
-                                                            : 'Make Admin'}
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem
-                                                        className="text-destructive"
-                                                        onClick={() =>
-                                                            setShowRemoveDialog(
-                                                                { member }
-                                                            )
-                                                        }
-                                                    >
-                                                        <UserMinus className="h-4 w-4 mr-2" />
-                                                        Remove from Team
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        )}
-                                </div>
-                            </div>
-                        ))}
+                                        <div className="flex items-center gap-2">
+                                            <Badge
+                                                variant={
+                                                    invite.role === 'TEAM_ADMIN'
+                                                        ? 'default'
+                                                        : 'secondary'
+                                                }
+                                            >
+                                                {invite.role === 'TEAM_ADMIN'
+                                                    ? 'Admin'
+                                                    : 'Member'}
+                                            </Badge>
 
-                        {members.length === 0 && !error && (
-                            <div className="text-center py-8 text-muted-foreground">
-                                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                <p>No team members found</p>
+                                            {canManageMembers && (
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger
+                                                        asChild
+                                                    >
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            disabled={
+                                                                isPendingResend
+                                                            }
+                                                        >
+                                                            {isPendingResend ? (
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                            ) : (
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            )}
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                handleResendInvite(
+                                                                    invite.id
+                                                                )
+                                                            }
+                                                        >
+                                                            Resend Invite
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            className="text-destructive"
+                                                            onClick={() =>
+                                                                handleCancelInvite(
+                                                                    invite.id,
+                                                                    invite.name,
+                                                                    invite.email
+                                                                )
+                                                            }
+                                                        >
+                                                            Cancel Invite
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {pendingInvites.length === 0 && !error && (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                        <p>No invites found</p>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        </>
+                    )}
                 </CardContent>
             </Card>
 

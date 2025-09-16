@@ -16,6 +16,7 @@ import {
     logCompanyAdminInvited,
     logCompanyAdminRemoved
 } from '@/actions/audit/audit-company';
+import { checkCompanyUserLimits } from '@/lib/team';
 
 export const inviteCompanyAdmin = async (
     values: z.infer<typeof InviteCompanyAdminSchema>,
@@ -25,8 +26,8 @@ export const inviteCompanyAdmin = async (
 
     if (!userSession) {
         return {
-            data: null,
-            message: 'Not authorised'
+            success: false,
+            error: 'Not authorised'
         };
     }
 
@@ -34,8 +35,8 @@ export const inviteCompanyAdmin = async (
 
     if (userCompany.role !== 'COMPANY_ADMIN') {
         return {
-            data: null,
-            message: 'Not authorised'
+            success: false,
+            error: 'Not authorised'
         };
     }
 
@@ -45,7 +46,7 @@ export const inviteCompanyAdmin = async (
 
         if (!validatedFields.success) {
             return {
-                data: null,
+                success: false,
                 message: 'Invalid fields'
             };
         }
@@ -137,6 +138,29 @@ export const inviteCompanyAdmin = async (
                 error: null
             };
         } else {
+            const limits = await checkCompanyUserLimits(company.id);
+
+            if (!limits.canCreateUser) {
+                return {
+                    success: false,
+                    error: 'User limit reached for your current plan'
+                };
+            }
+
+            const admins = await prisma.companyMember.findMany({
+                where: { role: 'COMPANY_ADMIN' }
+            });
+
+            if (
+                limits.currentPlan.maxAdmin !== 0 ||
+                admins.length >= limits.currentPlan.maxAdmin
+            ) {
+                return {
+                    success: false,
+                    error: 'Admin limit reached for your current plan'
+                };
+            }
+
             const pendingInvites = await prisma.companyInvite.findFirst({
                 where: { companyId, email: values.email }
             });

@@ -77,10 +77,9 @@ const data = {
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     userSession: SessionType;
-    teams: Team[];
 }
 
-export function AppSidebar({ userSession, teams, ...props }: AppSidebarProps) {
+export function AppSidebar({ userSession, ...props }: AppSidebarProps) {
     return (
         <Sidebar collapsible="offcanvas" {...props}>
             <SidebarHeader>
@@ -109,7 +108,6 @@ export function AppSidebar({ userSession, teams, ...props }: AppSidebarProps) {
             </SidebarContent>
             <SidebarFooter>
                 <NavUser />
-                {/* <TeamSelector teams={teams} company={company} /> */}
             </SidebarFooter>
         </Sidebar>
     );

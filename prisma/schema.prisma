@@ -492,6 +492,26 @@ model TeamMember {
   @@map("team_members")
 }
 
+model TeamInvite {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email     String
+  name      String
+  role      TeamRole         @default(TEAM_MEMBER)
+  status    InvitationStatus @default(PENDING)
+  token     String           @unique
+  expiresAt DateTime
+
+  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+  invitedBy String // User ID who sent the invite
+
+  @@unique([teamId, email])
+  @@map("team_invites")
+}
+
 model Nudge {
   id        String   @id @default(uuid())
   slug      String   @unique
@@ -636,25 +656,6 @@ model TeamTemplate {
 
   @@unique([teamId, name])
   @@map("team_templates")
-}
-
-model TeamInvite {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  email     String
-  role      TeamRole         @default(TEAM_MEMBER)
-  status    InvitationStatus @default(PENDING)
-  token     String           @unique
-  expiresAt DateTime
-
-  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId    String
-  invitedBy String // User ID who sent the invite
-
-  @@unique([teamId, email])
-  @@map("team_invites")
 }
 
 model Plan {

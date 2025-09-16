@@ -28,3 +28,29 @@ export async function logTeamUpdated(
         metadata: { ...metadata }
     });
 }
+
+export async function logTeamMemberInvited(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'team.team_member_invited',
+        category: 'team',
+        description: `Team member invited`,
+        metadata: { ...metadata }
+    });
+}
+
+export async function logTeamMemberAdded(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'team.team_member_added',
+        category: 'team',
+        description: `Team member added`,
+        metadata: { ...metadata }
+    });
+}

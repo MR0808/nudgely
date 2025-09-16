@@ -8,6 +8,9 @@ import ResetPasswordEmailTemplate from '@/emails/reset-password';
 import PasswordResetConfirmationEmailTemplate from '@/emails/password-reset-confirmation';
 import CompanyAddedAdminEmailTemplate from '@/emails/company-added-admin';
 import CompanyInviteAdminEmailTemplate from '@/emails/company-invite-admin';
+import { TeamRole } from '@/generated/prisma';
+import TeamAddedEmailTemplate from '@/emails/team-added';
+import TeamInviteEmailTemplate from '@/emails/team-invite';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -92,7 +95,7 @@ export const sendCompanyAddedAdminEmail = async ({
     await resend.emails.send({
         from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
         to: email,
-        subject: 'Nudgely - Your are now an admin',
+        subject: 'Nudgely - You are now an admin',
         react: CompanyAddedAdminEmailTemplate({ name, companyName })
     });
 };
@@ -119,6 +122,59 @@ export const sendCompanyInviteAdminEmail = async ({
             companyName,
             name,
             expiresAt
+        })
+    });
+};
+
+export const sendTeamAddedEmail = async ({
+    email,
+    name,
+    companyName,
+    teamName,
+    role
+}: {
+    email: string;
+    name: string;
+    companyName: string;
+    teamName: string;
+    role: string;
+}) => {
+    await resend.emails.send({
+        from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
+        to: email,
+        subject: 'Nudgely - You have been added to a team',
+        react: TeamAddedEmailTemplate({ name, companyName, teamName, role })
+    });
+};
+
+export const sendTeamInviteEmail = async ({
+    email,
+    link,
+    companyName,
+    name,
+    expiresAt,
+    role,
+    teamName
+}: {
+    email: string;
+    link: string;
+    companyName: string;
+    name: string;
+    expiresAt: Date;
+    role: string;
+    teamName: string;
+}) => {
+    await resend.emails.send({
+        from: fromNudgely,
+        to: email,
+        subject: 'Nudgely - Invite to be a part of a team',
+        react: TeamInviteEmailTemplate({
+            link,
+            companyName,
+            name,
+            expiresAt,
+            role,
+            teamName
         })
     });
 };

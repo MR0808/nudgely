@@ -42,6 +42,7 @@ export type TeamDataTeam = NonNullable<TeamData>['team'];
 
 export type Members = NonNullable<TeamData>['members'];
 export type Member = NonNullable<TeamData>['members'][number];
+export type Invites = NonNullable<TeamData>['invites'];
 
 export interface TeamMainProps {
     teamData: TeamData;
@@ -53,6 +54,8 @@ export interface InviteMemberDialogProps {
     teamName: string;
     currentMemberCount: number;
     companyPlan: Plan;
+    setMembers: (members: Members) => void;
+    setPendingInvites: (pendingInvites: Invites) => void;
     trigger?: React.ReactNode;
 }
 
@@ -68,6 +71,7 @@ export interface TeamEditFormProps {
 
 export interface TeamMembersListProps {
     team: TeamDataTeam;
-    members: Members;
+    membersData: Members;
+    invitesData: Invites;
     userRole: TeamRole;
 }

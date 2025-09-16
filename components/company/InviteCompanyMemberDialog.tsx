@@ -102,7 +102,6 @@ const InviteCompanyMemberDialog = ({
                 <Form {...form}>
                     <form
                         onSubmit={form.handleSubmit(onSubmit)}
-                        data-company-invite-form
                         className="space-y-4"
                     >
                         {error && (

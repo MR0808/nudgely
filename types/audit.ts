@@ -56,6 +56,8 @@ export type AuditAction =
     // Team actions
     | 'team.team_created'
     | 'team.team_updated'
+    | 'team.team_member_invited'
+    | 'team.team_member_added'
 
     // Company actions
     | 'company.company_created'

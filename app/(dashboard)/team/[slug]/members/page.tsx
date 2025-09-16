@@ -72,7 +72,7 @@ const TeamMembersPage = async (props: { params: ParamsSlug }) => {
         );
     }
 
-    const { team, members, userRole } = data;
+    const { team, members, invites, userRole } = data;
 
     return (
         <div className="container mx-auto py-8 space-y-6">
@@ -85,7 +85,8 @@ const TeamMembersPage = async (props: { params: ParamsSlug }) => {
 
             <TeamMembersList
                 team={team}
-                members={members}
+                membersData={members}
+                invitesData={invites || []}
                 userRole={userRole}
             />
         </div>

@@ -96,6 +96,43 @@ export const checkCompanyTeamLimits = async (companyId: string) => {
     }
 };
 
+export const checkCompanyUserLimits = async (companyId: string) => {
+    try {
+        const company = await prisma.company.findUnique({
+            where: { id: companyId },
+            include: { members: true }
+        });
+
+        if (!company) {
+            throw new Error('Company not found');
+        }
+
+        const plan = await prisma.plan.findUnique({
+            where: { id: company.planId }
+        });
+
+        if (!plan) {
+            throw new Error('Plan not found');
+        }
+
+        if (plan.maxUsers === 0) {
+            return {
+                canCreateUser: true,
+                currentPlan: plan,
+                memberCount: company.members.length
+            };
+        }
+
+        return {
+            canCreateUser: company.members.length < plan.maxUsers,
+            currentPlan: plan,
+            memberCount: company.members.length
+        };
+    } catch (error) {
+        throw new Error('Failed to check company');
+    }
+};
+
 export async function getUserCompanyRole(userId: string, companyId: string) {
     const membership = await prisma.companyMember.findFirst({
         where: {
