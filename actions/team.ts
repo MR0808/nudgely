@@ -58,7 +58,7 @@ export const getCompanyTeams = async () => {
             include: { user: true }
         });
 
-        return { data: { teams, members }, error: null };
+        return { data: { teams: returnTeams, members }, error: null };
     } catch (error) {
         return { data: null, error: `Error getting teams - ${error}` };
     }

@@ -40,7 +40,7 @@ const TeamFilter = ({ teamsDb }: TeamFilterProps) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(true);
 
-    const filteredTeams = teams.filter((team) =>
+    const filteredTeams = teams.teams.filter((team) =>
         team.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
