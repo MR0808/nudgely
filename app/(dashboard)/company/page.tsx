@@ -140,7 +140,7 @@ const CompanyPage = async () => {
                         userSession={userSession}
                     />
                     <CompanyTeamsCard
-                        teams={teams.data || []}
+                        teams={teams.data?.teams || []}
                         userSession={userSession}
                     />
                 </div>

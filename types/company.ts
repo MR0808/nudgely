@@ -41,8 +41,12 @@ export type Company = NonNullable<
     CompanyData extends { company: infer T } ? T : never
 >;
 
-export type Teams = NonNullable<
+export type TeamsUpper = NonNullable<
     TeamsData extends { data: infer T } ? T : never
+>;
+
+export type Teams = NonNullable<
+    TeamsUpper extends { teams: infer T } ? T : never
 >;
 
 export interface CompanyProps {
