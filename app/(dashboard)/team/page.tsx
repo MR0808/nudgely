@@ -40,10 +40,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const TeamPage = async () => {
     const { company } = await authCheck('/team');
-    const { data: teams } = await getCompanyTeams();
+    const { data } = await getCompanyTeams();
     const { plan } = await getPlan();
 
-    if (!teams || !plan) {
+    if (!data || !plan) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -64,12 +64,14 @@ const TeamPage = async () => {
         );
     }
 
-    const uniqueUserIds = [
-        ...new Set(
-            teams.flatMap((team) => team.members.map((member) => member.userId))
-        )
-    ];
+    const { teams, members } = data;
 
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+    const recentMembers = members.filter(
+        (member) => member.createdAt >= oneMonthAgo
+    );
     return (
         <div className="w-full bg-background">
             <div className="mx-32 p-6 space-y-6">
@@ -113,7 +115,7 @@ const TeamPage = async () => {
                                 <Users className="h-5 w-5 text-muted-foreground" />
                                 <div>
                                     <p className="text-2xl font-bold">
-                                        {teams.length}
+                                        {`${teams.length} / ${plan.maxTeams === 0 ? '∞' : plan.maxTeams}`}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
                                         Total Teams
@@ -128,7 +130,7 @@ const TeamPage = async () => {
                                 <Users className="h-5 w-5 text-muted-foreground" />
                                 <div>
                                     <p className="text-2xl font-bold">
-                                        {uniqueUserIds.length}
+                                        {`${members.length} / ${plan.maxUsers === 0 ? '∞' : plan.maxUsers}`}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
                                         Total Members
@@ -140,13 +142,13 @@ const TeamPage = async () => {
                     <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center gap-2">
-                                <Crown className="h-5 w-5 text-muted-foreground" />
+                                <Calendar className="h-5 w-5 text-muted-foreground" />
                                 <div>
                                     <p className="text-2xl font-bold">
-                                        {/* {totalAdmins} */}3
+                                        {recentMembers.length}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        Team Admins
+                                        New Members This Month
                                     </p>
                                 </div>
                             </div>
@@ -174,14 +176,14 @@ const TeamPage = async () => {
                                         }
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        New This Month
+                                        New Teams This Month
                                     </p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
-                <TeamFilter teamsDb={teams} />
+                <TeamFilter teamsDb={data} />
             </div>
         </div>
     );

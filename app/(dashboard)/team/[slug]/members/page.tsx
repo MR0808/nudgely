@@ -7,6 +7,7 @@ import { getCurrentTeamBySlug } from '@/actions/team';
 import { ParamsSlug } from '@/types/global';
 import { Button } from '@/components/ui/button';
 import TeamMembersList from '@/components/team/view/TeamMembersList';
+import { ArrowLeft } from 'lucide-react';
 
 export async function generateMetadata({
     params
@@ -76,6 +77,18 @@ const TeamMembersPage = async (props: { params: ParamsSlug }) => {
 
     return (
         <div className="container mx-auto py-8 space-y-6">
+            <div className="flex items-center justify-between">
+                <Link href={`/team/${team.slug}`}>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="cursor-pointer"
+                    >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back to Team
+                    </Button>
+                </Link>
+            </div>
             <div>
                 <h1 className="text-3xl font-bold">{team.name} Members</h1>
                 <p className="text-muted-foreground">

@@ -87,3 +87,14 @@ export interface CancelInviteDialogProps {
     slug: string;
     trigger?: React.ReactNode;
 }
+
+export interface RemoveMemberDialogProps {
+    name: string;
+    email: string;
+    memberId: string;
+    teamId: string;
+    setMembers: (members: Members) => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    trigger?: React.ReactNode;
+}

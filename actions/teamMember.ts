@@ -9,7 +9,9 @@ import { authCheckServer } from '@/lib/authCheck';
 import { InviteTeamMemberSchema } from '@/schemas/teamMember';
 import {
     logTeamMemberAdded,
-    logTeamMemberInvited
+    logTeamMemberInvited,
+    logTeamMemberRemoved,
+    logTeamMemberRoleUpdated
 } from '@/actions/audit/audit-team';
 import { TeamRole } from '@/generated/prisma';
 import { sendTeamAddedEmail, sendTeamInviteEmail } from '@/lib/mail';
@@ -224,26 +226,30 @@ export const inviteTeamMember = async (
     }
 };
 
-export const resendTeamInvitation = async (id: string) => {
+export const resendTeamInvitation = async (id: string, teamId: string) => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
         return {
-            data: null,
+            success: false,
             error: 'Not authorised'
         };
     }
 
-    const { company, userCompany } = userSession;
-
-    if (userCompany.role !== 'COMPANY_ADMIN') {
-        return {
-            data: null,
-            error: 'Not authorised'
-        };
-    }
+    const { user, company } = userSession;
 
     try {
+        const userTeamMember = await prisma.teamMember.findUnique({
+            where: { teamId_userId: { userId: user.id, teamId } }
+        });
+
+        if (!userTeamMember || userTeamMember.role !== 'TEAM_ADMIN') {
+            return {
+                success: false,
+                error: 'Not authorised'
+            };
+        }
+
         const invite = await prisma.teamInvite.findUnique({
             where: { id },
             include: { team: true }
@@ -294,20 +300,25 @@ export const cancelTeamInvitation = async (
 
     if (!userSession) {
         return {
-            data: null,
+            success: false,
             error: 'Not authorised'
         };
     }
 
-    const { company, userCompany } = userSession;
+    const { user, company } = userSession;
 
-    if (userCompany.role !== 'COMPANY_ADMIN') {
-        return {
-            data: null,
-            error: 'Not authorised'
-        };
-    }
     try {
+        const userTeamMember = await prisma.teamMember.findUnique({
+            where: { teamId_userId: { userId: user.id, teamId } }
+        });
+
+        if (!userTeamMember || userTeamMember.role !== 'TEAM_ADMIN') {
+            return {
+                success: false,
+                error: 'Not authorised'
+            };
+        }
+
         await prisma.teamInvite.delete({ where: { id } });
 
         const data = await prisma.teamInvite.findMany({
@@ -321,5 +332,191 @@ export const cancelTeamInvitation = async (
     } catch (error) {
         console.error('Failed to cancel invitation:', error);
         return { data: null, error: 'Failed to cancel invitation' };
+    }
+};
+
+export const changeTeamMemberRole = async (
+    memberId: string,
+    newRole: 'TEAM_ADMIN' | 'TEAM_MEMBER',
+    teamId: string
+) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { user, company } = userSession;
+
+    try {
+        const userTeamMember = await prisma.teamMember.findUnique({
+            where: { teamId_userId: { userId: user.id, teamId } }
+        });
+
+        if (!userTeamMember || userTeamMember.role !== 'TEAM_ADMIN') {
+            return {
+                data: null,
+                error: 'Not authorised'
+            };
+        }
+
+        // Get the member
+        const member = await prisma.teamMember.findUnique({
+            where: { id: memberId },
+            include: {
+                team: true,
+                user: true
+            }
+        });
+
+        if (!member) {
+            return { data: null, error: 'Team member not found' };
+        }
+
+        // Prevent changing the team creator's role
+        if (member.team.creatorId === member.userId) {
+            return {
+                data: null,
+                error: "Cannot change the team creator's role"
+            };
+        }
+
+        // Update the role
+        await prisma.teamMember.update({
+            where: { id: memberId },
+            data: { role: newRole }
+        });
+
+        await logTeamMemberRoleUpdated(userSession.user.id, {
+            teamId,
+            targetUserId: member.userId,
+            targetUserEmail: member.user.email,
+            oldRole: member.role,
+            newRole
+        });
+
+        const data = await prisma.teamMember.findMany({
+            where: { teamId },
+            include: {
+                user: { include: { companyMember: true } }
+            },
+            orderBy: [
+                { role: 'asc' }, // Admins first
+                { createdAt: 'asc' }
+            ]
+        });
+
+        const members = data.map((member) => ({
+            id: member.id,
+            name: `${member.user.name} ${member.user.lastName}`.trim(),
+            firstName: member.user.name,
+            lastName: member.user.lastName,
+            email: member.user.email,
+            role: member.role,
+            avatar: member.user.image || undefined,
+            joinedAt: member.createdAt,
+            isCurrentUser: member.user.id === user.id,
+            companyRole: member.user.companyMember[0].role
+        }));
+
+        return { data: members, error: null };
+    } catch (error) {
+        console.error('Failed to change team member role:', error);
+        return { data: null, error: 'Failed to change member role' };
+    }
+};
+
+export const removeTeamMember = async (memberId: string, teamId: string) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { user, company } = userSession;
+
+    try {
+        const userTeamMember = await prisma.teamMember.findUnique({
+            where: { teamId_userId: { userId: user.id, teamId } }
+        });
+
+        if (!userTeamMember || userTeamMember.role !== 'TEAM_ADMIN') {
+            return {
+                data: null,
+                error: 'Not authorised'
+            };
+        }
+
+        // Get the member
+        const member = await prisma.teamMember.findUnique({
+            where: { id: memberId },
+            include: {
+                team: true,
+                user: true
+            }
+        });
+
+        if (!member) {
+            return { data: null, error: 'Team member not found' };
+        }
+
+        // Prevent removing the team creator
+        if (member.team.creatorId === member.userId) {
+            return { data: null, error: 'Cannot remove the team creator' };
+        }
+
+        // Prevent removing yourself
+        if (member.userId === user.id) {
+            return {
+                data: null,
+                error: 'Cannot remove yourself from the team'
+            };
+        }
+
+        // Remove the member
+        await prisma.teamMember.delete({
+            where: { id: memberId }
+        });
+
+        await logTeamMemberRemoved(userSession.user.id, {
+            teamId,
+            targetUserId: member.userId,
+            targetUserEmail: member.user.email
+        });
+
+        const data = await prisma.teamMember.findMany({
+            where: { teamId },
+            include: {
+                user: { include: { companyMember: true } }
+            },
+            orderBy: [
+                { role: 'asc' }, // Admins first
+                { createdAt: 'asc' }
+            ]
+        });
+
+        const members = data.map((member) => ({
+            id: member.id,
+            name: `${member.user.name} ${member.user.lastName}`.trim(),
+            firstName: member.user.name,
+            lastName: member.user.lastName,
+            email: member.user.email,
+            role: member.role,
+            avatar: member.user.image || undefined,
+            joinedAt: member.createdAt,
+            isCurrentUser: member.user.id === user.id,
+            companyRole: member.user.companyMember[0].role
+        }));
+
+        return { data: members, error: null };
+    } catch (error) {
+        console.error('Failed to remove team member:', error);
+        return { data: null, error: 'Failed to remove team member' };
     }
 };

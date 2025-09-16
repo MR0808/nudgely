@@ -43,8 +43,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import { InviteMemberDialog } from '@/components/team/view/InviteMemberDialog';
 import { Member, TeamMembersListProps } from '@/types/team';
-import { resendTeamInvitation } from '@/actions/teamMember';
+import {
+    changeTeamMemberRole,
+    resendTeamInvitation
+} from '@/actions/teamMember';
 import CancelInviteDialog from '@/components/team/view/CancelInviteDialog';
+import RemoveMemberDialog from '@/components/team/view/RemoveMemberDialog';
 
 const TeamMembersList = ({
     team,
@@ -53,68 +57,43 @@ const TeamMembersList = ({
     userRole
 }: TeamMembersListProps) => {
     const [isPendingResend, startTransitionResend] = useTransition();
+    const [isPendingRole, startTransitionRole] = useTransition();
     const [members, setMembers] = useState(membersData);
     const [pendingInvites, setPendingInvites] = useState(invitesData);
     const [view, setView] = useState<'members' | 'invites'>('members');
     const [error, setError] = useState<string | null>(null);
-    const [removingMember, setRemovingMember] = useState<string | null>(null);
-    const [changingRole, setChangingRole] = useState<string | null>(null);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
-    const [showRemoveDialog, setShowRemoveDialog] = useState<{
-        member: Member;
-    } | null>(null);
     const [inviteId, setInviteId] = useState('');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [memberId, setMemberId] = useState('');
 
-    const handleRemoveMember = async (member: Member) => {
-        // setRemovingMember(member.id);
-        // try {
-        //     console.log('[v0] Removing team member:', member.id);
-        //     const result = await removeTeamMember(member.id);
-        //     if (result.success) {
-        //         // Remove member from local state
-        //         setMembers((prev) => prev.filter((m) => m.id !== member.id));
-        //         setShowRemoveDialog(null);
-        //     } else {
-        //         setError(result.error || 'Failed to remove team member');
-        //     }
-        // } catch (error) {
-        //     console.error('Failed to remove team member:', error);
-        //     setError('Failed to remove team member');
-        // } finally {
-        //     setRemovingMember(null);
-        // }
+    const handleRemoveMember = async (
+        memberId: string,
+        name: string,
+        email: string
+    ) => {
+        setMemberId(memberId);
+        setName(name);
+        setEmail(email);
+        setRemoveDialogOpen(true);
     };
 
     const handleChangeRole = async (
         memberId: string,
         newRole: 'TEAM_ADMIN' | 'TEAM_MEMBER'
     ) => {
-        // setChangingRole(memberId);
-        // try {
-        //     console.log('[v0] Changing member role:', { memberId, newRole });
-        //     const result = await changeTeamMemberRole(memberId, newRole);
-        //     if (result.success) {
-        //         // Update member role in local state
-        //         setMembers((prev) =>
-        //             prev.map((member) =>
-        //                 member.id === memberId
-        //                     ? { ...member, role: newRole }
-        //                     : member
-        //             )
-        //         );
-        //     } else {
-        //         setError(result.error || 'Failed to change member role');
-        //     }
-        // } catch (error) {
-        //     console.error('Failed to change member role:', error);
-        //     setError('Failed to change member role');
-        // } finally {
-        //     setChangingRole(null);
-        // }
+        startTransitionRole(async () => {
+            const data = await changeTeamMemberRole(memberId, newRole, team.id);
+            if (data.error) {
+                toast.error(data.error);
+            }
+            if (data.data) {
+                setMembers(data.data);
+                toast.success('User role updated');
+            }
+        });
     };
 
     const handleCancelInvite = async (
@@ -130,7 +109,7 @@ const TeamMembersList = ({
 
     const handleResendInvite = async (inviteId: string) => {
         startTransitionResend(async () => {
-            const data = await resendTeamInvitation(inviteId);
+            const data = await resendTeamInvitation(inviteId, team.id);
             if (data.error) {
                 toast.error(data.error);
             }
@@ -279,17 +258,8 @@ const TeamMembersList = ({
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                disabled={
-                                                                    removingMember ===
-                                                                        member.id ||
-                                                                    changingRole ===
-                                                                        member.id
-                                                                }
                                                             >
-                                                                {removingMember ===
-                                                                    member.id ||
-                                                                changingRole ===
-                                                                    member.id ? (
+                                                                {isPendingRole ? (
                                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                                 ) : (
                                                                     <MoreHorizontal className="h-4 w-4" />
@@ -318,10 +288,10 @@ const TeamMembersList = ({
                                                             <DropdownMenuItem
                                                                 className="text-destructive"
                                                                 onClick={() =>
-                                                                    setShowRemoveDialog(
-                                                                        {
-                                                                            member
-                                                                        }
+                                                                    handleRemoveMember(
+                                                                        member.id,
+                                                                        `${member.firstName} ${member.lastName}`,
+                                                                        member.email
                                                                     )
                                                                 }
                                                             >
@@ -467,6 +437,15 @@ const TeamMembersList = ({
                         onOpenChange={setCancelDialogOpen}
                         teamId={team.id}
                         slug={team.slug}
+                    />
+                    <RemoveMemberDialog
+                        name={name}
+                        email={email}
+                        memberId={memberId}
+                        teamId={team.id}
+                        setMembers={setMembers}
+                        open={removeDialogOpen}
+                        onOpenChange={setRemoveDialogOpen}
                     />
                 </CardContent>
             </Card>

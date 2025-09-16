@@ -47,10 +47,18 @@ export const getCompanyTeams = async () => {
             const teamAdminCount = members.filter(
                 (member) => member.role === 'TEAM_ADMIN'
             ).length;
-            return { ...team, admins: teamAdminCount };
+            return {
+                ...team,
+                admins: teamAdminCount
+            };
         });
 
-        return { data: returnTeams, error: null };
+        const members = await prisma.companyMember.findMany({
+            where: { companyId: company.id, user: { status: 'ACTIVE' } },
+            include: { user: true }
+        });
+
+        return { data: { teams, members }, error: null };
     } catch (error) {
         return { data: null, error: `Error getting teams - ${error}` };
     }
@@ -465,127 +473,3 @@ export const updateTeam = async (
         };
     }
 };
-
-// export async function removeTeamMember(memberId: string) {
-//     try {
-//         const user = await getCurrentUser();
-
-//         // Get the member
-//         const member = await prisma.teamMember.findUnique({
-//             where: { id: memberId },
-//             include: {
-//                 team: true,
-//                 user: true
-//             }
-//         });
-
-//         if (!member) {
-//             return { success: false, error: 'Team member not found' };
-//         }
-
-//         // Check team permissions
-//         await checkTeamPermission(user.id, member.teamId, 'TEAM_ADMIN');
-
-//         // Prevent removing the team creator
-//         if (member.team.creatorId === member.userId) {
-//             return { success: false, error: 'Cannot remove the team creator' };
-//         }
-
-//         // Prevent removing yourself
-//         if (member.userId === user.id) {
-//             return {
-//                 success: false,
-//                 error: 'Cannot remove yourself from the team'
-//             };
-//         }
-
-//         // Remove the member
-//         await prisma.teamMember.delete({
-//             where: { id: memberId }
-//         });
-
-//         // Create audit log
-//         await prisma.auditLog.create({
-//             data: {
-//                 userId: user.id,
-//                 companyId: member.team.companyId,
-//                 teamId: member.teamId,
-//                 action: 'TEAM_MEMBER_REMOVED',
-//                 category: 'team',
-//                 description: `Removed ${member.user.name} ${member.user.lastName} from team`,
-//                 metadata: {
-//                     removedUserId: member.userId,
-//                     removedUserEmail: member.user.email,
-//                     removedUserName: `${member.user.name} ${member.user.lastName}`
-//                 }
-//             }
-//         });
-
-//         return { success: true };
-//     } catch (error) {
-//         console.error('Failed to remove team member:', error);
-//         return { success: false, error: 'Failed to remove team member' };
-//     }
-// }
-
-// export async function changeTeamMemberRole(
-//     memberId: string,
-//     newRole: 'TEAM_ADMIN' | 'TEAM_MEMBER'
-// ) {
-//     try {
-//         const user = await getCurrentUser();
-
-//         // Get the member
-//         const member = await prisma.teamMember.findUnique({
-//             where: { id: memberId },
-//             include: {
-//                 team: true,
-//                 user: true
-//             }
-//         });
-
-//         if (!member) {
-//             return { success: false, error: 'Team member not found' };
-//         }
-
-//         // Check team permissions
-//         await checkTeamPermission(user.id, member.teamId, 'TEAM_ADMIN');
-
-//         // Prevent changing the team creator's role
-//         if (member.team.creatorId === member.userId) {
-//             return {
-//                 success: false,
-//                 error: "Cannot change the team creator's role"
-//             };
-//         }
-
-//         // Update the role
-//         await prisma.teamMember.update({
-//             where: { id: memberId },
-//             data: { role: newRole }
-//         });
-
-//         // Create audit log
-//         await prisma.auditLog.create({
-//             data: {
-//                 userId: user.id,
-//                 companyId: member.team.companyId,
-//                 teamId: member.teamId,
-//                 action: 'TEAM_MEMBER_ROLE_CHANGED',
-//                 category: 'team',
-//                 description: `Changed ${member.user.name} ${member.user.lastName}'s role to ${newRole}`,
-//                 metadata: {
-//                     targetUserId: member.userId,
-//                     targetUserEmail: member.user.email,
-//                     oldRole: member.role,
-//                     newRole
-//                 }
-//             }
-//         });
-
-//         return { success: true };
-//     } catch (error) {
-//         console.error('Failed to change team member role:', error);
-//         return { success: false, error: 'Failed to change member role' };
-//     }
-// }

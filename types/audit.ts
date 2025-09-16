@@ -58,6 +58,8 @@ export type AuditAction =
     | 'team.team_updated'
     | 'team.team_member_invited'
     | 'team.team_member_added'
+    | 'team.team_member_role_updated'
+    | 'team.team_member_removed'
 
     // Company actions
     | 'company.company_created'
