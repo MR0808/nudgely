@@ -85,10 +85,9 @@ export function InviteMemberDialog({
         });
     };
 
-    const onError: SubmitErrorHandler<
-        z.infer<typeof InviteTeamMemberSchema>
-    > = (errors) => {
-        console.log(errors);
+    const onCancel = () => {
+        setOpen(false);
+        form.reset();
     };
 
     return (
@@ -114,7 +113,7 @@ export function InviteMemberDialog({
                 </DialogHeader>
                 <Form {...form}>
                     <form
-                        onSubmit={form.handleSubmit(onSubmit, onError)}
+                        onSubmit={form.handleSubmit(onSubmit)}
                         className="space-y-4"
                     >
                         {error && (
@@ -231,7 +230,7 @@ export function InviteMemberDialog({
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={() => setOpen(false)}
+                                    onClick={onCancel}
                                     disabled={isPending}
                                     className="cursor-pointer"
                                 >

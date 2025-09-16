@@ -223,3 +223,103 @@ export const inviteTeamMember = async (
         };
     }
 };
+
+export const resendTeamInvitation = async (id: string) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    try {
+        const invite = await prisma.teamInvite.findUnique({
+            where: { id },
+            include: { team: true }
+        });
+
+        if (!invite) {
+            return {
+                data: null,
+                error: 'Invite not found'
+            };
+        }
+
+        if (new Date() > invite.expiresAt) {
+            await prisma.companyInvite.update({
+                where: { id },
+                data: { status: 'EXPIRED' }
+            });
+            return {
+                data: null,
+                error: 'Invite expired'
+            };
+        }
+
+        const link = `${process.env.NEXT_PUBLIC_APP_URL}/auth/invite/team/${invite.token}`;
+
+        await sendTeamInviteEmail({
+            email: invite.email,
+            companyName: company.name,
+            link,
+            name: invite.name,
+            expiresAt: invite.expiresAt,
+            role: invite.role === 'TEAM_ADMIN' ? 'admin' : 'member',
+            teamName: invite.team.name
+        });
+
+        return { data: true, error: null };
+    } catch (error) {
+        return { data: null, error: `Failed to resend invitation - ${error}` };
+    }
+};
+
+export const cancelTeamInvitation = async (
+    id: string,
+    teamId: string,
+    slug: string
+) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+    try {
+        await prisma.teamInvite.delete({ where: { id } });
+
+        const data = await prisma.teamInvite.findMany({
+            where: { teamId, NOT: { status: 'ACCEPTED' } },
+            orderBy: { createdAt: 'asc' }
+        });
+
+        revalidatePath(`/team/${slug}/members`);
+
+        return { data, error: null };
+    } catch (error) {
+        console.error('Failed to cancel invitation:', error);
+        return { data: null, error: 'Failed to cancel invitation' };
+    }
+};

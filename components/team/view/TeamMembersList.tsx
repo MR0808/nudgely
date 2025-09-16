@@ -1,6 +1,18 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
+import {
+    Crown,
+    Users,
+    MoreHorizontal,
+    UserMinus,
+    Settings,
+    Mail,
+    AlertCircle,
+    Loader2
+} from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -29,18 +41,10 @@ import {
     AlertDialogHeader,
     AlertDialogTitle
 } from '@/components/ui/alert-dialog';
-import {
-    Crown,
-    Users,
-    MoreHorizontal,
-    UserMinus,
-    Settings,
-    Mail,
-    AlertCircle,
-    Loader2
-} from 'lucide-react';
 import { InviteMemberDialog } from '@/components/team/view/InviteMemberDialog';
 import { Member, TeamMembersListProps } from '@/types/team';
+import { resendTeamInvitation } from '@/actions/teamMember';
+import CancelInviteDialog from '@/components/team/view/CancelInviteDialog';
 
 const TeamMembersList = ({
     team,
@@ -60,6 +64,10 @@ const TeamMembersList = ({
     const [showRemoveDialog, setShowRemoveDialog] = useState<{
         member: Member;
     } | null>(null);
+    const [inviteId, setInviteId] = useState('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [memberId, setMemberId] = useState('');
 
     const handleRemoveMember = async (member: Member) => {
         // setRemovingMember(member.id);
@@ -114,22 +122,22 @@ const TeamMembersList = ({
         name: string,
         email: string
     ) => {
-        // setInviteId(inviteId);
-        // setName(name);
-        // setEmail(email);
-        // setCancelDialogOpen(true);
+        setInviteId(inviteId);
+        setName(name);
+        setEmail(email);
+        setCancelDialogOpen(true);
     };
 
     const handleResendInvite = async (inviteId: string) => {
-        // startTransitionResend(async () => {
-        //     const data = await resendCompanyInvitation(inviteId);
-        //     if (data.error) {
-        //         toast.error(data.error);
-        //     }
-        //     if (data.data) {
-        //         toast.success('User invite resent');
-        //     }
-        // });
+        startTransitionResend(async () => {
+            const data = await resendTeamInvitation(inviteId);
+            if (data.error) {
+                toast.error(data.error);
+            }
+            if (data.data) {
+                toast.success('User invite resent');
+            }
+        });
     };
 
     const canManageMembers = userRole === 'TEAM_ADMIN';
@@ -450,45 +458,18 @@ const TeamMembersList = ({
                             </div>
                         </>
                     )}
+                    <CancelInviteDialog
+                        name={name}
+                        email={email}
+                        inviteId={inviteId}
+                        setPendingInvites={setPendingInvites}
+                        open={cancelDialogOpen}
+                        onOpenChange={setCancelDialogOpen}
+                        teamId={team.id}
+                        slug={team.slug}
+                    />
                 </CardContent>
             </Card>
-
-            {/* Remove Member Confirmation Dialog */}
-            <AlertDialog
-                open={!!showRemoveDialog}
-                onOpenChange={() => setShowRemoveDialog(null)}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Are you sure you want to remove{' '}
-                            <strong>{showRemoveDialog?.member.name}</strong>{' '}
-                            from the team? This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={() =>
-                                showRemoveDialog &&
-                                handleRemoveMember(showRemoveDialog.member)
-                            }
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            disabled={!!removingMember}
-                        >
-                            {removingMember ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Removing...
-                                </>
-                            ) : (
-                                'Remove Member'
-                            )}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
         </>
     );
 };

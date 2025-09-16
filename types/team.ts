@@ -75,3 +75,15 @@ export interface TeamMembersListProps {
     invitesData: Invites;
     userRole: TeamRole;
 }
+
+export interface CancelInviteDialogProps {
+    name: string;
+    email: string;
+    inviteId: string;
+    setPendingInvites: (pendingInvites: Invites) => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    teamId: string;
+    slug: string;
+    trigger?: React.ReactNode;
+}

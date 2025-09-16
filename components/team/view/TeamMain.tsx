@@ -46,6 +46,9 @@ import { TeamMainProps, Member } from '@/types/team';
 
 const TeamMain = ({ teamData, userRole }: TeamMainProps) => {
     const [members, setMembers] = useState<Member[]>(teamData?.members || []);
+    const [pendingInvites, setPendingInvites] = useState(
+        teamData?.invites || []
+    );
     const [error, setError] = useState<string | null>(null);
     const [removingMember, setRemovingMember] = useState<string | null>(null);
     const [changingRole, setChangingRole] = useState<string | null>(null);
@@ -127,6 +130,8 @@ const TeamMain = ({ teamData, userRole }: TeamMainProps) => {
                                 teamName={teamData.team.name}
                                 companyPlan={teamData.team.company.plan}
                                 currentMemberCount={members.length}
+                                setMembers={setMembers}
+                                setPendingInvites={setPendingInvites}
                             />
                         )}
                     </div>
