@@ -6,9 +6,7 @@ import {
     Crown,
     Calendar,
     Building2,
-    CheckSquare,
-    MoreHorizontal,
-    Trash2
+    CheckSquare
 } from 'lucide-react';
 
 import { authCheck } from '@/lib/authCheck';
@@ -92,6 +90,9 @@ const TeamPage = async (props: { params: ParamsSlug }) => {
 
     const canManageTeam = userRole === 'TEAM_ADMIN' ? true : false;
 
+    const canManageCompany =
+        userSession.userCompany.role === 'COMPANY_ADMIN' ? true : false;
+
     const totalCompletions = team.nudges.reduce((total, nudge) => {
         return total + (nudge.completions?.length || 0);
     }, 0);
@@ -139,7 +140,9 @@ const TeamPage = async (props: { params: ParamsSlug }) => {
                                 Manage Members
                             </Button>
                         </Link>
-                        {canManageTeam && <DeleteTeamDialog teamId={team.id} />}
+                        {canManageCompany && (
+                            <DeleteTeamDialog teamId={team.id} />
+                        )}
                     </div>
                 </div>
 

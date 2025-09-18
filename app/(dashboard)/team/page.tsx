@@ -7,7 +7,7 @@ import { authCheck } from '@/lib/authCheck';
 import { getCompanyTeams } from '@/actions/team';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import TeamFilter from '@/components/team/list/TeamFilter';
+import TeamUserFilter from '@/components/team/list/TeamUserFilter';
 import { getPlan } from '@/actions/plan';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -39,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const TeamPage = async () => {
-    const { company } = await authCheck('/team');
+    const { userCompany } = await authCheck('/team');
     const { data } = await getCompanyTeams();
     const { plan } = await getPlan();
 
@@ -69,9 +69,21 @@ const TeamPage = async () => {
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
-    const recentMembers = members.filter(
+    const activeMembers = members.filter(
+        (member) => member.user.status === 'ACTIVE'
+    );
+
+    const recentMembers = activeMembers.filter(
         (member) => member.createdAt >= oneMonthAgo
     );
+
+    const canManageCompany =
+        userCompany.role === 'COMPANY_ADMIN' ? true : false;
+
+    const usersWithoutTeams = activeMembers.filter(
+        (u) => u.user.teamMembers.length === 0
+    ).length;
+
     return (
         <div className="w-full bg-background">
             <div className="mx-32 p-6 space-y-6">
@@ -108,7 +120,7 @@ const TeamPage = async () => {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid md:grid-cols-4 gap-4">
+                <div className="grid md:grid-cols-5 gap-4">
                     <Card>
                         <CardContent className="p-6">
                             <div className="flex items-center gap-2">
@@ -134,6 +146,23 @@ const TeamPage = async () => {
                                     </p>
                                     <p className="text-sm text-muted-foreground">
                                         Total Members
+                                    </p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-6">
+                            <div className="flex items-center gap-2">
+                                <Users className="h-5 w-5 text-muted-foreground" />
+                                <div>
+                                    <p className="text-2xl font-bold">
+                                        {usersWithoutTeams}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {usersWithoutTeams === 1
+                                            ? 'Member Without a Team'
+                                            : 'Members Without a Team'}
                                     </p>
                                 </div>
                             </div>
@@ -183,7 +212,11 @@ const TeamPage = async () => {
                         </CardContent>
                     </Card>
                 </div>
-                <TeamFilter teamsDb={data} />
+                <TeamUserFilter
+                    teamsDb={data}
+                    canManageCompany={canManageCompany}
+                    usersWithoutTeams={usersWithoutTeams}
+                />
             </div>
         </div>
     );

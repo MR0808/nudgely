@@ -8,6 +8,7 @@ import { authCheckServer } from '@/lib/authCheck';
 import { TeamSchema } from '@/schemas/team';
 import { checkCompanyTeamLimits } from '@/lib/team';
 import { revalidatePath } from 'next/cache';
+import { logTeamDeleted } from '@/actions/audit/audit-team';
 
 const slugger = new GithubSlugger();
 
@@ -33,7 +34,8 @@ export const getCompanyTeams = async () => {
     try {
         const teams = await prisma.team.findMany({
             where: {
-                companyId: company.id
+                companyId: company.id,
+                status: 'ACTIVE'
             },
             include: {
                 members: { include: { user: true } },
@@ -54,8 +56,8 @@ export const getCompanyTeams = async () => {
         });
 
         const members = await prisma.companyMember.findMany({
-            where: { companyId: company.id, user: { status: 'ACTIVE' } },
-            include: { user: true }
+            where: { companyId: company.id },
+            include: { user: { include: { teamMembers: true } } }
         });
 
         return { data: { teams: returnTeams, members }, error: null };
@@ -191,7 +193,8 @@ export const getCurrentTeamBySlug = async (slug: string) => {
 
         const team = await prisma.team.findUnique({
             where: {
-                slug
+                slug,
+                status: 'ACTIVE'
             },
             include: {
                 company: { include: { plan: true } },
@@ -295,7 +298,8 @@ export const createTeam = async (
         const existingTeam = await prisma.team.findFirst({
             where: {
                 companyId,
-                name
+                name,
+                status: 'ACTIVE'
             }
         });
 
@@ -471,5 +475,99 @@ export const updateTeam = async (
             data: null,
             error: 'Failed to create team, please contact support - Error 93476'
         };
+    }
+};
+
+export const deleteTeam = async (teamId: string) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { user, company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            error: 'Only company admins can delete teams'
+        };
+    }
+
+    try {
+        // Get the team with company info
+        const team = await prisma.team.findUnique({
+            where: { id: teamId },
+            include: {
+                members: true,
+                nudges: { where: { status: 'ACTIVE' } }
+            }
+        });
+
+        if (!team) {
+            return { data: null, error: 'Team not found' };
+        }
+
+        // Prevent deleting team with active tasks
+        if (team.nudges.length > 0) {
+            return {
+                data: null,
+                error: 'Cannot delete team with active tasks. Please complete or reassign all tasks first.'
+            };
+        }
+
+        await prisma.team.update({
+            where: { id: teamId },
+            data: { status: 'DISABLED' }
+        });
+
+        await prisma.teamMember.deleteMany({ where: { teamId } });
+
+        await prisma.teamInvite.deleteMany({ where: { teamId } });
+
+        await prisma.nudge.updateMany({
+            where: { teamId },
+            data: { status: 'DISABLED' }
+        });
+
+        await logTeamDeleted(user.id, {
+            teamId,
+            teamName: team.name,
+            nudgesCount: team.nudges.length,
+            memberCount: team.members.length
+        });
+
+        const teams = await prisma.team.findMany({
+            where: {
+                companyId: company.id,
+                status: 'ACTIVE'
+            },
+            include: {
+                members: { include: { user: true } },
+                nudges: true,
+                company: { include: { plan: true, members: true } }
+            }
+        });
+
+        const returnTeams = teams.map((team) => {
+            const members = team.members;
+            const teamAdminCount = members.filter(
+                (member) => member.role === 'TEAM_ADMIN'
+            ).length;
+            return {
+                ...team,
+                admins: teamAdminCount
+            };
+        });
+
+        revalidatePath(`/team`);
+
+        return { data: returnTeams, error: null };
+    } catch (error) {
+        console.error('Failed to delete team:', error);
+        return { data: null, error: 'Failed to delete team' };
     }
 };

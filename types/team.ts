@@ -11,6 +11,14 @@ export type Teams = NonNullable<
     TeamsData extends { data: infer T } ? T : never
 >;
 
+export type ReturnTeams = NonNullable<
+    Teams extends { teams: infer T } ? T : never
+>;
+
+export type ReturnMembers = NonNullable<
+    Teams extends { members: infer T } ? T : never
+>;
+
 export interface CreateTeamFormProps {
     companyId: string;
     userSession: SessionType | null;
@@ -61,6 +69,8 @@ export interface InviteMemberDialogProps {
 
 export interface TeamFilterProps {
     teamsDb: Teams;
+    canManageCompany: boolean;
+    usersWithoutTeams: number;
 }
 
 export interface TeamEditFormProps {
@@ -107,4 +117,10 @@ export interface TeamMembersCardProps {
 
 export interface DeleteTeamDialogProps {
     teamId: string;
+    setFilteredTeams?: (returnTeams: ReturnTeams) => void;
+}
+
+export interface DeactivateMemberDialogProps {
+    memberId: string;
+    setFilteredUsers?: (members: ReturnMembers) => void;
 }

@@ -40,6 +40,7 @@ enum TeamRole {
 enum NudgeStatus {
   ACTIVE
   DISABLED
+  FINISHED
   FROZEN
 }
 
@@ -464,14 +465,14 @@ model Team {
   status      TeamStatus @default(ACTIVE)
 
   // Relations
-  company    Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId  String
-  creator    User           @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  creatorId  String
-  members    TeamMember[]
-  nudges     Nudge[]
-  templates  TeamTemplate[]
-  TeamInvite TeamInvite[]
+  company     Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId   String
+  creator     User           @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId   String
+  members     TeamMember[]
+  nudges      Nudge[]
+  templates   TeamTemplate[]
+  teamInvites TeamInvite[]
 
   @@map("teams")
 }
@@ -525,6 +526,8 @@ model Nudge {
   description String?
   status      NudgeStatus    @default(ACTIVE)
   frequency   NudgeFrequency @default(DAILY)
+  hasEndDate  Boolean        @default(false)
+  endDate     DateTime?
 
   intervalCount Int?         @default(1)
   intervalUnit  IntervalUnit @default(DAY)

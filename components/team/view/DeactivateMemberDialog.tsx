@@ -19,66 +19,58 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { DeleteTeamDialogProps } from '@/types/team';
+import { DeactivateMemberDialogProps } from '@/types/team';
 import { deleteTeam } from '@/actions/team';
 
-const DeleteTeamDialog = ({
-    teamId,
-    setFilteredTeams
-}: DeleteTeamDialogProps) => {
+const DeactivateMemberDialog = ({
+    memberId,
+    setFilteredUsers
+}: DeactivateMemberDialogProps) => {
     const [isPending, startTransition] = useTransition();
     const [open, setOpen] = useState(false);
     const router = useRouter();
 
     const onDelete = () => {
         startTransition(async () => {
-            const result = await deleteTeam(teamId);
-            if (result.error) {
-                toast.error(result.error);
-            }
-            if (result.data) {
-                if (setFilteredTeams) {
-                    setFilteredTeams(result.data);
-                    setOpen(false);
-                } else {
-                    router.push('/team');
-                    setOpen(false);
-                }
-
-                toast.success('Team successfully deleted');
-            }
+            // const result = await deleteTeam(teamId);
+            // if (result.error) {
+            //     toast.error(result.error);
+            // }
+            // if (result.data) {
+            //     if (setFilteredTeams) {
+            //         setFilteredTeams(result.data);
+            //         setOpen(false);
+            //     } else {
+            //         router.push('/team');
+            //         setOpen(false);
+            //     }
+            //     toast.success('Team successfully deleted');
+            // }
         });
     };
 
     return (
         <>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="cursor-pointer">
-                        <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                        className="text-destructive cursor-pointer"
-                        onClick={() => setOpen(true)}
-                    >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Team
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <DropdownMenuItem
+                className="text-destructive cursor-pointer"
+                onClick={() => setOpen(true)}
+            >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Member
+            </DropdownMenuItem>
+
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Building2 className="h-5 w-5" />
-                            Delete Team
+                            Deactivate Member
                         </DialogTitle>
                         <DialogDescription>
-                            Are you sure you wish to delete this team? This will
-                            be permanent. Team members will not be removed from
-                            your company, just the team.
+                            Are you sure you wish to deactivate this member?
+                            This will remove the member from your account total,
+                            however, you will be able to reactivate them if you
+                            wish, if you have space.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex gap-2">
@@ -100,7 +92,7 @@ const DeleteTeamDialog = ({
                             {isPending && (
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                             )}
-                            Delete Team
+                            Deactivate Member
                         </Button>
                     </div>
                 </DialogContent>
@@ -109,4 +101,4 @@ const DeleteTeamDialog = ({
     );
 };
 
-export default DeleteTeamDialog;
+export default DeactivateMemberDialog;
