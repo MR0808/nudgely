@@ -7,7 +7,6 @@ import {
     Calendar,
     Building2,
     CheckSquare,
-    UserPlus,
     MoreHorizontal,
     Trash2
 } from 'lucide-react';
@@ -18,22 +17,12 @@ import { getCurrentTeamBySlug } from '@/actions/team';
 import { ParamsSlug } from '@/types/global';
 import { Button } from '@/components/ui/button';
 import TeamEditForm from '@/components/team/view/TeamEditForm';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+
+import TeamMembersCard from '@/components/team/view/TeamMembersCard';
+import DeleteTeamDialog from '@/components/team/view/DeleteTeamDialog';
 
 export async function generateMetadata({
     params
@@ -150,24 +139,7 @@ const TeamPage = async (props: { params: ParamsSlug }) => {
                                 Manage Members
                             </Button>
                         </Link>
-                        {canManageTeam && (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        className="cursor-pointer"
-                                    >
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem className="text-destructive">
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        Delete Team
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
+                        {canManageTeam && <DeleteTeamDialog teamId={team.id} />}
                     </div>
                 </div>
 
@@ -316,92 +288,11 @@ const TeamPage = async (props: { params: ParamsSlug }) => {
 
                     {/* Team Members */}
                     <div className="space-y-6">
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <div>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Users className="h-5 w-5" />
-                                        Team Members
-                                    </CardTitle>
-                                    <CardDescription>
-                                        {members.length} members
-                                    </CardDescription>
-                                </div>
-                                {canManageTeam && (
-                                    <Link href={`/team/${slug}/members`}>
-                                        <Button size="sm" variant="outline">
-                                            <UserPlus className="h-4 w-4 mr-2" />
-                                            Invite
-                                        </Button>
-                                    </Link>
-                                )}
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-3">
-                                    {members.slice(0, 5).map((member: any) => (
-                                        <div
-                                            key={member.id}
-                                            className="flex items-center gap-3"
-                                        >
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage
-                                                    src={
-                                                        member.avatar ||
-                                                        '/placeholder.svg'
-                                                    }
-                                                    alt={member.name}
-                                                />
-                                                <AvatarFallback className="text-xs">
-                                                    {member.name
-                                                        .split(' ')
-                                                        .map(
-                                                            (n: string) => n[0]
-                                                        )
-                                                        .join('')}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <p className="text-sm font-medium truncate">
-                                                        {member.name}
-                                                    </p>
-                                                    {member.role ===
-                                                        'TEAM_ADMIN' && (
-                                                        <Crown className="h-3 w-3 text-amber-500" />
-                                                    )}
-                                                    {member.isCurrentUser && (
-                                                        <Badge
-                                                            variant="outline"
-                                                            className="text-xs"
-                                                        >
-                                                            You
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                                <p className="text-xs text-muted-foreground truncate">
-                                                    {member.email}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {members.length > 5 && (
-                                        <div className="text-center pt-2">
-                                            <Link
-                                                href={`/team/${slug}/members`}
-                                            >
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                >
-                                                    View all {members.length}{' '}
-                                                    members
-                                                </Button>
-                                            </Link>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <TeamMembersCard
+                            canManageTeam={canManageTeam}
+                            team={team}
+                            membersData={members}
+                        />
                     </div>
                 </div>
             </div>

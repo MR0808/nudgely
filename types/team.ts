@@ -55,8 +55,8 @@ export interface InviteMemberDialogProps {
     currentMemberCount: number;
     companyPlan: Plan;
     setMembers: (members: Members) => void;
-    setPendingInvites: (pendingInvites: Invites) => void;
-    trigger?: React.ReactNode;
+    setPendingInvites?: (pendingInvites: Invites) => void;
+    trigger: 'team' | 'members';
 }
 
 export interface TeamFilterProps {
@@ -97,4 +97,14 @@ export interface RemoveMemberDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     trigger?: React.ReactNode;
+}
+
+export interface TeamMembersCardProps {
+    canManageTeam: boolean;
+    membersData: Members;
+    team: TeamDataTeam;
+}
+
+export interface DeleteTeamDialogProps {
+    teamId: string;
 }

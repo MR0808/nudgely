@@ -124,24 +124,8 @@ const TeamFilter = ({ teamsDb }: TeamFilterProps) => {
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem asChild>
-                                                <Link
-                                                    href={`/team/${team.slug}`}
-                                                >
-                                                    <Settings className="h-4 w-4 mr-2" />
-                                                    Manage Team
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem asChild>
-                                                <Link
-                                                    href={`/teams/${team.slug}/members`}
-                                                >
-                                                    <UserPlus className="h-4 w-4 mr-2" />
-                                                    Manage Members
-                                                </Link>
-                                            </DropdownMenuItem>
                                             <DropdownMenuItem
-                                                className="text-destructive"
+                                                className="text-destructive cursor-pointer"
                                                 onClick={() =>
                                                     handleDeleteTeam(
                                                         team.id,
@@ -211,6 +195,16 @@ const TeamFilter = ({ teamsDb }: TeamFilterProps) => {
                                     <div className="flex gap-2 pt-2">
                                         <Button
                                             asChild
+                                            size="sm"
+                                            className="flex-1"
+                                        >
+                                            <Link href={`/team/${team.slug}`}>
+                                                <Settings className="h-4 w-4 mr-2" />
+                                                Manage
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            asChild
                                             variant="outline"
                                             size="sm"
                                             className="flex-1 bg-transparent"
@@ -220,16 +214,6 @@ const TeamFilter = ({ teamsDb }: TeamFilterProps) => {
                                             >
                                                 <Users className="h-4 w-4 mr-2" />
                                                 Members
-                                            </Link>
-                                        </Button>
-                                        <Button
-                                            asChild
-                                            size="sm"
-                                            className="flex-1"
-                                        >
-                                            <Link href={`/team/${team.slug}`}>
-                                                <Settings className="h-4 w-4 mr-2" />
-                                                Manage
                                             </Link>
                                         </Button>
                                     </div>

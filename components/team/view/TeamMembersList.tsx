@@ -31,18 +31,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle
-} from '@/components/ui/alert-dialog';
 import { InviteMemberDialog } from '@/components/team/view/InviteMemberDialog';
-import { Member, TeamMembersListProps } from '@/types/team';
+import { TeamMembersListProps } from '@/types/team';
 import {
     changeTeamMemberRole,
     resendTeamInvitation
@@ -166,6 +156,7 @@ const TeamMembersList = ({
                                 currentMemberCount={members.length}
                                 setMembers={setMembers}
                                 setPendingInvites={setPendingInvites}
+                                trigger="members"
                             />
                         )}
                     </div>

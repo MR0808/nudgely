@@ -75,7 +75,7 @@ export function InviteMemberDialog({
                     if (data.members) setMembers(data.members);
                     toast.success('User successfully added');
                 }
-                if (data.method === 'invited') {
+                if (data.method === 'invited' && setPendingInvites) {
                     if (data.invitations) setPendingInvites(data.invitations);
                     toast.success('User successfully invited');
                 }
@@ -93,12 +93,24 @@ export function InviteMemberDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                {trigger || (
-                    <Button size="sm" className="cursor-pointer">
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Invite Member
-                    </Button>
-                )}
+                <div>
+                    {trigger === 'members' && (
+                        <Button size="sm" className="cursor-pointer">
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Invite Member
+                        </Button>
+                    )}
+                    {trigger === 'team' && (
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="cursor-pointer"
+                        >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Invite
+                        </Button>
+                    )}
+                </div>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
