@@ -69,6 +69,8 @@ export type AuditAction =
     | 'company.company_admin_invited'
     | 'company.company_admin_added'
     | 'company.company_admin_removed'
+    | 'company.company_member_deactivated'
+    | 'company.company_member_reactivated'
 
     // Invite actions
     | 'invite.company_accept_invite'

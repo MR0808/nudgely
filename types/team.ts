@@ -117,10 +117,29 @@ export interface TeamMembersCardProps {
 
 export interface DeleteTeamDialogProps {
     teamId: string;
-    setFilteredTeams?: (returnTeams: ReturnTeams) => void;
+    setTeams?: (returnTeams: ReturnTeams) => void;
 }
+
+// export interface DeactivateMemberDialogProps {
+//     memberId: string;
+//     setFilteredUsers: (members: ReturnMembers) => void;
+//     open: boolean;
+//     setOpen: (open: boolean) => void;
+//     setSearchQuery: (searchQuery: string) => void;
+// }
 
 export interface DeactivateMemberDialogProps {
     memberId: string;
-    setFilteredUsers?: (members: ReturnMembers) => void;
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    onDeactivate: (memberId: string) => void;
+    isPending: boolean;
+}
+
+export interface ReactivateMemberDialogProps {
+    memberId: string;
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    onReactivate: (memberId: string) => void;
+    isPending: boolean;
 }

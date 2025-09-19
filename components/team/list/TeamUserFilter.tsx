@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import {
     Users,
     Plus,
@@ -8,13 +8,15 @@ import {
     Crown,
     Settings,
     Mail,
-    Building2,
     Calendar,
     MoreHorizontal,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Trash2,
+    ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 import {
     Card,
@@ -37,21 +39,27 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TeamFilterProps } from '@/types/team';
 import DeleteTeamDialog from '@/components/team/view/DeleteTeamDialog';
 import DeactivateMemberDialog from '@/components/team/view/DeactivateMemberDialog';
+import { deactivateMember, reactivateMember } from '@/actions/companyMembers';
+import ReactivateMemberDialog from '@/components/team/view/ReactivateMemberDialog';
 
 const TeamUserFilter = ({
     teamsDb,
     canManageCompany,
     usersWithoutTeams
 }: TeamFilterProps) => {
-    const [teams, setTeams] = useState(teamsDb || []);
+    const [isPending, startTransition] = useTransition();
+    const [teams, setTeams] = useState(teamsDb.teams || []);
+    const [members, setMembers] = useState(teamsDb.members || []);
+    const [openDeactivate, setOpenDeactivate] = useState(false);
+    const [openReactivate, setOpenReactivate] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredTeams, setFilteredTeams] = useState(
-        teams.teams.filter((team) =>
+        teams.filter((team) =>
             team.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
     );
     const [filteredUsers, setFilteredUsers] = useState(
-        teams.members.filter(
+        members.filter(
             (user) =>
                 user.user.name
                     .toLowerCase()
@@ -73,43 +81,83 @@ const TeamUserFilter = ({
     const [startIndex, setStartIndex] = useState(
         (currentPage - 1) * usersPerPage
     );
-    const [paginatedUsers, setpaginatedUsers] = useState(
+    const [paginatedUsers, setPaginatedUsers] = useState(
         filteredUsers.slice(startIndex, startIndex + usersPerPage)
     );
 
     useEffect(() => {
         setStartIndex((currentPage - 1) * usersPerPage);
         const sIndex = (currentPage - 1) * usersPerPage;
-        setpaginatedUsers(filteredUsers.slice(sIndex, sIndex + usersPerPage));
+        setPaginatedUsers(filteredUsers.slice(sIndex, sIndex + usersPerPage));
     }, [currentPage]);
 
     useEffect(() => {
-        setFilteredTeams(
-            teams.teams.filter((team) =>
-                team.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )
+        const newFilteredTeams = teams.filter((team) =>
+            team.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
-        setFilteredUsers(
-            teams.members.filter(
-                (user) =>
-                    user.user.name
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase()) ||
-                    user.user.lastName
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase()) ||
-                    user.user.email
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase())
-            )
+
+        setFilteredTeams(newFilteredTeams);
+
+        const newFilteredUsers = members.filter(
+            (user) =>
+                user.user.name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase()) ||
+                user.user.lastName
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase()) ||
+                user.user.email
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase())
         );
+
+        // Update states
+        setFilteredUsers(newFilteredUsers);
         setCurrentPage(1);
-        setTotalPages(Math.ceil(filteredUsers.length / usersPerPage));
-        setStartIndex((currentPage - 1) * usersPerPage);
-        setpaginatedUsers(
-            filteredUsers.slice(startIndex, startIndex + usersPerPage)
-        );
-    }, [teams, searchQuery]);
+        setTotalPages(Math.ceil(newFilteredUsers.length / usersPerPage));
+        setStartIndex(0);
+        setPaginatedUsers(newFilteredUsers.slice(0, usersPerPage));
+    }, [teams, members, searchQuery]);
+
+    const onDeactivate = (memberId: string) => {
+        startTransition(async () => {
+            const result = await deactivateMember(memberId);
+            if (result.error) {
+                toast.error(result.error);
+            }
+            if (result.data) {
+                setMembers(result.data);
+                setFilteredUsers(result.data);
+                setCurrentPage(1); // Reset to page 1
+                setTotalPages(Math.ceil(result.data.length / usersPerPage));
+                setStartIndex(0); // (1 - 1) * usersPerPage
+                setPaginatedUsers(result.data.slice(0, usersPerPage));
+
+                toast.success('Member deactivated');
+            }
+            setOpenDeactivate(false);
+        });
+    };
+
+    const onReactivate = (memberId: string) => {
+        startTransition(async () => {
+            const result = await reactivateMember(memberId);
+            if (result.error) {
+                toast.error(result.error);
+            }
+            if (result.data) {
+                setMembers(result.data);
+                setFilteredUsers(result.data);
+                setCurrentPage(1); // Reset to page 1
+                setTotalPages(Math.ceil(result.data.length / usersPerPage));
+                setStartIndex(0); // (1 - 1) * usersPerPage
+                setPaginatedUsers(result.data.slice(0, usersPerPage));
+
+                toast.success('Member reactivated');
+            }
+            setOpenReactivate(false);
+        });
+    };
 
     return (
         <>
@@ -117,8 +165,12 @@ const TeamUserFilter = ({
             <Tabs defaultValue="teams" className="space-y-6">
                 <div className="flex items-center justify-between">
                     <TabsList>
-                        <TabsTrigger value="teams">Teams</TabsTrigger>
-                        <TabsTrigger value="users">Users</TabsTrigger>
+                        <TabsTrigger value="teams" className="cursor-pointer">
+                            Teams
+                        </TabsTrigger>
+                        <TabsTrigger value="users" className="cursor-pointer">
+                            Users
+                        </TabsTrigger>
                     </TabsList>
 
                     {/* Search */}
@@ -179,9 +231,7 @@ const TeamUserFilter = ({
                                             {canManageCompany && (
                                                 <DeleteTeamDialog
                                                     teamId={team.id}
-                                                    setFilteredTeams={
-                                                        setFilteredTeams
-                                                    }
+                                                    setTeams={setTeams}
                                                 />
                                             )}
                                         </div>
@@ -420,6 +470,7 @@ const TeamUserFilter = ({
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
+                                                                className="cursor-pointer"
                                                             >
                                                                 <MoreHorizontal className="h-4 w-4" />
                                                             </Button>
@@ -436,19 +487,80 @@ const TeamUserFilter = ({
                                                                     View Profile
                                                                 </Link>
                                                             </DropdownMenuItem>
-                                                            {canManageCompany && (
-                                                                <DeactivateMemberDialog
-                                                                    memberId={
-                                                                        user.userId
+                                                            {canManageCompany &&
+                                                            user.role ===
+                                                                'COMPANY_MEMBER' &&
+                                                            user.user.status ===
+                                                                'ACTIVE' ? (
+                                                                <DropdownMenuItem
+                                                                    className="text-destructive cursor-pointer"
+                                                                    onClick={() =>
+                                                                        setOpenDeactivate(
+                                                                            true
+                                                                        )
                                                                     }
-                                                                    setFilteredUsers={
-                                                                        setFilteredUsers
+                                                                >
+                                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                                    Deactivate
+                                                                    Member
+                                                                </DropdownMenuItem>
+                                                            ) : (
+                                                                <DropdownMenuItem
+                                                                    className="text-green-800 cursor-pointer"
+                                                                    onClick={() =>
+                                                                        setOpenReactivate(
+                                                                            true
+                                                                        )
                                                                     }
-                                                                />
+                                                                >
+                                                                    <ShieldCheck className="h-4 w-4 mr-2" />
+                                                                    Reactivate
+                                                                    Member
+                                                                </DropdownMenuItem>
                                                             )}
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>
+                                                {canManageCompany &&
+                                                    user.role ===
+                                                        'COMPANY_MEMBER' && (
+                                                        <>
+                                                            <DeactivateMemberDialog
+                                                                memberId={
+                                                                    user.userId
+                                                                }
+                                                                open={
+                                                                    openDeactivate
+                                                                }
+                                                                onDeactivate={
+                                                                    onDeactivate
+                                                                }
+                                                                setOpen={
+                                                                    setOpenDeactivate
+                                                                }
+                                                                isPending={
+                                                                    isPending
+                                                                }
+                                                            />
+                                                            <ReactivateMemberDialog
+                                                                memberId={
+                                                                    user.userId
+                                                                }
+                                                                open={
+                                                                    openReactivate
+                                                                }
+                                                                onReactivate={
+                                                                    onReactivate
+                                                                }
+                                                                setOpen={
+                                                                    setOpenReactivate
+                                                                }
+                                                                isPending={
+                                                                    isPending
+                                                                }
+                                                            />
+                                                        </>
+                                                    )}
                                             </div>
                                         ))}
                                     </div>

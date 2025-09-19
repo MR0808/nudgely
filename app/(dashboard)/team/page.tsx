@@ -142,10 +142,10 @@ const TeamPage = async () => {
                                 <Users className="h-5 w-5 text-muted-foreground" />
                                 <div>
                                     <p className="text-2xl font-bold">
-                                        {`${members.length} / ${plan.maxUsers === 0 ? '∞' : plan.maxUsers}`}
+                                        {`${activeMembers.length} / ${plan.maxUsers === 0 ? '∞' : plan.maxUsers}`}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        Total Members
+                                        Total Active Members
                                     </p>
                                 </div>
                             </div>

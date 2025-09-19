@@ -22,10 +22,7 @@ import {
 import { DeleteTeamDialogProps } from '@/types/team';
 import { deleteTeam } from '@/actions/team';
 
-const DeleteTeamDialog = ({
-    teamId,
-    setFilteredTeams
-}: DeleteTeamDialogProps) => {
+const DeleteTeamDialog = ({ teamId, setTeams }: DeleteTeamDialogProps) => {
     const [isPending, startTransition] = useTransition();
     const [open, setOpen] = useState(false);
     const router = useRouter();
@@ -37,8 +34,8 @@ const DeleteTeamDialog = ({
                 toast.error(result.error);
             }
             if (result.data) {
-                if (setFilteredTeams) {
-                    setFilteredTeams(result.data);
+                if (setTeams) {
+                    setTeams(result.data);
                     setOpen(false);
                 } else {
                     router.push('/team');

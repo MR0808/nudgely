@@ -80,3 +80,29 @@ export async function logCompanyAdminInvited(
         metadata: { ...metadata }
     });
 }
+
+export async function logCompanyMemberDeactivated(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'company.company_member_deactivated',
+        category: 'company',
+        description: `Company member deactivated`,
+        metadata: { ...metadata }
+    });
+}
+
+export async function logCompanyMemberReactivated(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'company.company_member_reactivated',
+        category: 'company',
+        description: `Company member reactivated`,
+        metadata: { ...metadata }
+    });
+}

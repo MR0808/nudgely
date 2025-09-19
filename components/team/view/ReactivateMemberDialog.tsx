@@ -10,15 +10,15 @@ import {
     DialogHeader,
     DialogTitle
 } from '@/components/ui/dialog';
-import { DeactivateMemberDialogProps } from '@/types/team';
+import { ReactivateMemberDialogProps } from '@/types/team';
 
-const DeactivateMemberDialog = ({
+const ReactivateMemberDialog = ({
     memberId,
     open,
     setOpen,
-    onDeactivate,
+    onReactivate,
     isPending
-}: DeactivateMemberDialogProps) => {
+}: ReactivateMemberDialogProps) => {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-md">
@@ -28,10 +28,10 @@ const DeactivateMemberDialog = ({
                         Deactivate Member
                     </DialogTitle>
                     <DialogDescription>
-                        Are you sure you wish to deactivate this member? This
-                        will remove the member from your account total and all
-                        teams, however, you will be able to reactivate them if
-                        you wish, if you have space.
+                        Are you sure you wish to reactivate this member? If you
+                        have used all your users, this will fail. Please note,
+                        you will need to add this user back to all their teams
+                        again.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex gap-2">
@@ -47,13 +47,13 @@ const DeactivateMemberDialog = ({
                     <Button
                         type="button"
                         disabled={isPending}
-                        onClick={() => onDeactivate(memberId)}
+                        onClick={() => onReactivate(memberId)}
                         className="cursor-pointer"
                     >
                         {isPending && (
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         )}
-                        Deactivate Member
+                        Reactivate Member
                     </Button>
                 </div>
             </DialogContent>
@@ -61,4 +61,4 @@ const DeactivateMemberDialog = ({
     );
 };
 
-export default DeactivateMemberDialog;
+export default ReactivateMemberDialog;

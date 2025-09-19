@@ -14,7 +14,9 @@ import { InviteCompanyAdminSchema } from '@/schemas/companyMember';
 import {
     logCompanyAdminAdded,
     logCompanyAdminInvited,
-    logCompanyAdminRemoved
+    logCompanyAdminRemoved,
+    logCompanyMemberDeactivated,
+    logCompanyMemberReactivated
 } from '@/actions/audit/audit-company';
 import { checkCompanyUserLimits } from '@/lib/team';
 
@@ -484,5 +486,147 @@ export const resendCompanyInvitation = async (id: string) => {
         return { data: true, error: null };
     } catch (error) {
         return { data: null, error: `Failed to resend invitation - ${error}` };
+    }
+};
+
+export const deactivateMember = async (memberId: string) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { user, company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            message: 'Not authorised'
+        };
+    }
+
+    try {
+        const userCompany = await prisma.companyMember.findUnique({
+            where: {
+                companyId_userId: { companyId: company.id, userId: memberId }
+            }
+        });
+
+        if (!userCompany) {
+            return { data: null, error: 'Member not found' };
+        }
+
+        if (userCompany.role === 'COMPANY_ADMIN') {
+            return {
+                data: null,
+                error: 'Unable to remove company admin. Please demote them first.'
+            };
+        }
+
+        // Prevent removing the team creator
+        if (company.creatorId === memberId) {
+            return { data: null, error: 'Cannot remove the company creator' };
+        }
+
+        // Prevent removing yourself
+        if (memberId === user.id) {
+            return {
+                data: null,
+                error: 'Cannot remove yourself from the company'
+            };
+        }
+
+        // Remove the member
+        await prisma.teamMember.deleteMany({
+            where: { userId: memberId }
+        });
+
+        await prisma.user.update({
+            where: { id: memberId },
+            data: { status: 'DISABLED' }
+        });
+
+        await logCompanyMemberDeactivated(userSession.user.id, {
+            companyId: company.id,
+            memberId
+        });
+
+        const members = await prisma.companyMember.findMany({
+            where: { companyId: company.id },
+            include: { user: { include: { teamMembers: true } } }
+        });
+
+        revalidatePath('/team');
+
+        return { data: members, error: null };
+    } catch (error) {
+        console.error('Failed to remove team member:', error);
+        return { data: null, error: 'Failed to remove team member' };
+    }
+};
+
+export const reactivateMember = async (memberId: string) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { user, company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            message: 'Not authorised'
+        };
+    }
+
+    try {
+        const userCompany = await prisma.companyMember.findUnique({
+            where: {
+                companyId_userId: { companyId: company.id, userId: memberId }
+            }
+        });
+
+        if (!userCompany) {
+            return { data: null, error: 'Member not found' };
+        }
+
+        const limits = await checkCompanyUserLimits(company.id);
+
+        if (!limits.canCreateUser) {
+            return {
+                data: null,
+                error: 'User limit reached for your current plan'
+            };
+        }
+
+        await prisma.user.update({
+            where: { id: memberId },
+            data: { status: 'ACTIVE' }
+        });
+
+        await logCompanyMemberReactivated(userSession.user.id, {
+            companyId: company.id,
+            memberId
+        });
+
+        const members = await prisma.companyMember.findMany({
+            where: { companyId: company.id },
+            include: { user: { include: { teamMembers: true } } }
+        });
+
+        revalidatePath('/team');
+
+        return { data: members, error: null };
+    } catch (error) {
+        console.error('Failed to remove team member:', error);
+        return { data: null, error: 'Failed to remove team member' };
     }
 };
