@@ -19,6 +19,8 @@ export type ReturnMembers = NonNullable<
     Teams extends { members: infer T } ? T : never
 >;
 
+export type ReturnMember = NonNullable<Teams>['members'][number];
+
 export interface CreateTeamFormProps {
     companyId: string;
     userSession: SessionType | null;
@@ -120,14 +122,6 @@ export interface DeleteTeamDialogProps {
     setTeams?: (returnTeams: ReturnTeams) => void;
 }
 
-// export interface DeactivateMemberDialogProps {
-//     memberId: string;
-//     setFilteredUsers: (members: ReturnMembers) => void;
-//     open: boolean;
-//     setOpen: (open: boolean) => void;
-//     setSearchQuery: (searchQuery: string) => void;
-// }
-
 export interface DeactivateMemberDialogProps {
     memberId: string;
     open: boolean;
@@ -142,4 +136,10 @@ export interface ReactivateMemberDialogProps {
     setOpen: (open: boolean) => void;
     onReactivate: (memberId: string) => void;
     isPending: boolean;
+}
+
+export interface ProfileDialogProps {
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    member: ReturnMember;
 }

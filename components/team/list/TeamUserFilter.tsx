@@ -41,6 +41,7 @@ import DeleteTeamDialog from '@/components/team/view/DeleteTeamDialog';
 import DeactivateMemberDialog from '@/components/team/view/DeactivateMemberDialog';
 import { deactivateMember, reactivateMember } from '@/actions/companyMembers';
 import ReactivateMemberDialog from '@/components/team/view/ReactivateMemberDialog';
+import ProfileDialog from '@/components/team/view/ProfileDialog';
 
 const TeamUserFilter = ({
     teamsDb,
@@ -52,6 +53,7 @@ const TeamUserFilter = ({
     const [members, setMembers] = useState(teamsDb.members || []);
     const [openDeactivate, setOpenDeactivate] = useState(false);
     const [openReactivate, setOpenReactivate] = useState(false);
+    const [openProfile, setOpenProfile] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredTeams, setFilteredTeams] = useState(
         teams.filter((team) =>
@@ -477,15 +479,15 @@ const TeamUserFilter = ({
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
                                                             <DropdownMenuItem
-                                                                asChild
+                                                                className="cursor-pointer"
+                                                                onClick={() =>
+                                                                    setOpenProfile(
+                                                                        true
+                                                                    )
+                                                                }
                                                             >
-                                                                <Link
-                                                                    href={`/users/${user.id}`}
-                                                                    className="cursor-pointer"
-                                                                >
-                                                                    <Settings className="h-4 w-4 mr-2" />
-                                                                    View Profile
-                                                                </Link>
+                                                                <Settings className="h-4 w-4 mr-2" />
+                                                                View Profile
                                                             </DropdownMenuItem>
                                                             {canManageCompany &&
                                                             user.role ===
@@ -558,6 +560,15 @@ const TeamUserFilter = ({
                                                                 isPending={
                                                                     isPending
                                                                 }
+                                                            />
+                                                            <ProfileDialog
+                                                                open={
+                                                                    openProfile
+                                                                }
+                                                                setOpen={
+                                                                    setOpenProfile
+                                                                }
+                                                                member={user}
                                                             />
                                                         </>
                                                     )}

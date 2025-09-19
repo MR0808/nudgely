@@ -57,7 +57,9 @@ export const getCompanyTeams = async () => {
 
         const members = await prisma.companyMember.findMany({
             where: { companyId: company.id },
-            include: { user: { include: { teamMembers: true } } }
+            include: {
+                user: { include: { teamMembers: { include: { team: true } } } }
+            }
         });
 
         return { data: { teams: returnTeams, members }, error: null };

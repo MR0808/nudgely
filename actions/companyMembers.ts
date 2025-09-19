@@ -556,7 +556,9 @@ export const deactivateMember = async (memberId: string) => {
 
         const members = await prisma.companyMember.findMany({
             where: { companyId: company.id },
-            include: { user: { include: { teamMembers: true } } }
+            include: {
+                user: { include: { teamMembers: { include: { team: true } } } }
+            }
         });
 
         revalidatePath('/team');
@@ -619,7 +621,9 @@ export const reactivateMember = async (memberId: string) => {
 
         const members = await prisma.companyMember.findMany({
             where: { companyId: company.id },
-            include: { user: { include: { teamMembers: true } } }
+            include: {
+                user: { include: { teamMembers: { include: { team: true } } } }
+            }
         });
 
         revalidatePath('/team');

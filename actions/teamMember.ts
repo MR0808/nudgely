@@ -16,7 +16,6 @@ import {
 import { TeamRole } from '@/generated/prisma';
 import { sendTeamAddedEmail, sendTeamInviteEmail } from '@/lib/mail';
 import { checkCompanyUserLimits } from '@/lib/team';
-import { logCompanyMemberDeactivated } from '@/actions/audit/audit-company';
 
 export const inviteTeamMember = async (
     values: z.infer<typeof InviteTeamMemberSchema>,
