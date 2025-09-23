@@ -107,6 +107,18 @@ enum NudgeInstanceStatus {
   OVERDUE
 }
 
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PASTDUE
+  CANCELLED
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
 model User {
   id        String   @id @default(uuid())
   createdAt DateTime
@@ -375,34 +387,37 @@ model Company {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name             String
-  address1         String?
-  address2         String?
-  city             String?
-  region           Region?       @relation(fields: [regionId], references: [id], onDelete: Cascade)
-  regionId         String?
-  postalCode       String?
-  country          Country?      @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  countryId        String?
-  contactEmail     String?
-  contactPhone     String?
-  website          String?
-  image            String?
-  companySize      CompanySize?  @relation(fields: [companySizeId], references: [id], onDelete: Cascade)
-  companySizeId    String?
-  industry         Industry?     @relation(fields: [industryId], references: [id], onDelete: Cascade)
-  industryId       String?
-  timezone         String? // IANA timezone identifier
-  locale           String?
-  plan             Plan          @relation(fields: [planId], references: [id], onDelete: Cascade)
-  planId           String
+  name          String
+  address1      String?
+  address2      String?
+  city          String?
+  region        Region?      @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  regionId      String?
+  postalCode    String?
+  country       Country?     @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  countryId     String?
+  contactEmail  String?
+  contactPhone  String?
+  website       String?
+  image         String?
+  companySize   CompanySize? @relation(fields: [companySizeId], references: [id], onDelete: Cascade)
+  companySizeId String?
+  industry      Industry?    @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  industryId    String?
+  timezone      String? // IANA timezone identifier
+  locale        String?
+
   trialEndsAt      DateTime?
   profileCompleted Boolean       @default(false)
   status           CompanyStatus @default(ACTIVE)
 
   // Stripe billing - now at company level
-  stripeCustomerId String? @unique
-  stripeSubId      String? @unique
+  stripeCustomerId   String?             @unique
+  stripeSubId        String?             @unique
+  subscriptionStatus SubscriptionStatus?
+  plan               Plan                @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId             String
+  billingInterval    BillingInterval?
 
   // Relations
   creator   User            @relation(fields: [creatorId], references: [id], onDelete: Cascade)

@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 import {
     Form,
@@ -31,6 +32,8 @@ const InitialRegistrationForm = ({
 }: InitialRegistrationFormProps) => {
     const [isPending, startTransition] = useTransition();
 
+    const router = useRouter();
+
     const form = useForm<z.infer<typeof RegisterSchema>>({
         resolver: zodResolver(RegisterSchema),
         defaultValues: {
@@ -48,10 +51,11 @@ const InitialRegistrationForm = ({
             const result = await registerInitial(values);
             if (result.error) {
                 toast.error(result.error, { position: 'top-center' });
+            } else if (result.companyToken) {
+                router.push(`/auth/invite/company/${result.companyToken}`);
+            } else if (result.teamToken) {
+                router.push(`/auth/invite/team/${result.teamToken}`);
             } else if (result.userId) {
-                // toast.success('Account created! Please verify your email.', {
-                //     position: 'top-center'
-                // });
                 onNext({ ...values, userId: result.userId });
             }
         });

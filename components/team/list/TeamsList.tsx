@@ -36,7 +36,7 @@ const TeamsList = ({
         )
     );
     const [currentPage, setCurrentPage] = useState(1);
-    const teamsPerPage = 3;
+    const teamsPerPage = 9;
 
     const [totalPages, setTotalPages] = useState(
         Math.ceil(filteredTeams.length / teamsPerPage)
@@ -67,30 +67,32 @@ const TeamsList = ({
     }, [teams, searchQueryTeams]);
 
     return (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTeams.length === 0 ? (
-                <div className="col-span-full text-center py-12">
-                    <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium mb-2">
-                        {searchQueryTeams ? 'No teams found' : 'No teams yet'}
-                    </h3>
-                    <p className="text-muted-foreground mb-4">
-                        {searchQueryTeams
-                            ? 'Try adjusting your search terms'
-                            : 'Create your first team to get started'}
-                    </p>
-                    {!searchQueryTeams && (
-                        <Link href="/team/create">
-                            <Button>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Create Team
-                            </Button>
-                        </Link>
-                    )}
-                </div>
-            ) : (
-                <>
-                    {paginatedTeams.map((team) => (
+        <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredTeams.length === 0 ? (
+                    <div className="col-span-full text-center py-12">
+                        <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium mb-2">
+                            {searchQueryTeams
+                                ? 'No teams found'
+                                : 'No teams yet'}
+                        </h3>
+                        <p className="text-muted-foreground mb-4">
+                            {searchQueryTeams
+                                ? 'Try adjusting your search terms'
+                                : 'Create your first team to get started'}
+                        </p>
+                        {!searchQueryTeams && (
+                            <Link href="/team/create">
+                                <Button>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Create Team
+                                </Button>
+                            </Link>
+                        )}
+                    </div>
+                ) : (
+                    paginatedTeams.map((team) => (
                         <Card
                             key={team.id}
                             className="hover:shadow-md transition-shadow"
@@ -197,83 +199,80 @@ const TeamsList = ({
                                 </div>
                             </CardContent>
                         </Card>
-                    ))}
-
-                    {totalPages > 1 && (
-                        <div className="flex items-center justify-between pt-4 border-t">
-                            <p className="text-sm text-muted-foreground">
-                                Showing {startIndex + 1} to{' '}
-                                {Math.min(
-                                    startIndex + teamsPerPage,
-                                    filteredTeams.length
-                                )}{' '}
-                                of {filteredTeams.length} users
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                        setCurrentPage((prev) =>
-                                            Math.max(prev - 1, 1)
-                                        )
-                                    }
-                                    disabled={currentPage === 1}
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                    Previous
-                                </Button>
-                                <div className="flex items-center gap-1">
-                                    {Array.from(
-                                        {
-                                            length: Math.min(5, totalPages)
-                                        },
-                                        (_, i) => {
-                                            const pageNum = i + 1;
-                                            return (
-                                                <Button
-                                                    key={pageNum}
-                                                    variant={
-                                                        currentPage === pageNum
-                                                            ? 'default'
-                                                            : 'outline'
-                                                    }
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        setCurrentPage(pageNum)
-                                                    }
-                                                    className="w-8 h-8 p-0"
-                                                >
-                                                    {pageNum}
-                                                </Button>
-                                            );
-                                        }
-                                    )}
-                                    {totalPages > 5 && (
-                                        <span className="text-muted-foreground">
-                                            ...
-                                        </span>
-                                    )}
-                                </div>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                        setCurrentPage((prev) =>
-                                            Math.min(prev + 1, totalPages)
-                                        )
-                                    }
-                                    disabled={currentPage === totalPages}
-                                >
-                                    Next
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
-                            </div>
+                    ))
+                )}
+            </div>
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t">
+                    <p className="text-sm text-muted-foreground">
+                        Showing {startIndex + 1} to{' '}
+                        {Math.min(
+                            startIndex + teamsPerPage,
+                            filteredTeams.length
+                        )}{' '}
+                        of {filteredTeams.length} teams
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                                setCurrentPage((prev) => Math.max(prev - 1, 1))
+                            }
+                            disabled={currentPage === 1}
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                            Previous
+                        </Button>
+                        <div className="flex items-center gap-1">
+                            {Array.from(
+                                {
+                                    length: Math.min(5, totalPages)
+                                },
+                                (_, i) => {
+                                    const pageNum = i + 1;
+                                    return (
+                                        <Button
+                                            key={pageNum}
+                                            variant={
+                                                currentPage === pageNum
+                                                    ? 'default'
+                                                    : 'outline'
+                                            }
+                                            size="sm"
+                                            onClick={() =>
+                                                setCurrentPage(pageNum)
+                                            }
+                                            className="w-8 h-8 p-0"
+                                        >
+                                            {pageNum}
+                                        </Button>
+                                    );
+                                }
+                            )}
+                            {totalPages > 5 && (
+                                <span className="text-muted-foreground">
+                                    ...
+                                </span>
+                            )}
                         </div>
-                    )}
-                </>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                                setCurrentPage((prev) =>
+                                    Math.min(prev + 1, totalPages)
+                                )
+                            }
+                            disabled={currentPage === totalPages}
+                        >
+                            Next
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
             )}
-        </div>
+        </>
     );
 };
 export default TeamsList;

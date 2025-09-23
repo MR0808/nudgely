@@ -49,6 +49,22 @@ export const registerInitial = async (
             }
         }
 
+        const existingCompanyInvite = await prisma.companyInvite.findFirst({
+            where: { email }
+        });
+
+        if (existingCompanyInvite) {
+            return { companyToken: existingCompanyInvite.token };
+        }
+
+        const existingTeamInvite = await prisma.teamInvite.findFirst({
+            where: { email }
+        });
+
+        if (existingTeamInvite) {
+            return { teamToken: existingTeamInvite.token };
+        }
+
         const existingUser = await prisma.user.findUnique({
             where: { email }
         });

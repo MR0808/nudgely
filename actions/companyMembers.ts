@@ -57,6 +57,22 @@ export const inviteCompanyAdmin = async (
             where: { email: values.email }
         });
 
+        const limits = await checkCompanyUserLimits(company.id);
+
+        const admins = await prisma.companyMember.findMany({
+            where: { role: 'COMPANY_ADMIN' }
+        });
+
+        if (
+            limits.currentPlan.maxAdmin !== 0 &&
+            admins.length >= limits.currentPlan.maxAdmin
+        ) {
+            return {
+                success: false,
+                error: 'Admin limit reached for your current plan'
+            };
+        }
+
         if (existingMember) {
             const companyMember = await prisma.companyMember.findFirst({
                 where: { userId: existingMember.id }
@@ -140,29 +156,6 @@ export const inviteCompanyAdmin = async (
                 error: null
             };
         } else {
-            const limits = await checkCompanyUserLimits(company.id);
-
-            if (!limits.canCreateUser) {
-                return {
-                    success: false,
-                    error: 'User limit reached for your current plan'
-                };
-            }
-
-            const admins = await prisma.companyMember.findMany({
-                where: { role: 'COMPANY_ADMIN' }
-            });
-
-            if (
-                limits.currentPlan.maxAdmin !== 0 ||
-                admins.length >= limits.currentPlan.maxAdmin
-            ) {
-                return {
-                    success: false,
-                    error: 'Admin limit reached for your current plan'
-                };
-            }
-
             const pendingInvites = await prisma.companyInvite.findFirst({
                 where: { companyId, email: values.email }
             });
@@ -172,6 +165,13 @@ export const inviteCompanyAdmin = async (
                     success: false,
                     error: 'An invitation has already been sent to this email'
                 };
+
+            if (!limits.canCreateUser) {
+                return {
+                    success: false,
+                    error: 'User limit reached for your current plan'
+                };
+            }
 
             const token = randomBytes(32).toString('hex');
             const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
