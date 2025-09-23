@@ -1,21 +1,26 @@
 'use client';
 
-import { Mail, Building2, Users, Calendar, Settings } from 'lucide-react';
+import { Mail, Users, Calendar, Phone, Building2 } from 'lucide-react';
+import parsePhoneNumber, { PhoneNumber } from 'libphonenumber-js';
 
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogHeader,
     DialogTitle
 } from '@/components/ui/dialog';
 import { ProfileDialogProps } from '@/types/team';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 const ProfileDialog = ({ open, setOpen, member }: ProfileDialogProps) => {
+    if (!member) return null;
+
+    const phoneNumber: PhoneNumber | undefined = member.user.phoneNumber
+        ? parsePhoneNumber(member.user.phoneNumber)
+        : undefined;
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="max-w-2xl">
@@ -89,6 +94,22 @@ const ProfileDialog = ({ open, setOpen, member }: ProfileDialogProps) => {
                                     ).toLocaleDateString()}
                                 </span>
                             </div>
+                            <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-muted-foreground" />
+                                <span>
+                                    {phoneNumber
+                                        ? phoneNumber.formatNational()
+                                        : 'Not specified'}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                                <span>
+                                    {member.role === 'COMPANY_ADMIN'
+                                        ? 'Admin'
+                                        : 'Member'}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -112,24 +133,6 @@ const ProfileDialog = ({ open, setOpen, member }: ProfileDialogProps) => {
                                 </p>
                             )}
                         </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 pt-4">
-                        <Button
-                            variant="outline"
-                            className="flex-1 bg-transparent"
-                        >
-                            <Mail className="h-4 w-4 mr-2" />
-                            Send Message
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="flex-1 bg-transparent"
-                        >
-                            <Settings className="h-4 w-4 mr-2" />
-                            Edit Profile
-                        </Button>
                     </div>
                 </div>
             </DialogContent>

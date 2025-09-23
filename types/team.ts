@@ -69,10 +69,26 @@ export interface InviteMemberDialogProps {
     trigger: 'team' | 'members';
 }
 
-export interface TeamFilterProps {
+export interface TeamUserFilterProps {
     teamsDb: Teams;
     canManageCompany: boolean;
     usersWithoutTeams: number;
+}
+
+export interface TeamsListProps {
+    teams: ReturnTeams;
+    searchQueryTeams: string;
+    canManageCompany: boolean;
+    setTeams: (returnTeams: ReturnTeams) => void;
+}
+
+export interface UsersListProps {
+    members: ReturnMembers;
+    searchQueryUsers: string;
+    canManageCompany: boolean;
+    setMembers: (returnMembers: ReturnMembers) => void;
+    usersWithoutTeams: number;
+    teams: ReturnTeams;
 }
 
 export interface TeamEditFormProps {
@@ -141,5 +157,12 @@ export interface ReactivateMemberDialogProps {
 export interface ProfileDialogProps {
     open: boolean;
     setOpen: (open: boolean) => void;
-    member: ReturnMember;
+    member: ReturnMember | null;
+}
+
+export interface AddToTeamDialogProps {
+    user: ReturnMember | null;
+    teams: ReturnTeams;
+    open: boolean;
+    setOpen: (open: boolean) => void;
 }

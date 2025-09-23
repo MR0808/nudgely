@@ -63,7 +63,7 @@ export const checkCompanyTeamLimits = async (companyId: string) => {
     try {
         const company = await prisma.company.findUnique({
             where: { id: companyId },
-            include: { teams: true }
+            include: { teams: { where: { status: 'ACTIVE' } } }
         });
 
         if (!company) {
