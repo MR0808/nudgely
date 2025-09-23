@@ -16,12 +16,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Users, Plus, Minus, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AddToTeamDialogProps } from '@/types/team';
+import { updateTeamMember } from '@/actions/teamMember';
 
 const AddToTeamDialog = ({
     user,
     teams,
     open,
-    setOpen
+    setOpen,
+    setMembers
 }: AddToTeamDialogProps) => {
     const [isPending, startTransition] = useTransition();
     const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
@@ -60,22 +62,21 @@ const AddToTeamDialog = ({
     };
 
     const handleSave = async () => {
-        try {
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-
-            const updatedTeams = teams
-                .filter((team) => selectedTeamIds.includes(team.id))
-                .map((team) => ({ id: team.id, name: team.name }));
-
-            toast.success('Teams Updated', {
-                description: `${user.user.name} ${user.user.lastName}'s team assignments have been updated`
-            });
-
-            setOpen(false);
-        } catch (error) {
-            toast.error('Failed to update team assignments');
-        }
+        startTransition(async () => {
+            const data = await updateTeamMember(
+                user.user.id,
+                teamsToAdd,
+                teamsToRemove
+            );
+            if (data.error) {
+                toast.error(data.error);
+            }
+            if (data.data) {
+                setMembers(data.data);
+                toast.success('Member teams updated');
+                setOpen(false);
+            }
+        });
     };
 
     return (

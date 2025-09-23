@@ -387,6 +387,7 @@ const UsersList = ({
                                     setOpen={setOpenTeams}
                                     user={member}
                                     teams={teams}
+                                    setMembers={setMembers}
                                 />
                             </>
                         )}

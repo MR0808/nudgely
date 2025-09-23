@@ -93,3 +93,16 @@ export async function logTeamDeleted(
         metadata: { ...metadata }
     });
 }
+
+export async function logTeamUpdateMemberTeams(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'team.team_updated_member_teams',
+        category: 'team',
+        description: `Team member teams updated`,
+        metadata: { ...metadata }
+    });
+}

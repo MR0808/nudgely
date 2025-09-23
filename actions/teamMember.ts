@@ -11,7 +11,8 @@ import {
     logTeamMemberAdded,
     logTeamMemberInvited,
     logTeamMemberRemoved,
-    logTeamMemberRoleUpdated
+    logTeamMemberRoleUpdated,
+    logTeamUpdateMemberTeams
 } from '@/actions/audit/audit-team';
 import { TeamRole } from '@/generated/prisma';
 import { sendTeamAddedEmail, sendTeamInviteEmail } from '@/lib/mail';
@@ -513,6 +514,82 @@ export const removeTeamMember = async (memberId: string, teamId: string) => {
             isCurrentUser: member.user.id === user.id,
             companyRole: member.user.companyMember[0].role
         }));
+
+        return { data: members, error: null };
+    } catch (error) {
+        console.error('Failed to remove team member:', error);
+        return { data: null, error: 'Failed to remove team member' };
+    }
+};
+
+export const updateTeamMember = async (
+    memberId: string,
+    addTeams: string[],
+    removeTeams: string[]
+) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { user, company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            message: 'Not authorised'
+        };
+    }
+
+    try {
+        const member = await prisma.user.findUnique({
+            where: { id: memberId }
+        });
+
+        if (!member) {
+            return {
+                data: null,
+                error: 'User not found'
+            };
+        }
+
+        for (const team of addTeams) {
+            const userTeamMember = await prisma.teamMember.findUnique({
+                where: { teamId_userId: { userId: memberId, teamId: team } }
+            });
+            if (!userTeamMember) {
+                await prisma.teamMember.create({
+                    data: {
+                        role: 'TEAM_MEMBER',
+                        teamId: team,
+                        userId: memberId
+                    }
+                });
+            }
+        }
+
+        for (const team of removeTeams) {
+            await prisma.teamMember.delete({
+                where: { teamId_userId: { teamId: team, userId: memberId } }
+            });
+        }
+
+        await logTeamUpdateMemberTeams(user.id, {
+            memberId,
+            addTeams,
+            removeTeams
+        });
+
+        const members = await prisma.companyMember.findMany({
+            where: { companyId: company.id },
+            include: {
+                user: { include: { teamMembers: { include: { team: true } } } }
+            }
+        });
 
         return { data: members, error: null };
     } catch (error) {

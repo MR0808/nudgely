@@ -165,4 +165,5 @@ export interface AddToTeamDialogProps {
     teams: ReturnTeams;
     open: boolean;
     setOpen: (open: boolean) => void;
+    setMembers: (returnMembers: ReturnMembers) => void;
 }
