@@ -146,7 +146,7 @@ export const auth = betterAuth({
     ...options,
     plugins: [
         ...(options.plugins ?? []),
-        customSession(async ({ user, session }) => {
+        customSession(async ({ user, session }, ctx) => {
             const accounts = await prisma.account.findMany({
                 where: { id: user.id }
             });
@@ -158,9 +158,7 @@ export const auth = betterAuth({
             const company = userCompany.company;
             return {
                 session,
-                user: {
-                    ...user
-                },
+                user,
                 accounts,
                 company,
                 userCompany
