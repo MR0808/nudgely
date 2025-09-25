@@ -119,3 +119,14 @@ export interface CompanyTeamsCardProps {
     teams: Teams;
     userSession: SessionType | null;
 }
+
+export interface CompanyBillingCardProps {
+    company: Company;
+    nudgeCount: number;
+}
+
+export interface BillingManagementDialogProps {
+    trigger: React.ReactNode;
+    company: Company;
+    plans: Plan[];
+}

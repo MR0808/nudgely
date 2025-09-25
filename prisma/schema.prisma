@@ -412,21 +412,35 @@ model Company {
   status           CompanyStatus @default(ACTIVE)
 
   // Stripe billing - now at company level
-  stripeCustomerId   String?             @unique
-  stripeSubId        String?             @unique
-  subscriptionStatus SubscriptionStatus?
-  plan               Plan                @relation(fields: [planId], references: [id], onDelete: Cascade)
-  planId             String
-  billingInterval    BillingInterval?
+  stripeCustomerId String? @unique
+  plan             Plan    @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId           String
 
   // Relations
-  creator   User            @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  creatorId String
-  members   CompanyMember[]
-  teams     Team[]
-  invites   CompanyInvite[]
+  creator               User                 @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId             String
+  members               CompanyMember[]
+  teams                 Team[]
+  invites               CompanyInvite[]
+  companySubscription   CompanySubscription? @relation(fields: [companySubscriptionId], references: [id])
+  companySubscriptionId String?              @unique
 
   @@map("companies")
+}
+
+model CompanySubscription {
+  id                   String          @id @default(uuid())
+  stripeSubscriptionId String          @unique
+  billingInterval      BillingInterval
+  currentPeriodEnd     DateTime?
+  nextBillingDate      DateTime?
+  company              Company?
+  priceId              String? // store Stripe price id for quick checks
+  status               String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  @@map("company_subscriptions")
 }
 
 model CompanyMember {
@@ -684,23 +698,34 @@ model Plan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name            String
-  slug            String      @unique
-  price           Int
-  maxAdmin        Int
-  maxUsers        Int
-  maxTeams        Int
-  maxNudges       Int
-  maxRecipients   Int
-  allTemplates    Boolean
-  customTemplates Boolean
-  nudgeHistory    Int
-  stats           Boolean
-  dataExport      Boolean
-  branding        Boolean
-  support         Support
-  companies       Company[]
-  colour          BadgeColour
+  name                String
+  slug                String      @unique
+  description         String
+  icon                String
+  iconClassname       String?
+  features            String[]
+  headline            String
+  popular             Boolean
+  priceMonthly        Int
+  priceYearly         Int
+  maxAdmin            Int
+  maxUsers            Int
+  maxTeams            Int
+  maxNudges           Int
+  maxRecipients       Int
+  allTemplates        Boolean
+  customTemplates     Boolean
+  nudgeHistory        Int
+  stats               Boolean
+  dataExport          Boolean
+  branding            Boolean
+  stripeMonthlyId     String
+  stripeMonthlyLookup String
+  stripeYearlyId      String
+  stripeYearlyLookup  String
+  support             Support
+  companies           Company[]
+  colour              BadgeColour
 
   @@map("plans")
 }

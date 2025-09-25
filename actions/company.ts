@@ -74,7 +74,8 @@ export const getCompany = async () => {
                 industry: true,
                 country: true,
                 region: true,
-                plan: true
+                plan: true,
+                companySubscription: true
             }
         });
 

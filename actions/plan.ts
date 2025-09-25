@@ -27,3 +27,15 @@ export const getPlan = async () => {
         return { plan: null, error: `Failed to get plan - ${error}` };
     }
 };
+
+export const getPlans = async () => {
+    try {
+        const plans = await prisma.plan.findMany({
+            orderBy: { priceMonthly: 'asc' }
+        });
+
+        return { plans, error: null };
+    } catch (error) {
+        return { plans: null, error: `Failed to get plans - ${error}` };
+    }
+};

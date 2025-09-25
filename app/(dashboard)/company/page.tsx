@@ -17,6 +17,9 @@ import {
 import CompanyTeamsCard from '@/components/company/CompanyTeamsCard';
 import { getCompanyTeams } from '@/actions/team';
 import { Button } from '@/components/ui/button';
+import CompanyBillingCard from '@/components/company/CompanyBillingCard';
+import { getCompanyNudgeCount } from '@/actions/nudges';
+import { getPlans } from '@/actions/plan';
 
 export async function generateMetadata(): Promise<Metadata> {
     const { company } = await getCompany();
@@ -54,7 +57,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const CompanyPage = async () => {
     const userSession = await authCheck('/company');
-
     const { company, userCompany, image } = await getCompany();
 
     if (!company || userCompany.role !== 'COMPANY_ADMIN') {
@@ -86,6 +88,7 @@ const CompanyPage = async () => {
     const members = await getCompanyAdminMembers();
     const invitations = await getCompanyInvitations();
     const teams = await getCompanyTeams();
+    const nudgeCount = await getCompanyNudgeCount();
 
     if (!members.data) {
         return (
@@ -145,7 +148,7 @@ const CompanyPage = async () => {
                     />
                 </div>
 
-                {/* <CompanyBillingCard /> */}
+                <CompanyBillingCard company={company} nudgeCount={nudgeCount} />
 
                 {/* <CompanyDangerZone /> */}
             </div>

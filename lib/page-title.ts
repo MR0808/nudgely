@@ -27,7 +27,8 @@ function getPageTitle(pathname: string) {
         '/settings': 'Settings',
         '/team/create': 'Create a Team',
         '/company': 'Company Settings',
-        '/team': 'Teams & Users'
+        '/team': 'Teams & Users',
+        '/billing': 'Billing'
     };
 
     // Define dynamic route patterns
