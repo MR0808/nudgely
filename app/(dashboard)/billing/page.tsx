@@ -85,6 +85,7 @@ const BillingPage = async ({
     }
 
     const details = await getCustomerPaymentInformation(
+        company.stripeCustomerId,
         company.companySubscription?.stripeSubscriptionId
     );
 
@@ -254,7 +255,7 @@ const BillingPage = async ({
                             customerId={company.stripeCustomerId || null}
                         />
                         <BillingInvoices
-                            invoices={details.invoices}
+                            invoices={details.invoices?.data}
                             customerId={company.stripeCustomerId || null}
                         />
                     </>

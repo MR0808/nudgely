@@ -16,7 +16,6 @@ import { BillingInvoicesProps } from '@/types/billing';
 import { formatDollarsForDisplayNoDecimals } from '@/utils/currency';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { downloadAllInvoices } from '@/actions/subscriptions';
 
 const BillingInvoices = ({ invoices, customerId }: BillingInvoicesProps) => {
     const [isPending, startTransition] = useTransition();
@@ -83,7 +82,7 @@ const BillingInvoices = ({ invoices, customerId }: BillingInvoicesProps) => {
                         Download your invoices and receipts
                     </CardDescription>
                 </div>
-                {invoices.data.length > 0 && (
+                {invoices.length > 0 && (
                     <Button
                         variant="outline"
                         size="sm"
@@ -97,7 +96,7 @@ const BillingInvoices = ({ invoices, customerId }: BillingInvoicesProps) => {
                 )}
             </CardHeader>
             <CardContent>
-                {invoices.data.length === 0 ? (
+                {invoices.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                         <Download className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p>No billing history</p>
@@ -107,7 +106,7 @@ const BillingInvoices = ({ invoices, customerId }: BillingInvoicesProps) => {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {invoices.data.map((invoice) => {
+                        {invoices.map((invoice) => {
                             return (
                                 <div
                                     key={invoice.id}

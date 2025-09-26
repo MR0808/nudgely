@@ -110,9 +110,10 @@ export const createCheckoutSessions = async (
 };
 
 export const getCustomerPaymentInformation = async (
+    customerId: string | null,
     subscriptionId?: string
 ) => {
-    if (!subscriptionId)
+    if (!subscriptionId || !customerId)
         return {
             error: 'Not applicable',
             payment: null,
@@ -155,7 +156,7 @@ export const getCustomerPaymentInformation = async (
         };
 
         const invoices = await stripe.invoices.list({
-            subscription: subscriptionId
+            customer: customerId
         });
         return { payment, invoices, error: null };
     } catch (error) {
@@ -186,92 +187,5 @@ export const createPortalSession = async (customerId: string) => {
     } catch (error) {
         console.error('Error creating portal session:', error);
         return { error: `Internal server error - ${error}` };
-    }
-};
-
-export const downloadAllInvoices = async (customerId: string) => {
-    if (!customerId) {
-        return new Response(JSON.stringify({ error: 'Not applicable' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
-    }
-
-    const userSession = await authCheckServer();
-
-    if (!userSession) {
-        return new Response(JSON.stringify({ error: 'Not authorised' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
-    }
-
-    const { user, company, userCompany } = userSession;
-
-    if (userCompany.role !== 'COMPANY_ADMIN') {
-        return new Response(JSON.stringify({ error: 'Not authorised' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        });
-    }
-    try {
-        const invoices = await stripe.invoices.list({
-            customer: customerId,
-            limit: 100
-        });
-
-        // Prepare CSV data
-        const csvData = [];
-        const headers = [
-            'Invoice ID',
-            'Number',
-            'Customer Name',
-            'Customer Email',
-            'Date',
-            'Amount Due',
-            'Currency',
-            'Status',
-            'Invoice PDF'
-        ];
-
-        // Iterate through invoices (auto_paging_iter handles pagination)
-        for await (const invoice of invoices.data) {
-            csvData.push([
-                invoice.id,
-                invoice.number || '',
-                invoice.customer_name || 'N/A',
-                invoice.customer_email || 'N/A',
-                new Date(invoice.created * 1000).toISOString().split('T')[0], // Convert Unix timestamp to YYYY-MM-DD
-                (invoice.amount_due / 100).toFixed(2), // Convert cents to dollars
-                invoice.currency.toUpperCase(),
-                invoice.status,
-                invoice.invoice_pdf || 'N/A'
-            ]);
-        }
-
-        // Generate CSV string
-        const csvString = stringify([headers, ...csvData], {
-            header: false
-        });
-
-        // Set response headers for CSV download
-        const headersResponse = new Headers({
-            'Content-Type': 'text/csv',
-            'Content-Disposition': 'attachment; filename="stripe_invoices.csv"'
-        });
-
-        return new Response(csvString, {
-            status: 200,
-            headers: headersResponse
-        });
-    } catch (error) {
-        console.error('Error fetching invoices:', error);
-        return new Response(
-            JSON.stringify({ error: 'Failed to fetch invoices' }),
-            {
-                status: 500,
-                headers: { 'Content-Type': 'application/json' }
-            }
-        );
     }
 };

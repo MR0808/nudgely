@@ -15,8 +15,12 @@ export type Payment = NonNullable<
     Details extends { payment: infer T } ? T : never
 >;
 
-export type Invoices = NonNullable<
+export type InvoicesObject = NonNullable<
     Details extends { invoices: infer T } ? T : never
+>;
+
+export type Invoices = NonNullable<
+    InvoicesObject extends { data: infer T } ? T : never
 >;
 
 export interface BillingPlanSelectionProps {
@@ -30,6 +34,6 @@ export interface BillingPaymentMethodProps {
 }
 
 export interface BillingInvoicesProps {
-    invoices: Invoices | null;
+    invoices: Invoices | undefined;
     customerId: string | null;
 }
