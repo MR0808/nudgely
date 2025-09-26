@@ -26,4 +26,10 @@ export interface BillingPlanSelectionProps {
 
 export interface BillingPaymentMethodProps {
     payment: Payment | null;
+    customerId: string | null;
+}
+
+export interface BillingInvoicesProps {
+    invoices: Invoices | null;
+    customerId: string | null;
 }

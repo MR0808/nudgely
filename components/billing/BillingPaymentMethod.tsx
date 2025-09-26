@@ -1,6 +1,8 @@
 'use client';
 
 import { CreditCard, House } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { useTransition } from 'react';
 
 import {
     Card,
@@ -11,8 +13,15 @@ import {
 } from '@/components/ui/card';
 import { BillingPaymentMethodProps } from '@/types/billing';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { createPortalSession } from '@/actions/subscriptions';
 
-const BillingPaymentMethod = ({ payment }: BillingPaymentMethodProps) => {
+const BillingPaymentMethod = ({
+    payment,
+    customerId
+}: BillingPaymentMethodProps) => {
+    const [isPending, startTransition] = useTransition();
+
     if (!payment) return null;
 
     function countryDisplay(countryCode: string) {
@@ -24,33 +33,38 @@ const BillingPaymentMethod = ({ payment }: BillingPaymentMethodProps) => {
         return countryName;
     }
 
+    const stripePromise = loadStripe(
+        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+    );
+
     const handleRedirectToPortal = async () => {
-        setLoading(true);
-        try {
-            // Replace with the actual customer ID (e.g., from your auth system or database)
-            const customerId = 'cus_12345'; // Example customer ID
-
-            const response = await fetch('/api/create-portal-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ customerId })
-            });
-
-            const data = await response.json();
-
-            if (data.url) {
-                // Redirect to the Stripe Customer Portal
-                window.location.href = data.url;
-            } else {
-                console.error('Error:', data.error);
-            }
-        } catch (error) {
-            console.error('Error redirecting to portal:', error);
-        } finally {
-            setLoading(false);
+        if (!customerId) {
+            toast.error(
+                'There was an issue loading the customer portal, please reload the page and try again'
+            );
+            return;
         }
+        startTransition(async () => {
+            const stripe = await stripePromise;
+
+            if (!stripe) {
+                console.error('Stripe failed to load');
+                return;
+            }
+
+            const response = await createPortalSession(customerId);
+
+            if (response.error) {
+                const errorData = response.error;
+                console.error('API Error:', errorData);
+                return;
+            }
+
+            if (response.url) {
+                // Redirect to the Stripe Customer Portal
+                window.location.href = response.url;
+            }
+        });
     };
 
     return (
@@ -80,8 +94,14 @@ const BillingPaymentMethod = ({ payment }: BillingPaymentMethodProps) => {
                                 </p>
                             </div>
                         </div>
-                        <Button variant="outline" size="sm">
-                            Update Payment Method
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRedirectToPortal}
+                            disabled={isPending}
+                            className="cursor-pointer"
+                        >
+                            {isPending ? 'Loading...' : 'Manage Subscription'}
                         </Button>
                     </div>
                     <div className="flex gap-3 items-start">

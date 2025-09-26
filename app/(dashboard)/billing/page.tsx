@@ -22,23 +22,7 @@ import { getPlans } from '@/actions/plan';
 import BillingPlanSelection from '@/components/billing/BillingPlanSelection';
 import { getCustomerPaymentInformation } from '@/actions/subscriptions';
 import BillingPaymentMethod from '@/components/billing/BillingPaymentMethod';
-
-const mockInvoices = [
-    {
-        id: 'inv_1',
-        date: new Date('2024-01-01'),
-        amount: 96,
-        status: 'paid' as const,
-        downloadUrl: '#'
-    },
-    {
-        id: 'inv_2',
-        date: new Date('2023-12-01'),
-        amount: 96,
-        status: 'paid' as const,
-        downloadUrl: '#'
-    }
-];
+import BillingInvoices from '@/components/billing/BillingInvoices';
 
 export async function generateMetadata(): Promise<Metadata> {
     const title = `Billing`;
@@ -76,7 +60,6 @@ const BillingPage = async ({
     const userSession = await authCheck('/billing');
     const { company, userCompany } = await getCompany();
     const { plans } = await getPlans();
-    const invoices = mockInvoices;
     const params = await searchParams;
 
     if (!company || userCompany.role !== 'COMPANY_ADMIN') {
@@ -266,86 +249,14 @@ const BillingPage = async ({
                 {/* Payment Method */}
                 {company.companySubscription && (
                     <>
-                        <BillingPaymentMethod payment={details.payment} />
-                        {/* Billing History */}
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <div>
-                                    <CardTitle>Billing History</CardTitle>
-                                    <CardDescription>
-                                        Download your invoices and receipts
-                                    </CardDescription>
-                                </div>
-                                {invoices.length > 0 && (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="gap-2 bg-transparent"
-                                    >
-                                        <Download className="h-4 w-4" />
-                                        Export All
-                                    </Button>
-                                )}
-                            </CardHeader>
-                            <CardContent>
-                                {invoices.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        <Download className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                        <p>No billing history</p>
-                                        <p className="text-sm">
-                                            Your invoices will appear here once
-                                            you upgrade
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {invoices.map((invoice) => (
-                                            <div
-                                                key={invoice.id}
-                                                className="flex items-center justify-between p-3 border rounded-lg"
-                                            >
-                                                <div>
-                                                    <p className="font-medium">
-                                                        {invoice.date.toLocaleDateString()}
-                                                    </p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {formatDollarsForDisplayNoDecimals(
-                                                            invoice.amount
-                                                        )}
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Badge
-                                                        variant={
-                                                            invoice.status ===
-                                                            'paid'
-                                                                ? 'default'
-                                                                : 'secondary'
-                                                        }
-                                                    >
-                                                        {invoice.status}
-                                                    </Badge>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        asChild
-                                                    >
-                                                        <a
-                                                            href={
-                                                                invoice.downloadUrl
-                                                            }
-                                                            download
-                                                        >
-                                                            <Download className="h-4 w-4" />
-                                                        </a>
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                        <BillingPaymentMethod
+                            payment={details.payment}
+                            customerId={company.stripeCustomerId || null}
+                        />
+                        <BillingInvoices
+                            invoices={details.invoices}
+                            customerId={company.stripeCustomerId || null}
+                        />
                     </>
                 )}
             </div>
