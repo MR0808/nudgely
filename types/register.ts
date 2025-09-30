@@ -1,5 +1,4 @@
 import { getTeamInvitationByToken } from '@/actions/invitation';
-import { Country, TeamRole } from '@/generated/prisma';
 
 export type RegistrationStep = 'initial' | 'email-verify' | 'complete';
 

@@ -1,9 +1,6 @@
 import { CompanySize, Country, Industry, Region } from '@/generated/prisma';
 
-import { auth } from '@/lib/auth';
-
-export type Session = typeof auth.$Infer.Session;
-export type SessionType = Awaited<ReturnType<typeof auth.api.getSession>>;
+import { SessionType } from '@/types/session';
 
 export interface CompanyOnboardingWizardProps {
     countryProp?: Country;

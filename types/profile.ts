@@ -1,8 +1,6 @@
-import { auth } from '@/lib/auth';
-
-export type Session = typeof auth.$Infer.Session;
-export type SessionType = Awaited<ReturnType<typeof auth.api.getSession>>;
 import { Gender } from '@/generated/prisma';
+
+import { SessionType } from '@/types/session';
 
 export interface GenderProps {
     genderProp?: Gender;

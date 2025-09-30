@@ -1,9 +1,7 @@
-import { getCompanyTeams, getCurrentTeamBySlug } from '@/actions/team';
-import { Plan, TeamRole, UserRole } from '@/generated/prisma';
-import { auth } from '@/lib/auth';
+import { Plan, TeamRole } from '@/generated/prisma';
 
-export type Session = typeof auth.$Infer.Session;
-export type SessionType = Awaited<ReturnType<typeof auth.api.getSession>>;
+import { getCompanyTeams, getCurrentTeamBySlug } from '@/actions/team';
+import { SessionType } from '@/types/session';
 
 export type TeamsData = Awaited<ReturnType<typeof getCompanyTeams>>;
 

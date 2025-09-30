@@ -1,9 +1,3 @@
-import { getCompany } from '@/actions/company';
-import {
-    getCompanyAdminMembers,
-    getCompanyInvitations
-} from '@/actions/companyMembers';
-import { getCompanyTeams } from '@/actions/team';
 import {
     Image,
     CompanySize,
@@ -14,10 +8,13 @@ import {
     Plan
 } from '@/generated/prisma';
 
-import { auth } from '@/lib/auth';
-
-export type Session = typeof auth.$Infer.Session;
-export type SessionType = Awaited<ReturnType<typeof auth.api.getSession>>;
+import { getCompany } from '@/actions/company';
+import {
+    getCompanyAdminMembers,
+    getCompanyInvitations
+} from '@/actions/companyMembers';
+import { getCompanyTeams } from '@/actions/team';
+import { SessionType } from '@/types/session';
 
 export type CompanyData = Awaited<ReturnType<typeof getCompany>>;
 

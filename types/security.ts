@@ -1,11 +1,8 @@
 import { Dispatch, SetStateAction } from 'react';
 import { Country } from '@/generated/prisma';
 
-import { auth } from '@/lib/auth';
 import { LocationData } from '@/types/account';
-
-export type Session = typeof auth.$Infer.Session;
-export type SessionType = Awaited<ReturnType<typeof auth.api.getSession>>;
+import { SessionType } from '@/types/session';
 
 export type SecurityProps = {
     userSession: SessionType | null;
