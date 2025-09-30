@@ -19,7 +19,55 @@ export async function POST(req: Request) {
             status: 400
         });
     }
+    console.log(event.type);
+
     switch (event.type) {
+        case 'subscription_schedule.updated': {
+            const session = event.data.object;
+            let priceId = '';
+            if (typeof session.phases[0].items[0].price === 'string') {
+                priceId = session.phases[0].items[0].price;
+            } else {
+                priceId = session.phases[0].items[0].price.id || '1';
+            }
+            if (session.status === 'released') {
+                await prisma.pendingCompanySubscription.delete({
+                    where: { stripeScheduleId: session.id }
+                });
+                break;
+            }
+            let customerId = '';
+            if (typeof session.customer === 'string') {
+                customerId = session.customer;
+            } else {
+                customerId = session.customer?.id || '1';
+            }
+
+            const company = await prisma.company.findUnique({
+                where: { stripeCustomerId: customerId }
+            });
+            if (!company) break;
+            if (session.status === 'active') {
+                const nextMonthDate = new Date();
+                const activeDate = session.current_phase?.end_date
+                    ? new Date(session.current_phase.end_date)
+                    : (nextMonthDate.setMonth(nextMonthDate.getMonth() + 1),
+                      nextMonthDate);
+                await prisma.pendingCompanySubscription.create({
+                    data: {
+                        stripeScheduleId: session.id,
+                        activeDate,
+                        priceId,
+                        company: {
+                            connect: {
+                                id: company.id
+                            }
+                        }
+                    }
+                });
+            }
+            break;
+        }
         case 'checkout.session.completed': {
             // session.subscription contains subscription id
             // link subscription to your user by session.client_reference_id or customer
@@ -39,10 +87,13 @@ export async function POST(req: Request) {
             }
             break;
         }
-        case 'customer.subscription.updated':
+        case 'customer.subscription.updated': {
+            const session = event.data.object;
+            console.log(session);
+            break;
+        }
         case 'customer.subscription.created': {
             const session = event.data.object;
-            console.log(session.items.data[0]);
             let customerId = '';
             if (typeof session.customer === 'string') {
                 customerId = session.customer;
@@ -74,9 +125,8 @@ export async function POST(req: Request) {
                     planId: plan.id
                 }
             });
-            await prisma.companySubscription.upsert({
-                where: { stripeSubscriptionId: customerId },
-                create: {
+            await prisma.companySubscription.create({
+                data: {
                     stripeSubscriptionId: session.id,
                     billingInterval:
                         interval === 'month' ? 'MONTHLY' : 'YEARLY',
@@ -91,25 +141,26 @@ export async function POST(req: Request) {
                             1000
                     ),
                     status: session.status
-                },
-                update: {
-                    priceId: session.items?.data?.[0]?.price?.id || null,
-                    currentPeriodEnd: new Date(
-                        (session.items?.data?.[0]?.current_period_end || 0) *
-                            1000
-                    ),
-                    billingInterval:
-                        session.items?.data?.[0]?.price?.recurring?.interval ===
-                        'month'
-                            ? 'MONTHLY'
-                            : 'YEARLY',
-                    status: session.status
                 }
+                // update: {
+                //     priceId: session.items?.data?.[0]?.price?.id || null,
+                //     currentPeriodEnd: new Date(
+                //         (session.items?.data?.[0]?.current_period_end || 0) *
+                //             1000
+                //     ),
+                //     billingInterval:
+                //         session.items?.data?.[0]?.price?.recurring?.interval ===
+                //         'month'
+                //             ? 'MONTHLY'
+                //             : 'YEARLY',
+                //     status: session.status
+                // }
             });
             break;
         }
         case 'invoice.paid': {
-            // mark payment ok
+            const session = event.data.object;
+            console.log(session);
             break;
         }
         case 'invoice.payment_failed': {

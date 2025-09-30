@@ -11,81 +11,19 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-08-27.basil'
 });
 
-// export const changePlan = async ({
-//     userId,
-//     companyId,
-//     stripeSubscriptionId,
-//     newPriceId,
-//     immediatelyCharge
-// }: {
-//     userId: string;
-//     companyId: string;
-//     stripeSubscriptionId: string;
-//     newPriceId: string;
-//     immediatelyCharge?: boolean;
-// }) => {
-//     // fetch subscription from Stripe to get subscription item id
-//     const subscription = await stripe.subscriptions.retrieve(
-//         stripeSubscriptionId,
-//         {
-//             expand: ['items.data.price']
-//         }
-//     );
-
-//     // get the subscription item id (assuming single-item subscription)
-//     const item = subscription.items.data[0];
-//     if (!item) throw new Error('No subscription item found');
-
-//     // update subscription item with a new price
-//     await stripe.subscriptions.update(stripeSubscriptionId, {
-//         items: [
-//             {
-//                 id: item.id,
-//                 price: newPriceId,
-//                 quantity: 1
-//             }
-//         ],
-//         proration_behavior: immediatelyCharge ? 'create_prorations' : 'none'
-//     });
-
-//     // update DB on success (optimistic — we will also sync from webhooks)
-//     await prisma.companySubscription.updateMany({
-//         where: { stripeSubscriptionId },
-//         data: { priceId: newPriceId }
-//     });
-
-//     // refresh server-side rendered data for account page
-//     revalidatePath('/company');
-// };
-
-// export const cancelSubscription = async ({
-//     stripeSubscriptionId,
-//     atPeriodEnd
-// }: {
-//     stripeSubscriptionId: string;
-//     atPeriodEnd?: boolean;
-// }) => {
-//     if (atPeriodEnd) {
-//         // schedule cancellation at period end
-//         await stripe.subscriptions.update(stripeSubscriptionId, {
-//             cancel_at_period_end: true
-//         });
-//     } else {
-//         // immediate cancel
-//         await stripe.subscriptions.cancel(stripeSubscriptionId);
-//     }
-// };
-
 export const createCheckoutSessions = async (
     planId: string,
-    companyId: string
+    companyId: string,
+    method: 'update' | 'create'
 ) => {
     try {
         const company = await prisma.company.findUnique({
-            where: { id: companyId }
+            where: { id: companyId },
+            include: { companySubscription: true }
         });
         if (!company) return { error: 'Company not found' };
 
+        // if (method === 'create') {
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [
@@ -103,9 +41,85 @@ export const createCheckoutSessions = async (
         });
 
         return { sessionId: session.id };
+        // }
+
+        // if (!company.companySubscription?.stripeSubscriptionId) {
+        //     return { error: 'Company subscription not found' };
+        // }
     } catch (error) {
         console.log(error);
         return { error };
+    }
+};
+
+export const getPendingSubscriptions = async () => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            message: 'Not authorised'
+        };
+    }
+
+    const { user, company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            message: 'Not authorised'
+        };
+    }
+    try {
+        const pendingCompanySubscription =
+            await prisma.pendingCompanySubscription.findFirst({
+                where: { company: { id: company.id } }
+            });
+
+        if (!pendingCompanySubscription) {
+            return { data: null, message: 'No pending subscription' };
+        }
+
+        const plan = await prisma.plan.findFirst({
+            where: {
+                OR: [
+                    { stripeMonthlyId: pendingCompanySubscription.priceId },
+                    { stripeYearlyId: pendingCompanySubscription.priceId }
+                ]
+            }
+        });
+
+        if (!plan) {
+            return { data: null, message: 'No plan found' };
+        }
+
+        const planPrice =
+            plan.stripeYearlyId === pendingCompanySubscription.priceId
+                ? plan.priceYearly
+                : plan.priceMonthly;
+
+        const planInterval =
+            plan.stripeYearlyId === pendingCompanySubscription.priceId
+                ? 'YEARLY'
+                : 'MONTHLY';
+
+        return {
+            data: {
+                planName: plan.name,
+                planPrice,
+                planInterval,
+                planColour: plan.colour,
+                planIcon: plan.icon,
+                planIconClassName: plan.iconClassname,
+                activeDate: pendingCompanySubscription.activeDate
+            },
+            message: ''
+        };
+    } catch (error) {
+        return {
+            message: `There was an error - ${error}`,
+            data: null
+        };
     }
 };
 

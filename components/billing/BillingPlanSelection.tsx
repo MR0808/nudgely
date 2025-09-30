@@ -25,7 +25,6 @@ const BillingPlanSelection = ({
     plans
 }: BillingPlanSelectionProps) => {
     const [isPending, startTransition] = useTransition();
-    const [selectedPlan, setSelectedPlan] = useState(company.plan);
     const [billingInterval, setBillingInterval] = useState<
         'MONTHLY' | 'YEARLY'
     >('YEARLY');
@@ -54,8 +53,13 @@ const BillingPlanSelection = ({
                 billingInterval === 'YEARLY'
                     ? plan.stripeYearlyId
                     : plan.stripeMonthlyId;
+            const method = company.companySubscriptionId ? 'update' : 'create';
 
-            const response = await createCheckoutSessions(planId, company.id);
+            const response = await createCheckoutSessions(
+                planId,
+                company.id,
+                method
+            );
 
             if (response.error) {
                 const errorData = response.error;
@@ -87,27 +91,29 @@ const BillingPlanSelection = ({
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="flex items-center justify-center">
-                    <div className="flex items-center bg-muted rounded-lg p-1">
-                        <button
-                            onClick={() => setBillingInterval('MONTHLY')}
-                            className={`px-4 py-2 rounded-md text-sm transition-all ${
-                                billingInterval === 'MONTHLY'
-                                    ? 'bg-background text-foreground font-bold shadow-sm'
-                                    : 'text-muted-foreground font-medium hover:text-foreground'
-                            }`}
+                <div className="flex justify-center max-w-[16rem] m-auto mb-8 lg:mb-16">
+                    <div className="relative flex w-full p-1 bg-muted  rounded-full">
+                        <span
+                            className="absolute inset-0 m-1 pointer-events-none"
+                            aria-hidden="true"
                         >
-                            Monthly
-                        </button>
+                            <span
+                                className={`absolute inset-0 w-1/2 bg-background rounded-full shadow-sm shadow-indigo-950/10 transform transition-transform duration-150 ease-in-out ${billingInterval === 'YEARLY' ? 'translate-x-0' : 'translate-x-full'}`}
+                            ></span>
+                        </span>
                         <button
+                            className={`relative flex-1 h-10 text-lg rounded-full focus-visible:outline-none focus-visible:ring focus-visible:ring-indigo-300 dark:focus-visible:ring-slate-600 transition-colors duration-150 ease-in-out ${billingInterval === 'YEARLY' ? 'text-foreground font-bold' : 'text-muted-foreground font-medium hover:text-foreground cursor-pointer '}`}
                             onClick={() => setBillingInterval('YEARLY')}
-                            className={`px-4 py-2 rounded-md text-sm transition-all relative ${
-                                billingInterval === 'YEARLY'
-                                    ? 'bg-background text-foreground font-bold shadow-sm'
-                                    : 'text-muted-foreground font-medium hover:text-foreground'
-                            }`}
+                            aria-pressed={billingInterval === 'YEARLY'}
                         >
                             Yearly
+                        </button>
+                        <button
+                            className={`relative flex-1 h-10 text-lg  rounded-full focus-visible:outline-none focus-visible:ring focus-visible:ring-indigo-300 dark:focus-visible:ring-slate-600 transition-colors duration-150 ease-in-out ${billingInterval === 'MONTHLY' ? 'text-foreground font-bold' : 'text-muted-foreground font-medium hover:text-foreground cursor-pointer '}`}
+                            onClick={() => setBillingInterval('MONTHLY')}
+                            aria-pressed={billingInterval === 'MONTHLY'}
+                        >
+                            Monthly
                         </button>
                     </div>
                 </div>
@@ -120,12 +126,7 @@ const BillingPlanSelection = ({
                         return (
                             <Card
                                 key={plan.id}
-                                className={`relative cursor-pointer transition-all hover:shadow-md flex flex-col ${
-                                    selectedPlan.id === plan.id
-                                        ? 'ring-2 ring-primary'
-                                        : ''
-                                } ${plan.popular ? 'border-primary' : ''}`}
-                                onClick={() => setSelectedPlan(plan)}
+                                className={`relative transition-all hover:shadow-md flex flex-col ${plan.popular ? 'border-primary' : ''}`}
                             >
                                 {plan.popular && (
                                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -223,11 +224,7 @@ const BillingPlanSelection = ({
                                     </div>
 
                                     <Button
-                                        variant={
-                                            selectedPlan.id === plan.id
-                                                ? 'default'
-                                                : 'outline'
-                                        }
+                                        variant="outline"
                                         className="w-full mt-4 cursor-pointer"
                                         disabled={isCurrentPlan || isPending}
                                         onClick={(e) => {

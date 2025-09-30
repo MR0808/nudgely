@@ -417,13 +417,15 @@ model Company {
   planId           String
 
   // Relations
-  creator               User                 @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  creatorId             String
-  members               CompanyMember[]
-  teams                 Team[]
-  invites               CompanyInvite[]
-  companySubscription   CompanySubscription? @relation(fields: [companySubscriptionId], references: [id])
-  companySubscriptionId String?              @unique
+  creator                      User                        @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId                    String
+  members                      CompanyMember[]
+  teams                        Team[]
+  invites                      CompanyInvite[]
+  companySubscription          CompanySubscription?        @relation(fields: [companySubscriptionId], references: [id])
+  companySubscriptionId        String?                     @unique
+  pendingCompanySubscription   PendingCompanySubscription? @relation(fields: [pendingCompanySubscriptionId], references: [id])
+  pendingCompanySubscriptionId String?                     @unique
 
   @@map("companies")
 }
@@ -441,6 +443,18 @@ model CompanySubscription {
   updatedAt            DateTime        @updatedAt
 
   @@map("company_subscriptions")
+}
+
+model PendingCompanySubscription {
+  id               String   @id @default(uuid())
+  activeDate       DateTime
+  stripeScheduleId String   @unique
+  priceId          String
+  company          Company?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("pending_company_subscriptions")
 }
 
 model CompanyMember {

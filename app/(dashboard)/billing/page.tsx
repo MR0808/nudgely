@@ -1,6 +1,7 @@
-import { CreditCard, Download } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { format } from 'date-fns';
 
 import { authCheck } from '@/lib/authCheck';
 import siteMetadata from '@/utils/siteMetaData';
@@ -18,9 +19,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { formatDollarsForDisplayNoDecimals } from '@/utils/currency';
 import { DynamicIcon } from '@/components/global/DynamicIcon';
 import { cn } from '@/lib/utils';
-import { getPlans } from '@/actions/plan';
-import BillingPlanSelection from '@/components/billing/BillingPlanSelection';
-import { getCustomerPaymentInformation } from '@/actions/subscriptions';
+import {
+    getCustomerPaymentInformation,
+    getPendingSubscriptions
+} from '@/actions/subscriptions';
 import BillingPaymentMethod from '@/components/billing/BillingPaymentMethod';
 import BillingInvoices from '@/components/billing/BillingInvoices';
 
@@ -59,7 +61,6 @@ const BillingPage = async ({
 }) => {
     const userSession = await authCheck('/billing');
     const { company, userCompany } = await getCompany();
-    const { plans } = await getPlans();
     const params = await searchParams;
 
     if (!company || userCompany.role !== 'COMPANY_ADMIN') {
@@ -88,6 +89,9 @@ const BillingPage = async ({
         company.stripeCustomerId,
         company.companySubscription?.stripeSubscriptionId
     );
+
+    const pendingCompanySubscription = await getPendingSubscriptions();
+    const { data: pendingPlan } = pendingCompanySubscription;
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -215,6 +219,15 @@ const BillingPage = async ({
                                         }
                                     </Badge>
                                 )}
+                                <Link href="/subscription">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="cursor-pointer"
+                                    >
+                                        Change Subscription
+                                    </Button>
+                                </Link>
                             </div>
                             <div className="text-right">
                                 <p className="text-lg font-bold">
@@ -244,8 +257,52 @@ const BillingPage = async ({
                     </CardContent>
                 </Card>
 
-                {/* Plan Selection */}
-                <BillingPlanSelection company={company} plans={plans || []} />
+                {pendingPlan && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <CreditCard className="h-5 w-5" />
+                                Upcoming Subscription
+                            </CardTitle>
+                            <CardDescription>
+                                Your active plan will change to below
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-start justify-between p-4 bg-muted rounded-lg">
+                                <div className="flex flex-col space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <DynamicIcon
+                                            name={pendingPlan.planIcon}
+                                            className={cn(
+                                                'w-6 h-6',
+                                                pendingPlan.planIconClassName
+                                            )}
+                                        />
+                                        <span className="font-medium">
+                                            {pendingPlan.planName}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-lg font-bold">
+                                        {`${formatDollarsForDisplayNoDecimals(pendingPlan.planPrice)} / month`}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Begins{' '}
+                                        {format(
+                                            pendingPlan.activeDate,
+                                            'dd/MM/yyyy'
+                                        )}
+                                        {pendingPlan.planInterval === 'YEARLY'
+                                            ? ' • Billed yearly'
+                                            : ' • Billed monthly'}
+                                    </p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Payment Method */}
                 {company.companySubscription && (
