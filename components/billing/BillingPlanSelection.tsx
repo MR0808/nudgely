@@ -98,9 +98,9 @@ const BillingPlanSelection = ({
                 //         console.error('Stripe redirect error:', result.error);
                 //     }
                 // }
-                if (response.returnUrl) {
+                if (response.url) {
                     // Redirect to the Stripe Customer Portal
-                    window.location.href = response.returnUrl;
+                    window.location.href = response.url;
                 }
             }
 

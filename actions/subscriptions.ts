@@ -49,7 +49,9 @@ export const createCheckoutSessions = async (
             cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing`
         });
 
-        return { sessionId: session.id, returnUrl: session.return_url };
+        console.log(session);
+
+        return { sessionId: session.id, url: session.url };
         // }
 
         // if (!company.companySubscription?.stripeSubscriptionId) {
