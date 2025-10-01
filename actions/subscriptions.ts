@@ -9,7 +9,7 @@ import { authCheckServer } from '@/lib/authCheck';
 import { error } from 'console';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-08-27.basil'
+    apiVersion: '2025-09-30.clover'
 });
 
 export const createCheckoutSessions = async (
@@ -49,7 +49,7 @@ export const createCheckoutSessions = async (
             cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing`
         });
 
-        return { sessionId: session.id };
+        return { sessionId: session.id, returnUrl: session.return_url };
         // }
 
         // if (!company.companySubscription?.stripeSubscriptionId) {

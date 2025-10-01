@@ -89,14 +89,18 @@ const BillingPlanSelection = ({
                     return;
                 }
 
-                if (response.sessionId) {
-                    const sessionId = response.sessionId;
-                    const result = await stripe.redirectToCheckout({
-                        sessionId
-                    });
-                    if (result.error) {
-                        console.error('Stripe redirect error:', result.error);
-                    }
+                // if (response.sessionId) {
+                //     const sessionId = response.sessionId;
+                //     const result = await stripe.redirectToCheckout({
+                //         sessionId
+                //     });
+                //     if (result.error) {
+                //         console.error('Stripe redirect error:', result.error);
+                //     }
+                // }
+                if (response.returnUrl) {
+                    // Redirect to the Stripe Customer Portal
+                    window.location.href = response.returnUrl;
                 }
             }
 
