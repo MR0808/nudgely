@@ -6,6 +6,7 @@ import { stringify } from 'csv-stringify/sync';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { authCheckServer } from '@/lib/authCheck';
+import { error } from 'console';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-08-27.basil'
@@ -16,6 +17,13 @@ export const createCheckoutSessions = async (
     companyId: string,
     method: 'update' | 'create'
 ) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            error: 'Not authorised'
+        };
+    }
     try {
         const company = await prisma.company.findUnique({
             where: { id: companyId },
@@ -35,6 +43,7 @@ export const createCheckoutSessions = async (
             billing_address_collection: 'required',
             client_reference_id: companyId,
             customer: company.stripeCustomerId || undefined,
+            metadata: { userId: userSession.user.id },
             mode: 'subscription',
             success_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing`
@@ -131,7 +140,8 @@ export const getCustomerPaymentInformation = async (
         return {
             error: 'Not applicable',
             payment: null,
-            invoices: null
+            invoices: null,
+            nextBillingDate: null
         };
 
     const userSession = await authCheckServer();
@@ -140,7 +150,8 @@ export const getCustomerPaymentInformation = async (
         return {
             error: 'Not authorised',
             payment: null,
-            invoices: null
+            invoices: null,
+            nextBillingDate: null
         };
     }
 
@@ -150,7 +161,8 @@ export const getCustomerPaymentInformation = async (
         return {
             error: 'Not authorised',
             payment: null,
-            invoices: null
+            invoices: null,
+            nextBillingDate: null
         };
     }
 
@@ -168,21 +180,33 @@ export const getCustomerPaymentInformation = async (
             address: paymentMethod.billing_details.address,
             card: paymentMethod.card
         };
+        const nextBillingDate = subscription.items.data[0].current_period_end;
 
         const invoices = await stripe.invoices.list({
             customer: customerId
         });
-        return { payment, invoices, error: null };
+        return { payment, invoices, nextBillingDate, error: null };
     } catch (error) {
         return {
             error: `There was an error - ${error}`,
             payment: null,
-            invoices: null
+            invoices: null,
+            nextBillingDate: null
         };
     }
 };
 
-export const createPortalSession = async (customerId: string) => {
+export const createPortalSession = async (
+    customerId: string,
+    subscriptionId?: string
+) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            error: 'Not authorised'
+        };
+    }
     try {
         // Assume you have the customer ID (e.g., from your database or session)
 
@@ -190,11 +214,24 @@ export const createPortalSession = async (customerId: string) => {
             return { error: 'Customer ID is required' };
         }
 
-        // Create a billing portal session
-        const portalSession = await stripe.billingPortal.sessions.create({
+        let portalSessionParams: any = {
             customer: customerId,
             return_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing` // URL to redirect back to after the portal
-        });
+        };
+
+        if (subscriptionId) {
+            portalSessionParams = {
+                ...portalSessionParams,
+                flow_data: {
+                    type: 'subscription_update',
+                    subscription_update: { subscription: subscriptionId }
+                }
+            };
+        }
+
+        // Create a billing portal session
+        const portalSession =
+            await stripe.billingPortal.sessions.create(portalSessionParams);
 
         // Return the portal session URL
         return { url: portalSession.url };

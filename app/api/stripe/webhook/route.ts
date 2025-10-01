@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
+import {
+    logSubscriptionCreate,
+    logSubscriptionUpdate
+} from '@/actions/audit/audit-subscription';
 
 export async function POST(req: Request) {
     const body = await req.text();
@@ -24,12 +28,6 @@ export async function POST(req: Request) {
     switch (event.type) {
         case 'subscription_schedule.updated': {
             const session = event.data.object;
-            let priceId = '';
-            if (typeof session.phases[0].items[0].price === 'string') {
-                priceId = session.phases[0].items[0].price;
-            } else {
-                priceId = session.phases[0].items[0].price.id || '1';
-            }
             if (session.status === 'released') {
                 await prisma.pendingCompanySubscription.delete({
                     where: { stripeScheduleId: session.id }
@@ -42,36 +40,44 @@ export async function POST(req: Request) {
             } else {
                 customerId = session.customer?.id || '1';
             }
-
             const company = await prisma.company.findUnique({
                 where: { stripeCustomerId: customerId }
             });
             if (!company) break;
             if (session.status === 'active') {
-                const nextMonthDate = new Date();
-                const activeDate = session.current_phase?.end_date
-                    ? new Date(session.current_phase.end_date)
-                    : (nextMonthDate.setMonth(nextMonthDate.getMonth() + 1),
-                      nextMonthDate);
-                await prisma.pendingCompanySubscription.create({
-                    data: {
-                        stripeScheduleId: session.id,
-                        activeDate,
-                        priceId,
-                        company: {
-                            connect: {
-                                id: company.id
+                const pendingCompanySubscription =
+                    await prisma.pendingCompanySubscription.findUnique({
+                        where: { stripeScheduleId: session.id }
+                    });
+                if (!pendingCompanySubscription) {
+                    let priceId = '';
+                    if (typeof session.phases[1].items[0].price === 'string') {
+                        priceId = session.phases[1].items[0].price;
+                    } else {
+                        priceId = session.phases[1].items[0].price.id || '1';
+                    }
+                    const nextMonthDate = new Date();
+                    const activeDate = session.current_phase?.end_date
+                        ? new Date(session.current_phase.end_date * 1000)
+                        : (nextMonthDate.setMonth(nextMonthDate.getMonth() + 1),
+                          nextMonthDate);
+                    await prisma.pendingCompanySubscription.create({
+                        data: {
+                            stripeScheduleId: session.id,
+                            activeDate,
+                            priceId,
+                            company: {
+                                connect: {
+                                    id: company.id
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                }
             }
             break;
         }
         case 'checkout.session.completed': {
-            // session.subscription contains subscription id
-            // link subscription to your user by session.client_reference_id or customer
-            // fetch subscription details and create DB entry
             const session = event.data.object;
             let customerId = '';
             if (session.client_reference_id) {
@@ -85,11 +91,6 @@ export async function POST(req: Request) {
                     data: { stripeCustomerId: customerId }
                 });
             }
-            break;
-        }
-        case 'customer.subscription.updated': {
-            const session = event.data.object;
-            console.log(session);
             break;
         }
         case 'customer.subscription.created': {
@@ -125,42 +126,128 @@ export async function POST(req: Request) {
                     planId: plan.id
                 }
             });
-            await prisma.companySubscription.create({
-                data: {
-                    stripeSubscriptionId: session.id,
-                    billingInterval:
-                        interval === 'month' ? 'MONTHLY' : 'YEARLY',
-                    company: {
-                        connect: {
-                            id: company.id
-                        }
-                    }, // or map via user table
-                    priceId: stripeId,
-                    currentPeriodEnd: new Date(
-                        (session.items?.data?.[0]?.current_period_end || 0) *
-                            1000
-                    ),
-                    status: session.status
+            const companySubscription = await prisma.companySubscription.create(
+                {
+                    data: {
+                        stripeSubscriptionId: session.id,
+                        billingInterval:
+                            interval === 'month' ? 'MONTHLY' : 'YEARLY',
+                        company: {
+                            connect: {
+                                id: company.id
+                            }
+                        }, // or map via user table
+                        priceId: stripeId,
+                        currentPeriodEnd: new Date(
+                            (session.items?.data?.[0]?.current_period_end ||
+                                0) * 1000
+                        ),
+                        status: session.status
+                    }
                 }
-                // update: {
-                //     priceId: session.items?.data?.[0]?.price?.id || null,
-                //     currentPeriodEnd: new Date(
-                //         (session.items?.data?.[0]?.current_period_end || 0) *
-                //             1000
-                //     ),
-                //     billingInterval:
-                //         session.items?.data?.[0]?.price?.recurring?.interval ===
-                //         'month'
-                //             ? 'MONTHLY'
-                //             : 'YEARLY',
-                //     status: session.status
-                // }
+            );
+            await logSubscriptionCreate(session.metadata.userId, {
+                companyId: company.id,
+                companySubscription: companySubscription.id
             });
+
+            break;
+        }
+        case 'customer.subscription.updated': {
+            const session = event.data.object;
+            let customerId = '';
+            if (typeof session.customer === 'string') {
+                customerId = session.customer;
+            } else {
+                customerId = session.customer?.id || '1';
+            }
+            const company = await prisma.company.findFirst({
+                where: { stripeCustomerId: customerId },
+                include: { plan: true, companySubscription: true }
+            });
+            let billingInterval: 'MONTHLY' | 'YEARLY' = 'MONTHLY';
+            if (company && company.companySubscriptionId) {
+                const priceId = session.items.data[0].price.id;
+                if (
+                    priceId &&
+                    priceId !== company.plan.stripeMonthlyId &&
+                    priceId !== company.plan.stripeYearlyId
+                ) {
+                    const plan = await prisma.plan.findFirst({
+                        where: {
+                            OR: [
+                                { stripeMonthlyId: priceId },
+                                { stripeYearlyId: priceId }
+                            ]
+                        }
+                    });
+                    if (priceId === plan?.stripeMonthlyId) {
+                        billingInterval = 'MONTHLY';
+                    } else {
+                        billingInterval = 'YEARLY';
+                    }
+                    await prisma.company.update({
+                        where: { id: company.id },
+                        data: { planId: plan?.id }
+                    });
+                    const companySubscription =
+                        await prisma.companySubscription.update({
+                            where: { id: company.companySubscriptionId },
+                            data: { billingInterval, priceId }
+                        });
+                    await logSubscriptionUpdate(session.metadata.userId, {
+                        companyId: company.id,
+                        oldPlan: company.planId,
+                        companySubscription: companySubscription.id
+                    });
+                }
+            }
             break;
         }
         case 'invoice.paid': {
-            const session = event.data.object;
-            console.log(session);
+            // const session = event.data.object;
+            // let customerId = '';
+            // if (typeof session.customer === 'string') {
+            //     customerId = session.customer;
+            // } else {
+            //     customerId = session.customer?.id || '1';
+            // }
+            // const company = await prisma.company.findFirst({
+            //     where: { stripeCustomerId: customerId },
+            //     include: { plan: true, companySubscription: true }
+            // });
+            // let billingInterval: 'MONTHLY' | 'YEARLY' = 'MONTHLY';
+            // if (company && company.companySubscriptionId) {
+            //     const priceId =
+            //         session.lines.data[0].pricing?.price_details?.price;
+            //     if (
+            //         priceId &&
+            //         priceId !== company.plan.stripeMonthlyId &&
+            //         priceId !== company.plan.stripeYearlyId
+            //     ) {
+            //         const plan = await prisma.plan.findFirst({
+            //             where: {
+            //                 OR: [
+            //                     { stripeMonthlyId: priceId },
+            //                     { stripeYearlyId: priceId }
+            //                 ]
+            //             }
+            //         });
+            //         if (priceId === plan?.stripeMonthlyId) {
+            //             billingInterval = 'MONTHLY';
+            //         } else {
+            //             billingInterval = 'YEARLY';
+            //         }
+            //         await prisma.company.update({
+            //             where: { id: company.id },
+            //             data: { planId: plan?.id }
+            //         });
+            //         await prisma.companySubscription.update({
+            //             where: { id: company.companySubscriptionId },
+            //             data: { billingInterval, priceId }
+            //         });
+            //     }
+            // }
             break;
         }
         case 'invoice.payment_failed': {

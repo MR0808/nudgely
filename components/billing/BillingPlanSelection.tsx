@@ -18,7 +18,10 @@ import { DynamicIcon } from '@/components/global/DynamicIcon';
 import { cn } from '@/lib/utils';
 import { formatDollarsForDisplayNoDecimals } from '@/utils/currency';
 import { Button } from '@/components/ui/button';
-import { createCheckoutSessions } from '@/actions/subscriptions';
+import {
+    createCheckoutSessions,
+    createPortalSession
+} from '@/actions/subscriptions';
 
 const BillingPlanSelection = ({
     company,
@@ -49,31 +52,51 @@ const BillingPlanSelection = ({
                 return;
             }
 
-            const planId =
-                billingInterval === 'YEARLY'
-                    ? plan.stripeYearlyId
-                    : plan.stripeMonthlyId;
-            const method = company.companySubscriptionId ? 'update' : 'create';
+            if (company.companySubscription && company.stripeCustomerId) {
+                const response = await createPortalSession(
+                    company.stripeCustomerId,
+                    company.companySubscription.stripeSubscriptionId
+                );
 
-            const response = await createCheckoutSessions(
-                planId,
-                company.id,
-                method
-            );
+                if (response.error) {
+                    const errorData = response.error;
+                    console.error('API Error:', errorData);
+                    return;
+                }
 
-            if (response.error) {
-                const errorData = response.error;
-                console.error('API Error:', errorData);
-                return;
-            }
+                if (response.url) {
+                    // Redirect to the Stripe Customer Portal
+                    window.location.href = response.url;
+                }
+            } else {
+                const planId =
+                    billingInterval === 'YEARLY'
+                        ? plan.stripeYearlyId
+                        : plan.stripeMonthlyId;
+                const method = company.companySubscriptionId
+                    ? 'update'
+                    : 'create';
 
-            if (response.sessionId) {
-                const sessionId = response.sessionId;
-                const result = await stripe.redirectToCheckout({
-                    sessionId
-                });
-                if (result.error) {
-                    console.error('Stripe redirect error:', result.error);
+                const response = await createCheckoutSessions(
+                    planId,
+                    company.id,
+                    method
+                );
+
+                if (response.error) {
+                    const errorData = response.error;
+                    console.error('API Error:', errorData);
+                    return;
+                }
+
+                if (response.sessionId) {
+                    const sessionId = response.sessionId;
+                    const result = await stripe.redirectToCheckout({
+                        sessionId
+                    });
+                    if (result.error) {
+                        console.error('Stripe redirect error:', result.error);
+                    }
                 }
             }
 

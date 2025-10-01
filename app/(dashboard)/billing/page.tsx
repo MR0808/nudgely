@@ -90,6 +90,11 @@ const BillingPage = async ({
         company.companySubscription?.stripeSubscriptionId
     );
 
+    let nextBillingDate = new Date();
+    if (details.nextBillingDate) {
+        nextBillingDate = new Date(details.nextBillingDate * 1000);
+    }
+
     const pendingCompanySubscription = await getPendingSubscriptions();
     const { data: pendingPlan } = pendingCompanySubscription;
 
@@ -170,9 +175,20 @@ const BillingPage = async ({
                 {/* Current Plan Overview */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <CreditCard className="h-5 w-5" />
-                            Current Subscription
+                        <CardTitle className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                <CreditCard className="h-5 w-5" />
+                                Current Subscription
+                            </div>
+                            <Link href="/subscription">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer"
+                                >
+                                    Change Subscription
+                                </Button>
+                            </Link>
                         </CardTitle>
                         <CardDescription>
                             Your active plan and billing information
@@ -219,15 +235,6 @@ const BillingPage = async ({
                                         }
                                     </Badge>
                                 )}
-                                <Link href="/subscription">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="cursor-pointer"
-                                    >
-                                        Change Subscription
-                                    </Button>
-                                </Link>
                             </div>
                             <div className="text-right">
                                 <p className="text-lg font-bold">
@@ -245,11 +252,10 @@ const BillingPage = async ({
                                             ? ' • Billed yearly'
                                             : ' • Billed monthly')}
                                 </p>
-                                {company.companySubscription
-                                    ?.nextBillingDate && (
-                                    <p className="text-xs text-muted-foreground mt-1">
+                                {details.nextBillingDate && (
+                                    <p className="text-sm text-muted-foreground mt-1">
                                         Next billing date:{' '}
-                                        {company.companySubscription.nextBillingDate.toLocaleDateString()}
+                                        {nextBillingDate.toLocaleDateString()}
                                     </p>
                                 )}
                             </div>

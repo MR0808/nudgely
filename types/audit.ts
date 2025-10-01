@@ -10,7 +10,8 @@ export type AuditCategory =
     | 'admin'
     | 'team'
     | 'company'
-    | 'invite';
+    | 'invite'
+    | 'subscription';
 
 export type AuditAction =
     // Authentication actions
@@ -62,6 +63,11 @@ export type AuditAction =
     | 'team.team_member_removed'
     | 'team.team_deleted'
     | 'team.team_updated_member_teams'
+
+    // Subscription actions
+    | 'subscription.create_subscription'
+    | 'subscription.update_subscription'
+    | 'subscription.cancel_subscription'
 
     // Company actions
     | 'company.company_created'
