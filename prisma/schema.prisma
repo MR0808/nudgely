@@ -714,6 +714,7 @@ model Plan {
 
   name                String
   slug                String      @unique
+  level               Int
   description         String
   icon                String
   iconClassname       String?
