@@ -47,6 +47,11 @@ const BillingPlanSelection = ({
     );
 
     const handlePlanSelect = async (plan: Plan) => {
+        if (company.plan.level > plan.level) {
+            setPlan(plan);
+            setOpen(true);
+            return;
+        }
         startTransition(async () => {
             const stripe = await stripePromise;
 
@@ -56,25 +61,20 @@ const BillingPlanSelection = ({
             }
 
             if (company.companySubscription && company.stripeCustomerId) {
-                if (company.plan.level < plan.level) {
-                    const response = await createPortalSession(
-                        company.stripeCustomerId,
-                        company.companySubscription.stripeSubscriptionId
-                    );
+                const response = await createPortalSession(
+                    company.stripeCustomerId,
+                    company.companySubscription.stripeSubscriptionId
+                );
 
-                    if (response.error) {
-                        const errorData = response.error;
-                        console.error('API Error:', errorData);
-                        return;
-                    }
+                if (response.error) {
+                    const errorData = response.error;
+                    console.error('API Error:', errorData);
+                    return;
+                }
 
-                    if (response.url) {
-                        // Redirect to the Stripe Customer Portal
-                        window.location.href = response.url;
-                    }
-                } else {
-                    setPlan(plan);
-                    setOpen(true);
+                if (response.url) {
+                    // Redirect to the Stripe Customer Portal
+                    window.location.href = response.url;
                 }
             } else {
                 const planId =

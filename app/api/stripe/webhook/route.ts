@@ -5,6 +5,7 @@ import {
     logSubscriptionCreate,
     logSubscriptionUpdate
 } from '@/actions/audit/audit-subscription';
+import { checkDowngradedPlan } from '@/actions/subscriptions';
 
 export async function POST(req: Request) {
     const body = await req.text();
@@ -190,6 +191,7 @@ export async function POST(req: Request) {
                         where: { id: company.id },
                         data: { planId: plan?.id }
                     });
+                    await checkDowngradedPlan(company.id);
                     const companySubscription =
                         await prisma.companySubscription.update({
                             where: { id: company.companySubscriptionId },

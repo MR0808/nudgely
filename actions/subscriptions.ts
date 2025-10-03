@@ -241,3 +241,74 @@ export const createPortalSession = async (
         return { error: `Internal server error - ${error}` };
     }
 };
+
+export const checkDowngradedPlan = async (id: string) => {
+    try {
+        const company = await prisma.company.findUnique({
+            where: { id },
+            include: {
+                plan: true,
+                members: true,
+                teams: { include: { nudges: true } }
+            }
+        });
+        if (!company) return null;
+        const { maxNudges, maxTeams, maxUsers, maxRecipients } = company.plan;
+        if (company.members.length > maxUsers && maxUsers !== 0) {
+            await prisma.user.updateMany({
+                where: { companyMember: { some: { companyId: id } } },
+                data: { status: 'DISABLED' }
+            });
+        }
+        if (company.teams.length > maxTeams && maxTeams !== 0) {
+            await prisma.team.updateMany({
+                where: { companyId: id },
+                data: { status: 'DISABLED' }
+            });
+        }
+
+        const totalNudges = company.teams.reduce(
+            (acc, team) => acc + team.nudges.length,
+            0
+        );
+        if (totalNudges > maxNudges && maxNudges !== 0) {
+            await prisma.nudge.updateMany({
+                where: {
+                    team: {
+                        companyId: id // pass your company.id here
+                    }
+                },
+                data: {
+                    status: 'DISABLED' // whatever you want to update
+                }
+            });
+        }
+        const nudges = await prisma.nudge.findMany({
+            where: {
+                team: {
+                    companyId: id
+                }
+            },
+            include: {
+                recipients: true
+            }
+        });
+        for (const nudge of nudges) {
+            if (
+                nudge.recipients.length > maxRecipients &&
+                maxRecipients !== 0
+            ) {
+                await prisma.nudge.update({
+                    where: { id: nudge.id },
+                    data: {
+                        status: 'DISABLED' // or whatever update you need
+                    }
+                });
+            }
+        }
+        return true;
+    } catch (error) {
+        console.log(error);
+        return { error };
+    }
+};
