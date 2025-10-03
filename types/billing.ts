@@ -28,6 +28,13 @@ export interface BillingPlanSelectionProps {
     plans: Plan[];
 }
 
+export interface BillingPlanSelectionDowngradeDialogProps {
+    company: Company;
+    plan: Plan;
+    open: boolean;
+    setOpen: (open: boolean) => void;
+}
+
 export interface BillingPaymentMethodProps {
     payment: Payment | null;
     customerId: string | null;

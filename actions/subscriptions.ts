@@ -14,8 +14,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export const createCheckoutSessions = async (
     planId: string,
-    companyId: string,
-    method: 'update' | 'create'
+    companyId: string
 ) => {
     const userSession = await authCheckServer();
 

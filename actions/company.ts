@@ -68,7 +68,7 @@ export const getCompany = async () => {
             include: {
                 creator: true,
                 members: true,
-                teams: true,
+                teams: { include: { nudges: true } },
                 invites: true,
                 companySize: true,
                 industry: true,

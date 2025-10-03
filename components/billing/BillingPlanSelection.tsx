@@ -22,12 +22,15 @@ import {
     createCheckoutSessions,
     createPortalSession
 } from '@/actions/subscriptions';
+import BillingPlanSelectionDowngradeDialog from '@/components/billing/BillingPlanSelectionDowngradeDialogProps';
 
 const BillingPlanSelection = ({
     company,
     plans
 }: BillingPlanSelectionProps) => {
     const [isPending, startTransition] = useTransition();
+    const [open, setOpen] = useState(false);
+    const [plan, setPlan] = useState(plans[0]);
     const [billingInterval, setBillingInterval] = useState<
         'MONTHLY' | 'YEARLY'
     >('YEARLY');
@@ -53,34 +56,34 @@ const BillingPlanSelection = ({
             }
 
             if (company.companySubscription && company.stripeCustomerId) {
-                const response = await createPortalSession(
-                    company.stripeCustomerId,
-                    company.companySubscription.stripeSubscriptionId
-                );
+                if (company.plan.level < plan.level) {
+                    const response = await createPortalSession(
+                        company.stripeCustomerId,
+                        company.companySubscription.stripeSubscriptionId
+                    );
 
-                if (response.error) {
-                    const errorData = response.error;
-                    console.error('API Error:', errorData);
-                    return;
-                }
+                    if (response.error) {
+                        const errorData = response.error;
+                        console.error('API Error:', errorData);
+                        return;
+                    }
 
-                if (response.url) {
-                    // Redirect to the Stripe Customer Portal
-                    window.location.href = response.url;
+                    if (response.url) {
+                        // Redirect to the Stripe Customer Portal
+                        window.location.href = response.url;
+                    }
+                } else {
+                    setPlan(plan);
+                    setOpen(true);
                 }
             } else {
                 const planId =
                     billingInterval === 'YEARLY'
                         ? plan.stripeYearlyId
                         : plan.stripeMonthlyId;
-                const method = company.companySubscriptionId
-                    ? 'update'
-                    : 'create';
-
                 const response = await createCheckoutSessions(
                     planId,
-                    company.id,
-                    method
+                    company.id
                 );
 
                 if (response.error) {
@@ -93,9 +96,6 @@ const BillingPlanSelection = ({
                     window.location.href = response.url;
                 }
             }
-
-            console.error('No session ID returned from API');
-            return;
         });
     };
 
@@ -294,6 +294,12 @@ const BillingPlanSelection = ({
                         </div>
                     </div>
                 </div>
+                <BillingPlanSelectionDowngradeDialog
+                    plan={plan}
+                    company={company}
+                    open={open}
+                    setOpen={setOpen}
+                />
             </CardContent>
         </Card>
     );
