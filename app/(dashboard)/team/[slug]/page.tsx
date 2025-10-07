@@ -141,7 +141,10 @@ const TeamPage = async (props: { params: ParamsSlug }) => {
                             </Button>
                         </Link>
                         {canManageCompany && (
-                            <DeleteTeamDialog teamId={team.id} />
+                            <DeleteTeamDialog
+                                teamId={team.id}
+                                status={team.status}
+                            />
                         )}
                     </div>
                 </div>
