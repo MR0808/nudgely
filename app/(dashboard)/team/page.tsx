@@ -73,6 +73,8 @@ const TeamPage = async () => {
         (member) => member.user.status === 'ACTIVE'
     );
 
+    const activeTeams = teams.filter((team) => team.status === 'ACTIVE');
+
     const recentMembers = activeMembers.filter(
         (member) => member.createdAt >= oneMonthAgo
     );
@@ -127,7 +129,7 @@ const TeamPage = async () => {
                                 <Users className="h-5 w-5 text-muted-foreground" />
                                 <div>
                                     <p className="text-2xl font-bold">
-                                        {`${teams.length} / ${plan.maxTeams === 0 ? '∞' : plan.maxTeams}`}
+                                        {`${activeTeams.length} / ${plan.maxTeams === 0 ? '∞' : plan.maxTeams}`}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
                                         Total Teams

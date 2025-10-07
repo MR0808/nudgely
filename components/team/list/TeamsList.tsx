@@ -6,12 +6,19 @@ import {
     Crown,
     Settings,
     ChevronRight,
-    ChevronLeft
+    ChevronLeft,
+    MoreHorizontal
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 import DeleteTeamDialog from '@/components/team/view/DeleteTeamDialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import {
     Card,
     CardContent,
@@ -36,6 +43,8 @@ const TeamsList = ({
         )
     );
     const [currentPage, setCurrentPage] = useState(1);
+    const [open, setOpen] = useState(false);
+
     const teamsPerPage = 9;
 
     const [totalPages, setTotalPages] = useState(
@@ -95,7 +104,7 @@ const TeamsList = ({
                     paginatedTeams.map((team) => (
                         <Card
                             key={team.id}
-                            className="hover:shadow-md transition-shadow"
+                            className={`hover:shadow-md transition-shadow ${team.status === 'DISABLED' && 'bg-gray-200'}`}
                         >
                             <CardHeader className="pb-3">
                                 <div className="flex items-start justify-between">
@@ -115,6 +124,7 @@ const TeamsList = ({
                                         <DeleteTeamDialog
                                             teamId={team.id}
                                             setTeams={setTeams}
+                                            status={team.status}
                                         />
                                     )}
                                 </div>
@@ -122,16 +132,18 @@ const TeamsList = ({
                             <CardContent className="pt-0">
                                 <div className="space-y-4">
                                     {/* Team Stats */}
-                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                        <div className="flex items-center gap-1">
-                                            <Users className="h-4 w-4" />
-                                            {team.members.length} members
+                                    {team.status === 'ACTIVE' && (
+                                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                            <div className="flex items-center gap-1">
+                                                <Users className="h-4 w-4" />
+                                                {team.members.length} members
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Crown className="h-4 w-4" />
+                                                {team.admins} admins
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <Crown className="h-4 w-4" />
-                                            {team.admins} admins
-                                        </div>
-                                    </div>
+                                    )}
 
                                     {/* Member Avatars */}
                                     <div className="flex items-center gap-2">
@@ -162,40 +174,48 @@ const TeamsList = ({
                                                 </div>
                                             )}
                                         </div>
-                                        <Badge
-                                            variant={team.company.plan.colour}
-                                            className="text-xs"
-                                        >
-                                            {team.company.plan.name}
-                                        </Badge>
+                                        {team.status === 'DISABLED' && (
+                                            <Badge
+                                                variant={
+                                                    team.company.plan.colour
+                                                }
+                                                className="text-xs -ml-2"
+                                            >
+                                                {team.status}
+                                            </Badge>
+                                        )}
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex gap-2 pt-2">
-                                        <Button
-                                            asChild
-                                            size="sm"
-                                            className="flex-1"
-                                        >
-                                            <Link href={`/team/${team.slug}`}>
-                                                <Settings className="h-4 w-4 mr-2" />
-                                                Manage
-                                            </Link>
-                                        </Button>
-                                        <Button
-                                            asChild
-                                            variant="outline"
-                                            size="sm"
-                                            className="flex-1 bg-transparent"
-                                        >
-                                            <Link
-                                                href={`/team/${team.slug}/members`}
+                                    {team.status === 'ACTIVE' && (
+                                        <div className="flex gap-2 pt-2">
+                                            <Button
+                                                asChild
+                                                size="sm"
+                                                className="flex-1"
                                             >
-                                                <Users className="h-4 w-4 mr-2" />
-                                                Members
-                                            </Link>
-                                        </Button>
-                                    </div>
+                                                <Link
+                                                    href={`/team/${team.slug}`}
+                                                >
+                                                    <Settings className="h-4 w-4 mr-2" />
+                                                    Manage
+                                                </Link>
+                                            </Button>
+                                            <Button
+                                                asChild
+                                                variant="outline"
+                                                size="sm"
+                                                className="flex-1 bg-transparent"
+                                            >
+                                                <Link
+                                                    href={`/team/${team.slug}/members`}
+                                                >
+                                                    <Users className="h-4 w-4 mr-2" />
+                                                    Members
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

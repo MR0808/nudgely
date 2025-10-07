@@ -81,6 +81,19 @@ export async function logTeamMemberRemoved(
     });
 }
 
+export async function logTeamMemberEnabled(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'team.team_member_enabled',
+        category: 'team',
+        description: `Team member enabled`,
+        metadata: { ...metadata }
+    });
+}
+
 export async function logTeamDeleted(
     userId: string,
     metadata?: Record<string, any>
@@ -90,6 +103,19 @@ export async function logTeamDeleted(
         action: 'team.team_deleted',
         category: 'team',
         description: `Team deleted`,
+        metadata: { ...metadata }
+    });
+}
+
+export async function logTeamEnabled(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'team.team_enabled',
+        category: 'team',
+        description: `Team enabled`,
         metadata: { ...metadata }
     });
 }

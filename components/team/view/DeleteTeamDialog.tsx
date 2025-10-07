@@ -20,9 +20,14 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { DeleteTeamDialogProps } from '@/types/team';
-import { deleteTeam } from '@/actions/team';
+import { deleteTeam, enableTeam } from '@/actions/team';
+import { ReloadIcon } from '@radix-ui/react-icons';
 
-const DeleteTeamDialog = ({ teamId, setTeams }: DeleteTeamDialogProps) => {
+const DeleteTeamDialog = ({
+    teamId,
+    setTeams,
+    status
+}: DeleteTeamDialogProps) => {
     const [isPending, startTransition] = useTransition();
     const [open, setOpen] = useState(false);
     const router = useRouter();
@@ -47,6 +52,26 @@ const DeleteTeamDialog = ({ teamId, setTeams }: DeleteTeamDialogProps) => {
         });
     };
 
+    const onEnable = () => {
+        startTransition(async () => {
+            const result = await enableTeam(teamId);
+            if (result.error) {
+                toast.error(result.error);
+            }
+            if (result.data) {
+                if (setTeams) {
+                    setTeams(result.data);
+                    setOpen(false);
+                } else {
+                    router.push('/team');
+                    setOpen(false);
+                }
+
+                toast.success('Team successfully enabled');
+            }
+        });
+    };
+
     return (
         <>
             <DropdownMenu>
@@ -56,6 +81,14 @@ const DeleteTeamDialog = ({ teamId, setTeams }: DeleteTeamDialogProps) => {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                    {status === 'DISABLED' && (
+                        <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={onEnable}
+                        >
+                            <ReloadIcon className="h-4 w-4 mr-2" /> Enable
+                        </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                         className="text-destructive cursor-pointer"
                         onClick={() => setOpen(true)}

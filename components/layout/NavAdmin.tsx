@@ -3,6 +3,7 @@
 import { type LucideIcon } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useOptimistic, useTransition } from 'react';
+import Link from 'next/link';
 
 import {
     SidebarGroup,
@@ -53,11 +54,14 @@ export function NavAdmin({
                                 <SidebarMenuButton
                                     tooltip={item.title}
                                     isActive={isActive}
-                                    onClick={() => handleNavigation(item.url)}
+                                    // onClick={() => handleNavigation(item.url)}
                                     className="cursor-pointer"
+                                    asChild
                                 >
-                                    {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
+                                    <Link href={item.url}>
+                                        {item.icon && <item.icon />}
+                                        <span>{item.title}</span>
+                                    </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         );

@@ -1,4 +1,4 @@
-import { Plan, TeamRole } from '@/generated/prisma';
+import { Plan, TeamRole, TeamStatus } from '@/generated/prisma';
 
 import { getCompanyTeams, getCurrentTeamBySlug } from '@/actions/team';
 import { SessionType } from '@/types/session';
@@ -133,6 +133,7 @@ export interface TeamMembersCardProps {
 
 export interface DeleteTeamDialogProps {
     teamId: string;
+    status: TeamStatus;
     setTeams?: (returnTeams: ReturnTeams) => void;
 }
 

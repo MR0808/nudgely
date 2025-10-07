@@ -35,10 +35,12 @@ import { InviteMemberDialog } from '@/components/team/view/InviteMemberDialog';
 import { TeamMembersListProps } from '@/types/team';
 import {
     changeTeamMemberRole,
+    enableTeamMember,
     resendTeamInvitation
 } from '@/actions/teamMember';
 import CancelInviteDialog from '@/components/team/view/CancelInviteDialog';
 import RemoveMemberDialog from '@/components/team/view/RemoveMemberDialog';
+import { ReloadIcon } from '@radix-ui/react-icons';
 
 const TeamMembersList = ({
     team,
@@ -82,6 +84,19 @@ const TeamMembersList = ({
             if (data.data) {
                 setMembers(data.data);
                 toast.success('User role updated');
+            }
+        });
+    };
+
+    const handleEnable = async (memberId: string) => {
+        startTransitionRole(async () => {
+            const data = await enableTeamMember(memberId, team.id);
+            if (data.error) {
+                toast.error(data.error);
+            }
+            if (data.data) {
+                setMembers(data.data);
+                toast.success('User enabled');
             }
         });
     };
@@ -237,6 +252,11 @@ const TeamMembersList = ({
                                                     ? 'Admin'
                                                     : 'Member'}
                                             </Badge>
+                                            {member.status === 'DISABLED' && (
+                                                <Badge variant="destructive">
+                                                    Disabled
+                                                </Badge>
+                                            )}
 
                                             {canManageMembers &&
                                                 !member.isCurrentUser &&
@@ -249,6 +269,7 @@ const TeamMembersList = ({
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
+                                                                className="cursor-pointer"
                                                             >
                                                                 {isPendingRole ? (
                                                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -258,26 +279,44 @@ const TeamMembersList = ({
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem
-                                                                onClick={() =>
-                                                                    handleChangeRole(
-                                                                        member.id,
-                                                                        member.role ===
-                                                                            'TEAM_ADMIN'
-                                                                            ? 'TEAM_MEMBER'
-                                                                            : 'TEAM_ADMIN'
-                                                                    )
-                                                                }
-                                                            >
-                                                                <Settings className="h-4 w-4 mr-2" />
-                                                                {member.role ===
-                                                                'TEAM_ADMIN'
-                                                                    ? 'Make Member'
-                                                                    : 'Make Admin'}
-                                                            </DropdownMenuItem>
+                                                            {member.status ===
+                                                                'ACTIVE' && (
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        handleChangeRole(
+                                                                            member.id,
+                                                                            member.role ===
+                                                                                'TEAM_ADMIN'
+                                                                                ? 'TEAM_MEMBER'
+                                                                                : 'TEAM_ADMIN'
+                                                                        )
+                                                                    }
+                                                                    className="cursor-pointer"
+                                                                >
+                                                                    <Settings className="h-4 w-4 mr-2" />
+                                                                    {member.role ===
+                                                                    'TEAM_ADMIN'
+                                                                        ? 'Make Member'
+                                                                        : 'Make Admin'}
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            {member.status ===
+                                                                'DISABLED' && (
+                                                                <DropdownMenuItem
+                                                                    className="cursor-pointer"
+                                                                    onClick={() =>
+                                                                        handleEnable(
+                                                                            member.id
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <ReloadIcon className="h-4 w-4 mr-2" />
+                                                                    Enable
+                                                                </DropdownMenuItem>
+                                                            )}
                                                             <DropdownMenuSeparator />
                                                             <DropdownMenuItem
-                                                                className="text-destructive"
+                                                                className="text-destructive cursor-pointer"
                                                                 onClick={() =>
                                                                     handleRemoveMember(
                                                                         member.id,

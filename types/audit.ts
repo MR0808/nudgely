@@ -61,7 +61,9 @@ export type AuditAction =
     | 'team.team_member_added'
     | 'team.team_member_role_updated'
     | 'team.team_member_removed'
+    | 'team.team_member_enabled'
     | 'team.team_deleted'
+    | 'team.team_enabled'
     | 'team.team_updated_member_teams'
 
     // Subscription actions

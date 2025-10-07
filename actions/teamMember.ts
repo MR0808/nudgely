@@ -9,6 +9,7 @@ import { authCheckServer } from '@/lib/authCheck';
 import { InviteTeamMemberSchema } from '@/schemas/teamMember';
 import {
     logTeamMemberAdded,
+    logTeamMemberEnabled,
     logTeamMemberInvited,
     logTeamMemberRemoved,
     logTeamMemberRoleUpdated,
@@ -142,7 +143,8 @@ export const inviteTeamMember = async (
                 avatar: member.user.image || undefined,
                 joinedAt: member.createdAt,
                 isCurrentUser: member.user.id === user.id,
-                companyRole: member.user.companyMember[0].role
+                companyRole: member.user.companyMember[0].role,
+                status: member.status
             }));
 
             return {
@@ -420,7 +422,8 @@ export const changeTeamMemberRole = async (
             avatar: member.user.image || undefined,
             joinedAt: member.createdAt,
             isCurrentUser: member.user.id === user.id,
-            companyRole: member.user.companyMember[0].role
+            companyRole: member.user.companyMember[0].role,
+            status: member.status
         }));
 
         return { data: members, error: null };
@@ -512,7 +515,8 @@ export const removeTeamMember = async (memberId: string, teamId: string) => {
             avatar: member.user.image || undefined,
             joinedAt: member.createdAt,
             isCurrentUser: member.user.id === user.id,
-            companyRole: member.user.companyMember[0].role
+            companyRole: member.user.companyMember[0].role,
+            status: member.status
         }));
 
         return { data: members, error: null };
@@ -590,6 +594,87 @@ export const updateTeamMember = async (
                 user: { include: { teamMembers: { include: { team: true } } } }
             }
         });
+
+        return { data: members, error: null };
+    } catch (error) {
+        console.error('Failed to remove team member:', error);
+        return { data: null, error: 'Failed to remove team member' };
+    }
+};
+
+export const enableTeamMember = async (memberId: string, teamId: string) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { user, company } = userSession;
+
+    try {
+        const userTeamMember = await prisma.teamMember.findUnique({
+            where: { teamId_userId: { userId: user.id, teamId } }
+        });
+
+        if (!userTeamMember || userTeamMember.role !== 'TEAM_ADMIN') {
+            return {
+                data: null,
+                error: 'Not authorised'
+            };
+        }
+
+        // Get the member
+        const member = await prisma.teamMember.findUnique({
+            where: { id: memberId },
+            include: {
+                team: true,
+                user: true
+            }
+        });
+
+        if (!member) {
+            return { data: null, error: 'Team member not found' };
+        }
+
+        // Remove the member
+        await prisma.teamMember.update({
+            where: { id: memberId },
+            data: { status: 'ACTIVE' }
+        });
+
+        await logTeamMemberEnabled(userSession.user.id, {
+            teamId,
+            targetUserId: member.userId,
+            targetUserEmail: member.user.email
+        });
+
+        const data = await prisma.teamMember.findMany({
+            where: { teamId },
+            include: {
+                user: { include: { companyMember: true } }
+            },
+            orderBy: [
+                { role: 'asc' }, // Admins first
+                { createdAt: 'asc' }
+            ]
+        });
+
+        const members = data.map((member) => ({
+            id: member.id,
+            name: `${member.user.name} ${member.user.lastName}`.trim(),
+            firstName: member.user.name,
+            lastName: member.user.lastName,
+            email: member.user.email,
+            role: member.role,
+            avatar: member.user.image || undefined,
+            joinedAt: member.createdAt,
+            isCurrentUser: member.user.id === user.id,
+            companyRole: member.user.companyMember[0].role,
+            status: member.status
+        }));
 
         return { data: members, error: null };
     } catch (error) {

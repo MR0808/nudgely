@@ -11,6 +11,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem
 } from '@/components/ui/sidebar';
+import Link from 'next/link';
 
 export function NavMain({
     items
@@ -72,11 +73,14 @@ export function NavMain({
                                 <SidebarMenuButton
                                     tooltip={item.title}
                                     isActive={isActive}
-                                    onClick={() => handleNavigation(item.url)}
+                                    // onClick={() => handleNavigation(item.url)}
                                     className="cursor-pointer"
+                                    asChild
                                 >
-                                    {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
+                                    <Link href={item.url}>
+                                        {item.icon && <item.icon />}
+                                        <span>{item.title}</span>
+                                    </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         );

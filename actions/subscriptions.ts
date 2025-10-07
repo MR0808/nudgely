@@ -265,6 +265,16 @@ export const checkDowngradedPlan = async (id: string) => {
                 where: { companyId: id },
                 data: { status: 'DISABLED' }
             });
+            for (const team of company.teams) {
+                await prisma.teamMember.updateMany({
+                    where: { teamId: team.id },
+                    data: { status: 'DISABLED' }
+                });
+                await prisma.nudge.updateMany({
+                    where: { teamId: team.id },
+                    data: { status: 'DISABLED' }
+                });
+            }
         }
 
         const totalNudges = company.teams.reduce(

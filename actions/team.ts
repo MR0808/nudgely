@@ -8,7 +8,7 @@ import { authCheckServer } from '@/lib/authCheck';
 import { TeamSchema } from '@/schemas/team';
 import { checkCompanyTeamLimits } from '@/lib/team';
 import { revalidatePath } from 'next/cache';
-import { logTeamDeleted } from '@/actions/audit/audit-team';
+import { logTeamDeleted, logTeamEnabled } from '@/actions/audit/audit-team';
 
 const slugger = new GithubSlugger();
 
@@ -35,13 +35,14 @@ export const getCompanyTeams = async () => {
         const teams = await prisma.team.findMany({
             where: {
                 companyId: company.id,
-                status: 'ACTIVE'
+                OR: [{ status: 'ACTIVE' }, { status: 'DISABLED' }]
             },
             include: {
                 members: { include: { user: true } },
                 nudges: true,
                 company: { include: { plan: true, members: true } }
-            }
+            },
+            orderBy: [{ status: 'asc' }, { name: 'asc' }]
         });
 
         const returnTeams = teams.map((team) => {
@@ -232,7 +233,8 @@ export const getCurrentTeamBySlug = async (slug: string) => {
             avatar: member.user.image || undefined,
             joinedAt: member.createdAt,
             isCurrentUser: member.user.id === user.id,
-            companyRole: member.user.companyMember[0].role
+            companyRole: member.user.companyMember[0].role,
+            status: member.status
         }));
 
         const currentUserMember = members.find(
@@ -301,7 +303,7 @@ export const createTeam = async (
             where: {
                 companyId,
                 name,
-                status: 'ACTIVE'
+                OR: [{ status: 'ACTIVE' }, { status: 'DISABLED' }]
             }
         });
 
@@ -523,10 +525,13 @@ export const deleteTeam = async (teamId: string) => {
 
         await prisma.team.update({
             where: { id: teamId },
-            data: { status: 'DISABLED' }
+            data: { status: 'DELETED' }
         });
 
-        await prisma.teamMember.deleteMany({ where: { teamId } });
+        await prisma.teamMember.updateMany({
+            where: { teamId },
+            data: { status: 'DISABLED' }
+        });
 
         await prisma.teamInvite.deleteMany({ where: { teamId } });
 
@@ -545,13 +550,14 @@ export const deleteTeam = async (teamId: string) => {
         const teams = await prisma.team.findMany({
             where: {
                 companyId: company.id,
-                status: 'ACTIVE'
+                OR: [{ status: 'ACTIVE' }, { status: 'DISABLED' }]
             },
             include: {
                 members: { include: { user: true } },
                 nudges: true,
                 company: { include: { plan: true, members: true } }
-            }
+            },
+            orderBy: [{ status: 'asc' }, { name: 'asc' }]
         });
 
         const returnTeams = teams.map((team) => {
@@ -571,5 +577,116 @@ export const deleteTeam = async (teamId: string) => {
     } catch (error) {
         console.error('Failed to delete team:', error);
         return { data: null, error: 'Failed to delete team' };
+    }
+};
+
+export const enableTeam = async (teamId: string) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { user, company, userCompany } = userSession;
+
+    if (userCompany.role !== 'COMPANY_ADMIN') {
+        return {
+            data: null,
+            error: 'Only company admins can enable teams'
+        };
+    }
+
+    try {
+        const team = await prisma.team.findUnique({
+            where: { id: teamId },
+            include: {
+                members: true,
+                nudges: true
+            }
+        });
+        if (!team) {
+            return { data: null, error: 'Team not found' };
+        }
+
+        const limits = await checkCompanyTeamLimits(company.id);
+
+        if (!limits.canCreateTeam) {
+            return {
+                data: null,
+                error: 'Team limit reached for your current plan'
+            };
+        }
+        await prisma.team.update({
+            where: { id: teamId },
+            data: { status: 'ACTIVE' }
+        });
+
+        const companyAdmins = await prisma.companyMember.findMany({
+            where: { role: 'COMPANY_ADMIN' },
+            include: { user: true }
+        });
+
+        for (const admin of companyAdmins) {
+            const isAdminInTeam = team.members.some(
+                (member) => member.userId === admin.user.id
+            );
+            if (isAdminInTeam) {
+                await prisma.teamMember.update({
+                    where: {
+                        teamId_userId: {
+                            teamId: team.id,
+                            userId: admin.user.id
+                        }
+                    },
+                    data: { status: 'ACTIVE', role: 'TEAM_ADMIN' }
+                });
+            } else {
+                await prisma.teamMember.create({
+                    data: {
+                        teamId: team.id,
+                        userId: admin.user.id,
+                        role: 'TEAM_ADMIN'
+                    }
+                });
+            }
+        }
+        await logTeamEnabled(user.id, {
+            teamId,
+            teamName: team.name
+        });
+
+        const teams = await prisma.team.findMany({
+            where: {
+                companyId: company.id,
+                OR: [{ status: 'ACTIVE' }, { status: 'DISABLED' }]
+            },
+            include: {
+                members: { include: { user: true } },
+                nudges: true,
+                company: { include: { plan: true, members: true } }
+            },
+            orderBy: [{ status: 'asc' }, { name: 'asc' }]
+        });
+
+        const returnTeams = teams.map((team) => {
+            const members = team.members;
+            const teamAdminCount = members.filter(
+                (member) => member.role === 'TEAM_ADMIN'
+            ).length;
+            return {
+                ...team,
+                admins: teamAdminCount
+            };
+        });
+
+        revalidatePath(`/team`);
+
+        return { data: returnTeams, error: null };
+    } catch (error) {
+        console.error('Failed to enable team:', error);
+        return { data: null, error: 'Failed to enable team' };
     }
 };

@@ -98,6 +98,7 @@ enum TeamStatus {
   ACTIVE
   DISABLED
   BANNED
+  DELETED
 }
 
 enum NudgeInstanceStatus {
@@ -521,9 +522,10 @@ model Team {
 }
 
 model TeamMember {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String     @id @default(uuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  status    UserStatus @default(ACTIVE)
 
   role TeamRole @default(TEAM_MEMBER)
 
