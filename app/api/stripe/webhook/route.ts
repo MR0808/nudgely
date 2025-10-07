@@ -6,6 +6,7 @@ import {
     logSubscriptionUpdate
 } from '@/actions/audit/audit-subscription';
 import { checkDowngradedPlan } from '@/actions/subscriptions';
+import { sendDowngradeEmail, sendUpgradeEmail } from '@/lib/mail';
 
 export async function POST(req: Request) {
     const body = await req.text();
@@ -164,7 +165,11 @@ export async function POST(req: Request) {
             }
             const company = await prisma.company.findFirst({
                 where: { stripeCustomerId: customerId },
-                include: { plan: true, companySubscription: true }
+                include: {
+                    plan: true,
+                    companySubscription: true,
+                    creator: true
+                }
             });
             let billingInterval: 'MONTHLY' | 'YEARLY' = 'MONTHLY';
             if (company && company.companySubscriptionId) {
@@ -192,6 +197,19 @@ export async function POST(req: Request) {
                         data: { planId: plan?.id }
                     });
                     await checkDowngradedPlan(company.id);
+                    if (plan && company.plan.level > plan.level) {
+                        await sendDowngradeEmail({
+                            email: company.creator.email,
+                            name: company.creator.name,
+                            plan: plan.name
+                        });
+                    } else if (plan && company.plan.level < plan.level) {
+                        await sendUpgradeEmail({
+                            email: company.creator.email,
+                            name: company.creator.name,
+                            plan: plan.name
+                        });
+                    }
                     const companySubscription =
                         await prisma.companySubscription.update({
                             where: { id: company.companySubscriptionId },

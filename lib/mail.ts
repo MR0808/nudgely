@@ -11,6 +11,9 @@ import CompanyInviteAdminEmailTemplate from '@/emails/company-invite-admin';
 import { TeamRole } from '@/generated/prisma';
 import TeamAddedEmailTemplate from '@/emails/team-added';
 import TeamInviteEmailTemplate from '@/emails/team-invite';
+import UpgradeEmailTemplate from '@/emails/upgrade-email';
+import DowngradeEmailTemplate from '@/emails/downgrade-email';
+import DowngradeWarningEmailTemplate from '@/emails/downgrade-warning';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -176,5 +179,56 @@ export const sendTeamInviteEmail = async ({
             role,
             teamName
         })
+    });
+};
+
+export const sendUpgradeEmail = async ({
+    email,
+    name,
+    plan
+}: {
+    email: string;
+    name: string;
+    plan: string;
+}) => {
+    await resend.emails.send({
+        from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
+        to: email,
+        subject: 'Nudgely - Your plan has been upgraded',
+        react: UpgradeEmailTemplate({ name, plan })
+    });
+};
+
+export const sendDowngradeEmail = async ({
+    email,
+    name,
+    plan
+}: {
+    email: string;
+    name: string;
+    plan: string;
+}) => {
+    await resend.emails.send({
+        from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
+        to: email,
+        subject: 'Nudgely - Your plan has been downgraded',
+        react: DowngradeEmailTemplate({ name, plan })
+    });
+};
+
+export const sendDowngradeWarningEmail = async ({
+    email,
+    name,
+    plan
+}: {
+    email: string;
+    name: string;
+    plan: string;
+}) => {
+    await resend.emails.send({
+        from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
+        to: email,
+        subject: 'Nudgely - Your plan is about to be downgraded',
+        react: DowngradeWarningEmailTemplate({ name, plan })
     });
 };
