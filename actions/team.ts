@@ -9,6 +9,7 @@ import { TeamSchema } from '@/schemas/team';
 import { checkCompanyTeamLimits } from '@/lib/team';
 import { revalidatePath } from 'next/cache';
 import { logTeamDeleted, logTeamEnabled } from '@/actions/audit/audit-team';
+import { TeamStatus } from '@/generated/prisma';
 
 const slugger = new GithubSlugger();
 
@@ -24,18 +25,18 @@ export const getCompanyTeams = async () => {
 
     const { user, company, userCompany } = userSession;
 
-    if (userCompany.role !== 'COMPANY_ADMIN') {
-        return {
-            data: null,
-            error: 'Not authorised'
-        };
-    }
-
     try {
+        let orClause = [];
+        orClause.push({ status: TeamStatus.ACTIVE });
+
+        if (userCompany.role === 'COMPANY_ADMIN') {
+            orClause.push({ status: TeamStatus.DISABLED });
+        }
+
         const teams = await prisma.team.findMany({
             where: {
                 companyId: company.id,
-                OR: [{ status: 'ACTIVE' }, { status: 'DISABLED' }]
+                OR: orClause
             },
             include: {
                 members: { include: { user: true } },

@@ -14,6 +14,7 @@ import TeamInviteEmailTemplate from '@/emails/team-invite';
 import UpgradeEmailTemplate from '@/emails/upgrade-email';
 import DowngradeEmailTemplate from '@/emails/downgrade-email';
 import DowngradeWarningEmailTemplate from '@/emails/downgrade-warning';
+import CancelSubscriptionEmailTemplate from '@/emails/cancel-subscription';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -230,5 +231,22 @@ export const sendDowngradeWarningEmail = async ({
         to: email,
         subject: 'Nudgely - Your plan is about to be downgraded',
         react: DowngradeWarningEmailTemplate({ name, plan })
+    });
+};
+
+export const sendCancellationEmail = async ({
+    email,
+    name,
+    endDate
+}: {
+    email: string;
+    name: string;
+    endDate: Date;
+}) => {
+    await resend.emails.send({
+        from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
+        to: email,
+        subject: 'Nudgely - Your plan has been cancelled',
+        react: CancelSubscriptionEmailTemplate({ name, endDate })
     });
 };

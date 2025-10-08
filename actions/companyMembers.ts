@@ -394,10 +394,10 @@ export const removeCompanyAdminMember = async (memberId: string) => {
     }
 };
 
-export async function changeCompanyMemberRole(
+export const changeCompanyMemberRole = async (
     memberId: string,
     newRole: 'COMPANY_ADMIN' | 'COMPANY_MEMBER'
-) {
+) => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
@@ -432,7 +432,7 @@ export async function changeCompanyMemberRole(
         console.error('Failed to change company member role:', error);
         return { success: false, error: 'Failed to change member role' };
     }
-}
+};
 
 export const resendCompanyInvitation = async (id: string) => {
     const userSession = await authCheckServer();

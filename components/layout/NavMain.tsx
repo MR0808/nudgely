@@ -23,23 +23,10 @@ export function NavMain({
     }[];
 }) {
     const pathname = usePathname();
-    const router = useRouter();
-    const [optimisticPath, setOptimisticPath] = useOptimistic(pathname);
-    const [isPending, startTransition] = useTransition();
-
-    const handleNavigation = (url: string) => {
-        startTransition(() => {
-            setOptimisticPath(url);
-            router.push(url);
-        });
-    };
 
     return (
         <SidebarGroup>
-            <SidebarGroupContent
-                className="flex flex-col gap-2"
-                data-pending={isPending ? '' : undefined}
-            >
+            <SidebarGroupContent className="flex flex-col gap-2">
                 {/* Quick create button */}
                 {/* <SidebarMenu>
                     <SidebarMenuItem className="flex items-center gap-2 mb-4">
@@ -63,17 +50,12 @@ export function NavMain({
                 {/* Main navigation items */}
                 <SidebarMenu>
                     {items.map((item) => {
-                        // Use optimistic path for instant feedback
-                        const isActive =
-                            optimisticPath === item.url ||
-                            (optimisticPath === '/' && item.url === '/');
-
+                        const isActive = pathname === item.url;
                         return (
                             <SidebarMenuItem key={item.title}>
                                 <SidebarMenuButton
                                     tooltip={item.title}
                                     isActive={isActive}
-                                    // onClick={() => handleNavigation(item.url)}
                                     className="cursor-pointer"
                                     asChild
                                 >

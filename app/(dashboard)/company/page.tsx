@@ -19,7 +19,6 @@ import { getCompanyTeams } from '@/actions/team';
 import { Button } from '@/components/ui/button';
 import CompanyBillingCard from '@/components/company/CompanyBillingCard';
 import { getCompanyNudgeCount } from '@/actions/nudges';
-import { getPlans } from '@/actions/plan';
 
 export async function generateMetadata(): Promise<Metadata> {
     const { company } = await getCompany();

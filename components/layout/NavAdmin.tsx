@@ -14,57 +14,51 @@ import {
     SidebarGroupLabel,
     useSidebar
 } from '@/components/ui/sidebar';
+import { SessionType } from '@/types/session';
 
 export function NavAdmin({
-    items
+    items,
+    userSession
 }: {
     items: {
         title: string;
         url: string;
         icon?: LucideIcon;
+        admin?: boolean;
     }[];
+    userSession: SessionType;
 }) {
-    const { isMobile } = useSidebar();
     const pathname = usePathname();
-    const router = useRouter();
-    const [optimisticPath, setOptimisticPath] = useOptimistic(pathname);
-    const [isPending, startTransition] = useTransition();
-
-    const handleNavigation = (url: string) => {
-        startTransition(() => {
-            setOptimisticPath(url);
-            router.push(url);
-        });
-    };
 
     return (
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-            <SidebarGroupContent
-                className="flex flex-col gap-2"
-                data-pending={isPending ? '' : undefined}
-            >
+            <SidebarGroupContent className="flex flex-col gap-2">
                 <SidebarGroupLabel>Admin</SidebarGroupLabel>
                 <SidebarMenu>
                     {items.map((item) => {
-                        const isActive =
-                            optimisticPath === item.url ||
-                            (optimisticPath === '/' && item.url === '/');
-                        return (
-                            <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton
-                                    tooltip={item.title}
-                                    isActive={isActive}
-                                    // onClick={() => handleNavigation(item.url)}
-                                    className="cursor-pointer"
-                                    asChild
-                                >
-                                    <Link href={item.url}>
-                                        {item.icon && <item.icon />}
-                                        <span>{item.title}</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        );
+                        if (
+                            !item.admin ||
+                            (item.admin &&
+                                userSession?.userCompany.role ===
+                                    'COMPANY_ADMIN')
+                        ) {
+                            const isActive = pathname === item.url;
+                            return (
+                                <SidebarMenuItem key={item.title}>
+                                    <SidebarMenuButton
+                                        tooltip={item.title}
+                                        isActive={isActive}
+                                        className="cursor-pointer"
+                                        asChild
+                                    >
+                                        <Link href={item.url}>
+                                            {item.icon && <item.icon />}
+                                            <span>{item.title}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            );
+                        }
                     })}
                 </SidebarMenu>
             </SidebarGroupContent>

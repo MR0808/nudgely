@@ -185,26 +185,6 @@ const CompanyBillingCard = ({
                         </div>
                     </div>
                 </div>
-
-                {/* Quick Actions */}
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 bg-transparent"
-                    >
-                        <TrendingUp className="h-4 w-4" />
-                        View Usage Details
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 bg-transparent"
-                    >
-                        <DollarSign className="h-4 w-4" />
-                        Billing History
-                    </Button>
-                </div>
             </CardContent>
         </Card>
     );

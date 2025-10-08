@@ -39,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const TeamPage = async () => {
-    const { userCompany } = await authCheck('/team');
+    const { user, userCompany } = await authCheck('/team');
     const { data } = await getCompanyTeams();
     const { plan } = await getPlan();
 
@@ -99,26 +99,28 @@ const TeamPage = async () => {
                             Manage your teams, members, and user permissions
                         </p>
                     </div>
-                    <div className="flex gap-2">
-                        <Link href="/company/settings">
-                            <Button
-                                variant="outline"
-                                className="gap-2 bg-transparent cursor-pointer"
-                            >
-                                <Building2 className="h-4 w-4" />
-                                Company Settings
-                            </Button>
-                        </Link>
-                        {(plan.maxTeams > teams.length ||
-                            plan.maxTeams === 0) && (
-                            <Link href="/team/create">
-                                <Button className="gap-2 cursor-pointer">
-                                    <Plus className="h-4 w-4" />
-                                    Create Team
+                    {canManageCompany && (
+                        <div className="flex gap-2">
+                            <Link href="/company/settings">
+                                <Button
+                                    variant="outline"
+                                    className="gap-2 bg-transparent cursor-pointer"
+                                >
+                                    <Building2 className="h-4 w-4" />
+                                    Company Settings
                                 </Button>
                             </Link>
-                        )}
-                    </div>
+                            {(plan.maxTeams > activeTeams.length ||
+                                plan.maxTeams === 0) && (
+                                <Link href="/team/create">
+                                    <Button className="gap-2 cursor-pointer">
+                                        <Plus className="h-4 w-4" />
+                                        Create Team
+                                    </Button>
+                                </Link>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Stats Cards */}
@@ -218,6 +220,7 @@ const TeamPage = async () => {
                     teamsDb={data}
                     canManageCompany={canManageCompany}
                     usersWithoutTeams={usersWithoutTeams}
+                    userId={user.id}
                 />
             </div>
         </div>

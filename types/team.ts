@@ -1,4 +1,4 @@
-import { Plan, TeamRole, TeamStatus } from '@/generated/prisma';
+import { Plan, TeamRole, TeamStatus, User } from '@/generated/prisma';
 
 import { getCompanyTeams, getCurrentTeamBySlug } from '@/actions/team';
 import { SessionType } from '@/types/session';
@@ -71,6 +71,7 @@ export interface TeamUserFilterProps {
     teamsDb: Teams;
     canManageCompany: boolean;
     usersWithoutTeams: number;
+    userId: string;
 }
 
 export interface TeamsListProps {
@@ -78,6 +79,7 @@ export interface TeamsListProps {
     searchQueryTeams: string;
     canManageCompany: boolean;
     setTeams: (returnTeams: ReturnTeams) => void;
+    userId: string;
 }
 
 export interface UsersListProps {

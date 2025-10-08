@@ -23,13 +23,9 @@ import {
     SidebarMenuButton,
     SidebarMenuItem
 } from '@/components/ui/sidebar';
-// import { ChatMaxingIconColoured } from '@/components/logo';
-import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
-import TeamSelector from '@/components/layout/TeamSelector';
 import { SessionType } from '@/types/session';
-import { Company, Team } from '@/types/team';
 
 const data = {
     navMain: [
@@ -70,7 +66,8 @@ const data = {
         {
             title: 'Company Settings',
             url: '/company',
-            icon: Settings
+            icon: Settings,
+            admin: true
         }
     ]
 };
@@ -103,7 +100,7 @@ export function AppSidebar({ userSession, ...props }: AppSidebarProps) {
             </SidebarHeader>
             <SidebarContent>
                 <NavMain items={data.navMain} />
-                <NavAdmin items={data.admin} />
+                <NavAdmin items={data.admin} userSession={userSession} />
                 <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>
             <SidebarFooter>

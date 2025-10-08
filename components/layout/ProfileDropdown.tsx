@@ -72,12 +72,17 @@ export function ProfileDropdown() {
                                 <User /> Profile
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link href="/settings" className="cursor-pointer">
-                                <CircleDollarSign />
-                                Billing
-                            </Link>
-                        </DropdownMenuItem>
+                        {userSession?.userCompany.role === 'COMPANY_ADMIN' && (
+                            <DropdownMenuItem asChild>
+                                <Link
+                                    href="/billing"
+                                    className="cursor-pointer"
+                                >
+                                    <CircleDollarSign />
+                                    Billing
+                                </Link>
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem asChild>
                             <Link href="/settings" className="cursor-pointer">
                                 <Settings /> Settings

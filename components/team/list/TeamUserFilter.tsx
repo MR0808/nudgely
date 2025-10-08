@@ -12,7 +12,8 @@ import UsersList from '@/components/team/list/UsersList';
 const TeamUserFilter = ({
     teamsDb,
     canManageCompany,
-    usersWithoutTeams
+    usersWithoutTeams,
+    userId
 }: TeamUserFilterProps) => {
     const [activeTab, setActiveTab] = useState('teams');
     const [teams, setTeams] = useState(teamsDb.teams || []);
@@ -70,6 +71,7 @@ const TeamUserFilter = ({
                         searchQueryTeams={searchQueryTeams}
                         setTeams={setTeams}
                         canManageCompany={canManageCompany}
+                        userId={userId}
                     />
                 </TabsContent>
                 <TabsContent value="users" className="space-y-6">

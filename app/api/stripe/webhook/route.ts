@@ -2,11 +2,16 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import {
+    logSubscriptionCancel,
     logSubscriptionCreate,
     logSubscriptionUpdate
 } from '@/actions/audit/audit-subscription';
 import { checkDowngradedPlan } from '@/actions/subscriptions';
-import { sendDowngradeEmail, sendUpgradeEmail } from '@/lib/mail';
+import {
+    sendCancellationEmail,
+    sendDowngradeEmail,
+    sendUpgradeEmail
+} from '@/lib/mail';
 
 export async function POST(req: Request) {
     const body = await req.text();
@@ -25,6 +30,7 @@ export async function POST(req: Request) {
             status: 400
         });
     }
+
     console.log(event.type);
 
     switch (event.type) {
@@ -171,6 +177,13 @@ export async function POST(req: Request) {
                     creator: true
                 }
             });
+            if (company && session.cancel_at) {
+                await sendCancellationEmail({
+                    email: company.contactEmail || company.creator.email,
+                    name: company.creator.name,
+                    endDate: new Date(session.cancel_at * 1000)
+                });
+            }
             let billingInterval: 'MONTHLY' | 'YEARLY' = 'MONTHLY';
             if (company && company.companySubscriptionId) {
                 const priceId = session.items.data[0].price.id;
@@ -199,13 +212,15 @@ export async function POST(req: Request) {
                     await checkDowngradedPlan(company.id);
                     if (plan && company.plan.level > plan.level) {
                         await sendDowngradeEmail({
-                            email: company.creator.email,
+                            email:
+                                company.contactEmail || company.creator.email,
                             name: company.creator.name,
                             plan: plan.name
                         });
                     } else if (plan && company.plan.level < plan.level) {
                         await sendUpgradeEmail({
-                            email: company.creator.email,
+                            email:
+                                company.contactEmail || company.creator.email,
                             name: company.creator.name,
                             plan: plan.name
                         });
@@ -275,12 +290,39 @@ export async function POST(req: Request) {
             break;
         }
         case 'customer.subscription.deleted': {
-            const sub = event.data.object;
+            const session = event.data.object;
             // mark canceled in your DB
             await prisma.companySubscription.updateMany({
-                where: { stripeSubscriptionId: sub.id },
-                data: { status: 'canceled' }
+                where: { stripeSubscriptionId: session.id },
+                data: {
+                    billingInterval: 'MONTHLY',
+                    currentPeriodEnd: null,
+                    nextBillingDate: null,
+                    status: 'canceled'
+                }
             });
+
+            const plan = await prisma.plan.findFirst({ where: { level: 1 } });
+
+            if (!plan) break;
+            let customerId = '';
+            if (typeof session.customer === 'string') {
+                customerId = session.customer;
+            } else {
+                customerId = session.customer?.id || '1';
+            }
+
+            const company = await prisma.company.update({
+                where: { stripeCustomerId: customerId },
+                data: { planId: plan.id, stripeCustomerId: null }
+            });
+
+            await checkDowngradedPlan(company.id);
+
+            await logSubscriptionCancel(session.metadata.userId, {
+                companyId: company.id
+            });
+
             break;
         }
     }

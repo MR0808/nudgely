@@ -52,7 +52,9 @@ export async function GET(request: NextRequest) {
 
                 if (plan) {
                     await sendDowngradeWarningEmail({
-                        email: sub.company.creator.email,
+                        email:
+                            sub.company.contactEmail ||
+                            sub.company.creator.email,
                         name: sub.company?.creator.name,
                         plan: plan.name
                     });

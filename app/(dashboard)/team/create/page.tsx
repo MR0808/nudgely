@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 import { Separator } from '@/components/ui/separator';
 import { authCheck } from '@/lib/authCheck';
 import siteMetadata from '@/utils/siteMetaData';
 import CreateTeamForm from '@/components/team/create/CreateTeamForm';
 import { getUserCompany } from '@/actions/company';
+import { Button } from '@/components/ui/button';
 
 export function generateMetadata(): Metadata {
     const title = 'Create a team';
@@ -39,7 +41,27 @@ const TeamCreatePage = async () => {
 
     const company = await getUserCompany();
 
-    if (!company.data) return null;
+    if (!company.data || userSession.userCompany.role !== 'COMPANY_ADMIN') {
+        return (
+            <div className="min-h-screen bg-background">
+                <div className="max-w-4xl mx-auto p-6">
+                    <div className="text-center py-12">
+                        <h2 className="text-2xl font-bold mb-2">
+                            Company data not found
+                        </h2>
+                        <p className="text-muted-foreground mb-4">
+                            The company data you&apos;re looking for
+                            doesn&apos;t exist or you don&apos;t have access to
+                            it. If this is an issue, please contact support.
+                        </p>
+                        <Link href="/">
+                            <Button>Back to Dashboard</Button>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="px-4 py-6 flex grow flex-col overflow-hidden mx-auto w-3/4 ">
