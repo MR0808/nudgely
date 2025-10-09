@@ -1,10 +1,10 @@
-import { Team } from '@/types/team';
+import { UserTeams, UserTeam } from '@/types/nudge';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface TeamStore {
-    selectedTeam: Team | null;
-    setSelectedTeam: (team: Team | null) => void;
+    selectedTeam: UserTeam | null;
+    setSelectedTeam: (team: UserTeam | null) => void;
     isReloadTeam: boolean;
     setIsReloadTeam: (isReload: boolean) => void;
 }

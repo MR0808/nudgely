@@ -1,177 +1,69 @@
-'use client';
-
-import { useState } from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+import { authCheck } from '@/lib/authCheck';
+import siteMetadata from '@/utils/siteMetaData';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from '@/components/ui/select';
-import { MoreHorizontal } from 'lucide-react';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+import NudgeMain from '@/components/nudges/list/NudgeMain';
+import { getUserTeams } from '@/actions/team';
+import { getTeamNudges } from '@/actions/nudges';
 
-// Dummy data for nudges
-const mockNudges = [
-    {
-        id: 1,
-        title: 'Send Weekly Report',
-        description: 'Send updates to client',
-        frequency: 'Weekly',
-        time: '09:00 AM',
-        recipients: ['alice@example.com', 'bob@example.com'],
-        active: true
-    },
-    {
-        id: 2,
-        title: 'Team Standup',
-        description: 'Daily reminder for 9:30 standup',
-        frequency: 'Daily',
-        time: '09:30 AM',
-        recipients: ['team@example.com'],
-        active: false
-    }
-];
+export async function generateMetadata(): Promise<Metadata> {
+    const title = `Nudges`;
+    const description = 'View your nudges.';
+    const images = [siteMetadata.siteLogo];
+    return {
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            url: `${siteMetadata.siteUrl}/nudges`,
+            siteName: siteMetadata.title,
+            locale: 'en_AU',
+            type: 'article',
+            publishedTime: '2024-08-15 13:00:00',
+            modifiedTime: '2024-08-15 13:00:00',
+            images,
+            authors: [siteMetadata.author]
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images
+        }
+    };
+}
 
-const mockTeams = [
-    { id: 'team1', name: 'Marketing' },
-    { id: 'team2', name: 'Product' },
-    { id: 'team3', name: 'Operations' }
-];
+const NudgesPage = async () => {
+    const userSession = await authCheck('/billing');
+    const teams = await getUserTeams();
 
-export default function NudgeDashboard() {
-    const [selectedTeam, setSelectedTeam] = useState(mockTeams[0].id);
-    const [nudges, setNudges] = useState(mockNudges);
-
-    function toggleNudgeActive(id: number) {
-        setNudges((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, active: !n.active } : n))
+    if (!teams || teams.length === 0) {
+        return (
+            <div className="min-h-screen bg-background">
+                <div className="max-w-4xl mx-auto p-6">
+                    <div className="text-center py-12">
+                        <h2 className="text-2xl font-bold mb-2">
+                            No teams found
+                        </h2>
+                        <p className="text-muted-foreground mb-4">
+                            You are not part of any teams. Please request to be
+                            a part of a team to create a nudge.
+                        </p>
+                        <Link href="/">
+                            <Button>Back to Dashboard</Button>
+                        </Link>
+                    </div>
+                </div>
+            </div>
         );
     }
 
-    function deleteNudge(id: number) {
-        setNudges((prev) => prev.filter((n) => n.id !== id));
-    }
+    const nudges = await getTeamNudges(teams[0].id);
 
-    return (
-        <div className="container mx-auto max-w-5xl py-10 space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <h1 className="text-2xl font-bold">Your Nudges</h1>
+    return <NudgeMain returnTeams={teams} returnNudges={nudges} />;
+};
 
-                <div className="flex items-center gap-4">
-                    <Select
-                        value={selectedTeam}
-                        onValueChange={(val) => setSelectedTeam(val)}
-                    >
-                        <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder="Select a team" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {mockTeams.map((team) => (
-                                <SelectItem key={team.id} value={team.id}>
-                                    {team.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
-                    <Button onClick={() => alert('Go to Add Nudge Page')}>
-                        + Add Nudge
-                    </Button>
-                </div>
-            </div>
-
-            {/* Nudge List */}
-            <div className="grid gap-4">
-                {nudges.map((nudge) => (
-                    <Card
-                        key={nudge.id}
-                        className="hover:shadow-lg transition cursor-pointer group"
-                    >
-                        <Link href={`/nudges/${nudge.id}`} className="block">
-                            <CardHeader className="flex flex-row justify-between items-center">
-                                <CardTitle className="text-lg group-hover:text-blue-600 transition">
-                                    {nudge.title}
-                                </CardTitle>
-
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={(e) => e.preventDefault()}
-                                        >
-                                            <MoreHorizontal className="h-5 w-5" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuLabel>
-                                            Actions
-                                        </DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                            onClick={() => alert('Edit Nudge')}
-                                        >
-                                            Edit
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={() =>
-                                                toggleNudgeActive(nudge.id)
-                                            }
-                                        >
-                                            {nudge.active ? 'Pause' : 'Resume'}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={() =>
-                                                deleteNudge(nudge.id)
-                                            }
-                                            className="text-red-600"
-                                        >
-                                            Delete
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-gray-600">
-                                    {nudge.description}
-                                </p>
-                                <div className="mt-2 text-sm text-gray-500">
-                                    Frequency:{' '}
-                                    <span className="font-medium">
-                                        {nudge.frequency}
-                                    </span>{' '}
-                                    <br />
-                                    Time: {nudge.time} <br />
-                                    Recipients: {nudge.recipients.join(', ')}
-                                </div>
-                                <div className="mt-2">
-                                    <span
-                                        className={`px-2 py-1 rounded text-xs font-medium ${
-                                            nudge.active
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-gray-200 text-gray-600'
-                                        }`}
-                                    >
-                                        {nudge.active ? 'Active' : 'Paused'}
-                                    </span>
-                                </div>
-                            </CardContent>
-                        </Link>
-                    </Card>
-                ))}
-            </div>
-        </div>
-    );
-}
+export default NudgesPage;

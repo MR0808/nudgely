@@ -159,6 +159,7 @@ model User {
   teamMembers        TeamMember[]
   nudges             Nudge[]
   nudgeCompletions   NudgeCompletion[]
+  nudgeRecipients    NudgeRecipient[]
 
   @@map("users")
 }
@@ -623,6 +624,8 @@ model NudgeRecipient {
 
   nudge   Nudge  @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
   nudgeId String
+  user    User?  @relation(fields: [userId], references: [id])
+  userId  String
 
   @@unique([nudgeId, email])
   @@map("nudge_recipients")

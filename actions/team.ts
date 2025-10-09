@@ -91,7 +91,8 @@ export const getUserTeams = async () => {
                         nudges: true
                     }
                 }
-            }
+            },
+            orderBy: { team: { name: 'asc' } }
         });
 
         return teams.map((membership) => ({

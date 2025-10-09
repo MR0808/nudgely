@@ -39,11 +39,6 @@ export type Company = {
     trialEndsAt: Date | null;
 };
 
-export interface TeamSelectorProps {
-    teams: Team[];
-    company: Company;
-}
-
 export type TeamData = Awaited<ReturnType<typeof getCurrentTeamBySlug>>;
 
 export type TeamDataTeam = NonNullable<TeamData>['team'];

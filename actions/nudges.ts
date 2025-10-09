@@ -50,3 +50,23 @@ export const getCompanyNudgeCount = async () => {
         throw error;
     }
 };
+
+export const getTeamNudges = async (teamId: string) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        throw new Error('Not authorised');
+    }
+
+    const { user, company, userCompany } = userSession;
+    try {
+        const nudges = await prisma.nudge.findMany({
+            where: { teamId },
+            include: { recipients: true }
+        });
+
+        return nudges;
+    } catch (error) {
+        console.error('Error fetching nudge count:', error);
+    }
+};
