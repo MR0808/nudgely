@@ -35,8 +35,8 @@ const data = {
             icon: Gauge
         },
         {
-            title: 'Tasks',
-            url: '/tasks',
+            title: 'Nudges',
+            url: '/nudges',
             icon: SquareCheckBig
         },
         {
