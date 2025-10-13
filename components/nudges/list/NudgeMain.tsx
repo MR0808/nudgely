@@ -58,7 +58,7 @@ const NudgeMain = ({ returnTeams, returnNudges }: NudgeMainProps) => {
                               >
                                   <CardHeader className="flex flex-row justify-between items-center">
                                       <CardTitle className="text-lg group-hover:text-blue-600 transition">
-                                          {nudge.title}
+                                          {nudge.name}
                                       </CardTitle>
 
                                       <DropdownMenu>
@@ -106,7 +106,7 @@ const NudgeMain = ({ returnTeams, returnNudges }: NudgeMainProps) => {
                                               {nudge.frequency}
                                           </span>{' '}
                                           <br />
-                                          Time: {nudge.dueHour} <br />
+                                          Time: {nudge.timeOfDay} <br />
                                           Recipients:{' '}
                                           {nudge.recipients.join(', ')}
                                       </div>
