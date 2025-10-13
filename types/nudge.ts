@@ -27,3 +27,13 @@ export interface NudgeMainProps {
     returnTeams: UserTeams;
     returnNudges: Nudges;
 }
+
+export interface NudgeCreateFormProps {
+    returnTeams: UserTeams;
+    initialTeam: string;
+    initialTimezone: string;
+}
+
+export interface NudgeCreateFormBasicInformationProps {
+    returnTeams: UserTeams;
+}

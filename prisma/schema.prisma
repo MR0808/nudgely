@@ -44,17 +44,21 @@ enum NudgeStatus {
   FROZEN
 }
 
-enum NudgeFrequency {
+enum Frequency {
   DAILY
   WEEKLY
   MONTHLY
-  CUSTOM
 }
 
-enum IntervalUnit {
-  DAY
-  WEEK
-  MONTH
+enum MonthlyType {
+  DAY_OF_MONTH
+  NTH_DAY_OF_WEEK
+}
+
+enum EndType {
+  NEVER
+  ON_DATE
+  AFTER_OCCURRENCES
 }
 
 enum Support {
@@ -563,23 +567,33 @@ model TeamInvite {
 }
 
 model Nudge {
-  id        String   @id @default(uuid())
-  slug      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  title       String
+  id          String      @id @default(uuid())
+  slug        String      @unique
+  status      NudgeStatus @default(ACTIVE)
+  name        String
   description String?
-  status      NudgeStatus    @default(ACTIVE)
-  frequency   NudgeFrequency @default(DAILY)
-  hasEndDate  Boolean        @default(false)
-  endDate     DateTime?
 
-  intervalCount Int?         @default(1)
-  intervalUnit  IntervalUnit @default(DAY)
+  // Frequency settings
+  frequency Frequency
+  interval  Int       @default(1) // Every X days/weeks/months
 
-  dueHour  Int?   @default(8)
-  timezone String @default("UTC")
+  // Weekly settings (only used when frequency is WEEKLY)
+  dayOfWeek Int? // 0 = Sunday, 1 = Monday, etc.
+
+  // Monthly settings (only used when frequency is MONTHLY)
+  monthlyType         MonthlyType?
+  dayOfMonth          Int? // 1-31 for specific day of month
+  nthOccurrence       Int? // 1 = first, 2 = second, 3 = third, 4 = fourth, -1 = last
+  dayOfWeekForMonthly Int? // 0 = Sunday, 1 = Monday, etc. (used with nthOccurrence)
+
+  // Time settings
+  timeOfDay String // Format: "HH:mm" (24-hour format)
+  timezone  String // IANA timezone (e.g., "America/New_York")
+
+  // End date settings
+  endType             EndType
+  endDate             DateTime?
+  endAfterOccurrences Int?
 
   team        Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId      String
@@ -589,6 +603,11 @@ model Nudge {
   instances   NudgeInstance[]
   completions NudgeCompletion[]
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([frequency])
+  @@index([endType])
   @@map("nudges")
 }
 

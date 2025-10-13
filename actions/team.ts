@@ -103,6 +103,7 @@ export const getUserTeams = async () => {
             tasksCount: membership.team.nudges.length
         }));
     } catch (error) {
+        console.log(error);
         return null;
     }
 };
