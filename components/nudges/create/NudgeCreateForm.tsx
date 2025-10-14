@@ -4,6 +4,8 @@ import type * as z from 'zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { CreateNudgeSchema } from '@/schemas/nudge';
 import { Button } from '@/components/ui/button';
@@ -13,21 +15,27 @@ import NudgeCreateFormBasicInformation from '@/components/nudges/create/NudgeCre
 import NudgeCreateFormScheduleSettings from '@/components/nudges/create/NudgeCreateFormScheduleSettings';
 import NudgeCreateFormEndDate from '@/components/nudges/create/NudgeCreateFormEndDate';
 import NudgeCreateFormRecipients from '@/components/nudges/create/NudgeCreateFormRecipients';
+import { createNudge } from '@/actions/nudges';
+import { logNudgeCreated } from '@/actions/audit/audit-nudge';
 
 const NudgeCreateForm = ({
     returnTeams,
     initialTeam,
-    initialTimezone
+    initialTimezone,
+    userSession
 }: NudgeCreateFormProps) => {
     const [isPending, startTransition] = useTransition();
     const [submitMessage, setSubmitMessage] = useState<{
         type: 'success' | 'error';
         message: string;
     } | null>(null);
+    const router = useRouter();
 
     const form = useForm<z.infer<typeof CreateNudgeSchema>>({
         resolver: zodResolver(CreateNudgeSchema),
         defaultValues: {
+            name: '',
+            description: '',
             frequency: 'DAILY',
             teamId: initialTeam,
             interval: 1,
@@ -50,29 +58,24 @@ const NudgeCreateForm = ({
     const onSubmit = async (data: z.infer<typeof CreateNudgeSchema>) => {
         setSubmitMessage(null);
         startTransition(async () => {
-            console.log(data);
+            const result = await createNudge(data);
+            if (result.nudge) {
+                if (userSession) {
+                    await logNudgeCreated(userSession.user.id, {
+                        nudgeId: result.nudge.id,
+                        teamName: result.nudge.name
+                    });
+                }
+                toast.success('Nudge successfully created');
+                router.push(`/nudges/${result.nudge.slug}`);
+            } else {
+                setSubmitMessage({
+                    type: 'error',
+                    message: result.error || 'Failed to create nudge'
+                });
+                toast.error(result.error);
+            }
         });
-
-        // try {
-        //     // const result = await createReminder(data);
-        //     // if (result.success) {
-        //     //     setSubmitMessage({
-        //     //         type: 'success',
-        //     //         message: 'Reminder created successfully!'
-        //     //     });
-        //     //     form.reset();
-        //     // } else {
-        //     //     setSubmitMessage({
-        //     //         type: 'error',
-        //     //         message: result.error || 'Failed to create reminder'
-        //     //     });
-        //     // }
-        // } catch (error) {
-        //     setSubmitMessage({
-        //         type: 'error',
-        //         message: 'An unexpected error occurred'
-        //     });
-        // }
     };
 
     return (

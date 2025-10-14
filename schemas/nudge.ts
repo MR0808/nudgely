@@ -19,10 +19,13 @@ export const CreateNudgeSchema = z
         description: z.string().optional(),
         teamId: z.string().min(1, 'Team is required'),
         frequency: z.enum(['DAILY', 'WEEKLY', 'MONTHLY']),
-        interval: z.number().min(1, 'Interval must be at least 1'),
+        interval: z
+            .number()
+            .min(1, 'Interval must be at least 1')
+            .max(365, 'Interval must be less than a year'),
         dayOfWeek: z.number().min(0).max(6).optional(),
         monthlyType: z.enum(['DAY_OF_MONTH', 'NTH_DAY_OF_WEEK']).optional(),
-        dayOfMonth: z.number().min(1).max(31).optional(),
+        dayOfMonth: z.number().min(1).max(28).optional(),
         nthOccurrence: z.number().optional(),
         dayOfWeekForMonthly: z.number().min(0).max(6).optional(),
         timeOfDay: z.string().min(1, 'Time is required'),

@@ -641,10 +641,10 @@ model NudgeRecipient {
   name  String
   email String
 
-  nudge   Nudge  @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
+  nudge   Nudge   @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
   nudgeId String
-  user    User?  @relation(fields: [userId], references: [id])
-  userId  String
+  user    User?   @relation(fields: [userId], references: [id])
+  userId  String?
 
   @@unique([nudgeId, email])
   @@map("nudge_recipients")

@@ -53,7 +53,7 @@ const NudgeCreateFormScheduleSettingsMonthly = () => {
                                             htmlFor="day-of-month"
                                             className="font-medium cursor-pointer"
                                         >
-                                            Specific day of the month
+                                            Specific day of the month (max 28th)
                                         </FormLabel>
                                         {monthlyType === 'DAY_OF_MONTH' && (
                                             <FormField
@@ -65,7 +65,7 @@ const NudgeCreateFormScheduleSettingsMonthly = () => {
                                                             <Input
                                                                 type="number"
                                                                 min="1"
-                                                                max="31"
+                                                                max="28"
                                                                 value={
                                                                     field.value ??
                                                                     ''

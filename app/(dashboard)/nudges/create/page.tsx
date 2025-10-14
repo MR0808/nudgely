@@ -82,6 +82,7 @@ const CreateNudgePage = async ({
                 returnTeams={teams}
                 initialTeam={initialTeam}
                 initialTimezone={initialTimezone}
+                userSession={userSession}
             />
 
             {/* Right Column: Live Preview */}

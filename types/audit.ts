@@ -9,6 +9,7 @@ export type AuditCategory =
     | 'billing'
     | 'admin'
     | 'team'
+    | 'nudge'
     | 'company'
     | 'invite'
     | 'subscription';
@@ -65,6 +66,9 @@ export type AuditAction =
     | 'team.team_deleted'
     | 'team.team_enabled'
     | 'team.team_updated_member_teams'
+
+    // Nudge actions
+    | 'nudge.nudge_created'
 
     // Subscription actions
     | 'subscription.create_subscription'
