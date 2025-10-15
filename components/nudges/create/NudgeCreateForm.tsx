@@ -22,7 +22,8 @@ const NudgeCreateForm = ({
     returnTeams,
     initialTeam,
     initialTimezone,
-    userSession
+    userSession,
+    plan
 }: NudgeCreateFormProps) => {
     const [isPending, startTransition] = useTransition();
     const [submitMessage, setSubmitMessage] = useState<{
@@ -48,11 +49,6 @@ const NudgeCreateForm = ({
             nthOccurrence: undefined,
             dayOfWeekForMonthly: undefined
         }
-    });
-
-    const { fields, append, remove } = useFieldArray({
-        control: form.control,
-        name: 'recipients'
     });
 
     const onSubmit = async (data: z.infer<typeof CreateNudgeSchema>) => {
@@ -114,7 +110,10 @@ const NudgeCreateForm = ({
                 <NudgeCreateFormEndDate />
 
                 {/* Recipients */}
-                <NudgeCreateFormRecipients />
+                <NudgeCreateFormRecipients
+                    maxRecipients={plan.maxRecipients}
+                    planName={plan.name}
+                />
 
                 {/* Submit Button */}
                 <div className="flex justify-center pt-4">

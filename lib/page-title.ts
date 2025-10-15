@@ -30,7 +30,8 @@ function getPageTitle(pathname: string) {
         '/team': 'Teams & Users',
         '/billing': 'Billing',
         '/subscription': 'Change Subscription',
-        '/nudges': 'Nudges'
+        '/nudges': 'Nudges',
+        '/nudges/create': 'Create Nudge'
     };
 
     // Define dynamic route patterns

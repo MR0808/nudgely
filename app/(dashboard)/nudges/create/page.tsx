@@ -7,6 +7,7 @@ import NudgeCreateForm from '@/components/nudges/create/NudgeCreateForm';
 import NudgePreview from '@/components/nudges/create/NudgePreview';
 import { getUserTeams } from '@/actions/team';
 import { Button } from '@/components/ui/button';
+import { getPlan } from '@/actions/plan';
 
 export async function generateMetadata(): Promise<Metadata> {
     const title = `Create Nudge`;
@@ -45,6 +46,7 @@ const CreateNudgePage = async ({
     const teams = await getUserTeams();
     const params = await searchParams;
     const initialTeam = params.id ? params.id : '';
+    const plan = await getPlan();
 
     let initialTimezone = 'UTC';
     if (userSession.company.timezone) {
@@ -53,7 +55,7 @@ const CreateNudgePage = async ({
         initialTimezone = userSession.user.timezone;
     }
 
-    if (!teams || teams.length === 0) {
+    if (!teams || teams.length === 0 || !plan.plan) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -83,6 +85,7 @@ const CreateNudgePage = async ({
                 initialTeam={initialTeam}
                 initialTimezone={initialTimezone}
                 userSession={userSession}
+                plan={plan.plan}
             />
 
             {/* Right Column: Live Preview */}

@@ -6,7 +6,8 @@ import siteMetadata from '@/utils/siteMetaData';
 import { Button } from '@/components/ui/button';
 import NudgeMain from '@/components/nudges/list/NudgeMain';
 import { getUserTeams } from '@/actions/team';
-import { getTeamNudges } from '@/actions/nudges';
+import { getTeamNudges, getTotalCompanyNudges } from '@/actions/nudges';
+import { getPlan } from '@/actions/plan';
 
 export async function generateMetadata(): Promise<Metadata> {
     const title = `Nudges`;
@@ -39,8 +40,9 @@ export async function generateMetadata(): Promise<Metadata> {
 const NudgesPage = async () => {
     const userSession = await authCheck('/billing');
     const teams = await getUserTeams();
+    const plan = await getPlan();
 
-    if (!teams || teams.length === 0) {
+    if (!teams || teams.length === 0 || !plan.plan) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -62,8 +64,16 @@ const NudgesPage = async () => {
     }
 
     const nudges = await getTeamNudges(teams[0].id);
+    const totalNudges = await getTotalCompanyNudges();
 
-    return <NudgeMain returnTeams={teams} returnNudges={nudges} />;
+    return (
+        <NudgeMain
+            returnTeams={teams}
+            returnNudges={nudges}
+            plan={plan.plan}
+            totalNudges={totalNudges}
+        />
+    );
 };
 
 export default NudgesPage;

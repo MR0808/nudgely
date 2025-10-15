@@ -53,6 +53,25 @@ export const getCompanyNudgeCount = async () => {
     }
 };
 
+export const getTotalCompanyNudges = async () => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        throw new Error('Not authorised');
+    }
+
+    const { user, company, userCompany } = userSession;
+    try {
+        const nudges = await prisma.nudge.findMany({
+            where: { team: { companyId: company.id } }
+        });
+
+        return nudges.length;
+    } catch (error) {
+        throw new Error(`Error fetching nudge count: ${error}`);
+    }
+};
+
 export const getTeamNudges = async (teamId: string) => {
     const userSession = await authCheckServer();
 
@@ -84,6 +103,36 @@ export const createNudge = async (
 
     const { user, company, userCompany } = userSession;
     try {
+        const plan = await prisma.plan.findUnique({
+            where: { id: company.planId }
+        });
+
+        if (!plan) {
+            return {
+                success: false,
+                error: 'No plan found ',
+                fieldErrors: {
+                    plan: ['Not found']
+                }
+            };
+        }
+
+        const nudges = await prisma.nudge.findMany({
+            where: { team: { companyId: company.id } }
+        });
+
+        if (plan.maxNudges > 0 && nudges.length >= plan.maxNudges) {
+            return {
+                success: false,
+                error: 'Nudges limit reached',
+                fieldErrors: {
+                    nudges: [
+                        'You have created the maximum number of nudges allowed on your plan.'
+                    ]
+                }
+            };
+        }
+
         const validatedFields = CreateNudgeSchema.safeParse(values);
 
         if (!validatedFields.success) {
@@ -149,6 +198,18 @@ export const createNudge = async (
                 error: 'No recipients set',
                 fieldErrors: {
                     recipients: ['At least one recipient is required']
+                }
+            };
+        }
+
+        if (plan.maxRecipients > 0 && recipients.length > plan.maxRecipients) {
+            return {
+                success: false,
+                error: 'Too many recipients',
+                fieldErrors: {
+                    recipients: [
+                        'You have gone over the number of recipients allowed on your plan'
+                    ]
                 }
             };
         }
