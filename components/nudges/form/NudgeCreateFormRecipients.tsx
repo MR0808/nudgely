@@ -29,7 +29,9 @@ const NudgeCreateFormRecipients = ({
     planName
 }: NudgeCreateFormRecipientsProps) => {
     const form = useFormContext<CreateNudgeSchemaData>();
-    const [totalRecipients, setTotalRecipients] = useState(1);
+    const [totalRecipients, setTotalRecipients] = useState(
+        form.getValues('recipients').length
+    );
 
     const { fields, append, remove } = useFieldArray({
         control: form.control,

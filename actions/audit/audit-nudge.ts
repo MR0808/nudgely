@@ -16,6 +16,19 @@ export async function logNudgeCreated(
     });
 }
 
+export async function logNudgeUpdated(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'nudge.nudge_updated',
+        category: 'nudge',
+        description: `Nudge updated`,
+        metadata: { ...metadata }
+    });
+}
+
 export async function logNudgePaused(
     userId: string,
     metadata?: Record<string, any>
@@ -25,6 +38,19 @@ export async function logNudgePaused(
         action: 'nudge.nudge_paused',
         category: 'nudge',
         description: `Nudge paused`,
+        metadata: { ...metadata }
+    });
+}
+
+export async function logNudgeResumed(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'nudge.nudge_resumed',
+        category: 'nudge',
+        description: `Nudge resumed`,
         metadata: { ...metadata }
     });
 }
