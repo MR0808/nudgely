@@ -15,3 +15,16 @@ export async function logNudgeCreated(
         metadata: { ...metadata }
     });
 }
+
+export async function logNudgePaused(
+    userId: string,
+    metadata?: Record<string, any>
+): Promise<AuditLogResult> {
+    return await logAuditEvent({
+        userId,
+        action: 'nudge.nudge_paused',
+        category: 'nudge',
+        description: `Nudge paused`,
+        metadata: { ...metadata }
+    });
+}

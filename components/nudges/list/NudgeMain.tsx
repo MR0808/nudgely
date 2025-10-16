@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { getTeamNudges } from '@/actions/nudges';
 import { Skeleton } from '@/components/ui/skeleton';
+import NudgePauseDialog from '@/components/nudges/list/NudgePauseDialog';
+import NudgeResumeDialog from '@/components/nudges/list/NudgeResumeDialog';
 
 const NudgeMain = ({
     returnTeams,
@@ -28,6 +30,11 @@ const NudgeMain = ({
     const [nudges, setNudges] = useState(returnNudges);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedTeam, setSelectedTeam] = useState(returnTeams[0]);
+    const [pauseDialogOpen, setPauseDialogOpen] = useState(false);
+    const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
+    const [nudgeId, setNudgeId] = useState('');
+    const [name, setName] = useState('');
+    const [teamId, setTeamId] = useState('');
 
     useEffect(() => {
         async function fetchNudges() {
@@ -46,6 +53,20 @@ const NudgeMain = ({
     }, [selectedTeam]);
 
     if (!returnTeams) return null;
+
+    const onPause = (nudgeId: string, name: string, teamId: string) => {
+        setNudgeId(nudgeId);
+        setName(name);
+        setTeamId(teamId);
+        setPauseDialogOpen(true);
+    };
+
+    const onResume = (nudgeId: string, name: string, teamId: string) => {
+        setNudgeId(nudgeId);
+        setName(name);
+        setTeamId(teamId);
+        setResumeDialogOpen(true);
+    };
 
     return (
         <div className="container mx-auto max-w-5xl py-10 space-y-6">
@@ -80,17 +101,18 @@ const NudgeMain = ({
                     nudges.map((nudge) => (
                         <Card
                             key={nudge.id}
-                            className="hover:shadow-lg transition cursor-pointer group"
+                            className="hover:shadow-lg transition"
                         >
-                            <Link
-                                href={`/nudges/${nudge.id}`}
-                                className="block"
-                            >
-                                <CardHeader className="flex flex-row justify-between items-center">
-                                    <CardTitle className="text-lg group-hover:text-blue-600 transition">
+                            <CardHeader className="flex flex-row justify-between items-center">
+                                <Link
+                                    href={`/nudges/${nudge.slug}`}
+                                    className="block"
+                                >
+                                    <CardTitle className="text-lg hover:text-blue-600 transition hover:underline">
                                         {nudge.name}
                                     </CardTitle>
-
+                                </Link>
+                                {nudge.status !== 'FINISHED' && (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button
@@ -99,6 +121,7 @@ const NudgeMain = ({
                                                 onClick={(e) =>
                                                     e.preventDefault()
                                                 }
+                                                className="cursor-pointer"
                                             >
                                                 <MoreHorizontal className="h-5 w-5" />
                                             </Button>
@@ -112,54 +135,91 @@ const NudgeMain = ({
                                                 onClick={() =>
                                                     alert('Edit Nudge')
                                                 }
+                                                className="cursor-pointer"
                                             >
                                                 Edit
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                className="cursor-pointer"
+                                                onClick={() =>
+                                                    nudge.status === 'ACTIVE'
+                                                        ? onPause(
+                                                              nudge.id,
+                                                              nudge.name,
+                                                              nudge.teamId
+                                                          )
+                                                        : onResume(
+                                                              nudge.id,
+                                                              nudge.name,
+                                                              nudge.teamId
+                                                          )
+                                                }
+                                            >
                                                 {nudge.status === 'ACTIVE'
                                                     ? 'Pause'
                                                     : 'Resume'}
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem className="text-red-600">
+
+                                            <DropdownMenuItem className="text-red-600 cursor-pointer">
                                                 Delete
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-sm text-gray-600">
-                                        {nudge.description}
-                                    </p>
-                                    <div className="mt-2 text-sm text-gray-500">
-                                        Frequency:{' '}
-                                        <span className="font-medium">
-                                            {nudge.frequency}
-                                        </span>{' '}
-                                        <br />
-                                        Time: {nudge.timeOfDay} <br />
-                                        Recipients:{' '}
-                                        {nudge.recipients.join(', ')}
-                                    </div>
-                                    <div className="mt-2">
-                                        <span
-                                            className={`px-2 py-1 rounded text-xs font-medium ${
-                                                nudge.status == 'ACTIVE'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-gray-200 text-gray-600'
-                                            }`}
-                                        >
-                                            {nudge.status === 'ACTIVE'
-                                                ? 'Active'
-                                                : 'Paused'}
-                                        </span>
-                                    </div>
-                                </CardContent>
-                            </Link>
+                                )}
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-gray-600">
+                                    {nudge.description}
+                                </p>
+                                <div className="mt-2 text-sm text-gray-500">
+                                    Frequency:{' '}
+                                    <span className="font-medium">
+                                        {nudge.frequency}
+                                    </span>{' '}
+                                    <br />
+                                    Time: {nudge.timeOfDay} <br />
+                                    Recipients: {nudge.recipients.join(', ')}
+                                </div>
+                                <div className="mt-2">
+                                    <span
+                                        className={`px-2 py-1 rounded text-xs font-medium ${
+                                            nudge.status == 'ACTIVE'
+                                                ? 'bg-green-100 text-green-700'
+                                                : nudge.status === 'PAUSED'
+                                                  ? 'bg-gray-200 text-gray-600'
+                                                  : 'bg-red-100 text-red-700'
+                                        }`}
+                                    >
+                                        {nudge.status === 'ACTIVE'
+                                            ? 'Active'
+                                            : nudge.status === 'PAUSED'
+                                              ? 'Paused'
+                                              : 'Finished'}
+                                    </span>
+                                </div>
+                            </CardContent>
                         </Card>
                     ))
                 ) : (
                     "There are no nudges for this team. Why don't you create one now?"
                 )}
+                <NudgePauseDialog
+                    nudgeId={nudgeId}
+                    name={name}
+                    open={pauseDialogOpen}
+                    setOpen={setPauseDialogOpen}
+                    teamId={teamId}
+                    setNudges={setNudges}
+                />
+                <NudgeResumeDialog
+                    nudgeId={nudgeId}
+                    name={name}
+                    open={resumeDialogOpen}
+                    setOpen={setResumeDialogOpen}
+                    teamId={teamId}
+                    setNudges={setNudges}
+                />
             </div>
         </div>
     );

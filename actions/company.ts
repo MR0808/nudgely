@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { EditCompanySchema } from '@/schemas/company';
 import { deleteImage } from '@/actions/supabase';
+import { logCompanyUpdated } from '@/actions/audit/audit-company';
 
 const slugger = new GithubSlugger();
 
@@ -180,6 +181,26 @@ export const updateCompany = async (
                 slug = slugger.slug(name);
             }
         }
+
+        await logCompanyUpdated(userSession.user.id, {
+            companyId: company.id,
+            oldCompany: company,
+            name,
+            slug,
+            address1: values.address1,
+            address2: values.address2,
+            city: values.city,
+            regionId: values.region,
+            postalCode: values.postalCode,
+            countryId: values.country,
+            contactEmail: values.contactEmail,
+            contactPhone: values.contactPhone,
+            website: values.website,
+            companySizeId: values.companySize,
+            industryId: values.industry,
+            timezone: values.timezone,
+            locale: values.locale
+        });
 
         // Create the team
         const companyDb = await prisma.company.update({

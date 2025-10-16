@@ -69,6 +69,7 @@ export type AuditAction =
 
     // Nudge actions
     | 'nudge.nudge_created'
+    | 'nudge.nudge_paused'
 
     // Subscription actions
     | 'subscription.create_subscription'

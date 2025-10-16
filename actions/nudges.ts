@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { CreateNudgeSchema } from '@/schemas/nudge';
-import { error } from 'console';
+import { logNudgeCreated, logNudgePaused } from '@/actions/audit/audit-nudge';
 
 const slugger = new GithubSlugger();
 
@@ -303,6 +303,11 @@ export const createNudge = async (
             });
         }
 
+        await logNudgeCreated(userSession.user.id, {
+            nudgeId: nudge.id,
+            nudge: nudge.name
+        });
+
         return { success: true, nudge };
     } catch (error) {
         console.error('Error creating nudge:', error);
@@ -315,6 +320,82 @@ export const createNudge = async (
 
         return {
             success: false,
+            error: 'An unexpected error occurred while creating the reminder'
+        };
+    }
+};
+
+export const pauseNudge = async (id: string, teamId: string) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        throw new Error('Not authorised');
+    }
+
+    try {
+        const nudge = await prisma.nudge.update({
+            where: { id },
+            data: { status: 'PAUSED' }
+        });
+
+        await logNudgePaused(userSession.user.id, {
+            nudgeId: nudge.id
+        });
+
+        const nudges = await getTeamNudges(teamId);
+
+        return {
+            data: nudges,
+            error: null
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            return {
+                data: null,
+                error: error.message
+            };
+        }
+
+        return {
+            data: null,
+            error: 'An unexpected error occurred while creating the reminder'
+        };
+    }
+};
+
+export const resumeNudge = async (id: string, teamId: string) => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        throw new Error('Not authorised');
+    }
+
+    try {
+        const nudge = await prisma.nudge.update({
+            where: { id },
+            data: { status: 'ACTIVE' }
+        });
+
+        await logNudgePaused(userSession.user.id, {
+            nudgeId: nudge.id
+        });
+
+        const nudges = await getTeamNudges(teamId);
+
+        return {
+            data: nudges,
+            error: null
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            return {
+                data: null,
+                error: error.message
+            };
+        }
+
+        return {
+            data: null,
             error: 'An unexpected error occurred while creating the reminder'
         };
     }

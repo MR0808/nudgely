@@ -48,3 +48,12 @@ export interface NudgeCreateFormRecipientsProps {
     maxRecipients: number;
     planName: string;
 }
+
+export interface NudgePauseDialogProps {
+    name: string;
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    nudgeId: string;
+    teamId: string;
+    setNudges: (nudges: Nudges) => void;
+}

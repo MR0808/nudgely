@@ -41,7 +41,7 @@ enum NudgeStatus {
   ACTIVE
   DISABLED
   FINISHED
-  FROZEN
+  PAUSED
 }
 
 enum Frequency {
