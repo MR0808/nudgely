@@ -186,7 +186,7 @@ export const createNudge = async (
             if (!emailSet.has(email)) {
                 recipients.push({
                     email: recipient.email.toLowerCase(),
-                    firstName: recipient.firstName
+                    firstName: recipient.name
                 });
             }
             emailSet.add(email);
@@ -325,7 +325,7 @@ export const createNudge = async (
     }
 };
 
-export const pauseNudge = async (id: string, teamId: string) => {
+export const pauseNudge = async (id: string) => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
@@ -342,7 +342,9 @@ export const pauseNudge = async (id: string, teamId: string) => {
             nudgeId: nudge.id
         });
 
-        const nudges = await getTeamNudges(teamId);
+        const nudges = await getTeamNudges(nudge.teamId);
+
+        revalidatePath(`/nudges/${nudge.slug}`);
 
         return {
             data: nudges,
@@ -363,7 +365,7 @@ export const pauseNudge = async (id: string, teamId: string) => {
     }
 };
 
-export const resumeNudge = async (id: string, teamId: string) => {
+export const resumeNudge = async (id: string) => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
@@ -380,7 +382,9 @@ export const resumeNudge = async (id: string, teamId: string) => {
             nudgeId: nudge.id
         });
 
-        const nudges = await getTeamNudges(teamId);
+        const nudges = await getTeamNudges(nudge.teamId);
+
+        revalidatePath(`/nudges/${nudge.slug}`);
 
         return {
             data: nudges,
@@ -398,5 +402,34 @@ export const resumeNudge = async (id: string, teamId: string) => {
             data: null,
             error: 'An unexpected error occurred while creating the reminder'
         };
+    }
+};
+
+export const getNudgeBySlug = async (slug: string) => {
+    try {
+        const userSession = await authCheckServer();
+
+        if (!userSession) {
+            throw new Error('Not authorised');
+        }
+
+        const { user } = userSession;
+
+        const nudge = await prisma.nudge.findUnique({
+            where: {
+                slug
+            },
+            include: { recipients: true }
+        });
+
+        if (!nudge) return null;
+
+        return nudge;
+    } catch (error) {
+        if (error instanceof Error) {
+            return null;
+        }
+
+        return null;
     }
 };
