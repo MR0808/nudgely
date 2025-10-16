@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { CreateNudgeSchema } from '@/schemas/nudge';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
-import { NudgeCreateFormProps } from '@/types/nudge';
+import { NudgeEditFormProps } from '@/types/nudge';
 import NudgeCreateFormBasicInformation from '@/components/nudges/form/NudgeCreateFormBasicInformation';
 import NudgeCreateFormScheduleSettings from '@/components/nudges/form/NudgeCreateFormScheduleSettings';
 import NudgeCreateFormEndDate from '@/components/nudges/form/NudgeCreateFormEndDate';
@@ -18,13 +18,12 @@ import NudgeCreateFormRecipients from '@/components/nudges/form/NudgeCreateFormR
 import { createNudge } from '@/actions/nudges';
 import { logNudgeCreated } from '@/actions/audit/audit-nudge';
 
-const NudgeCreateForm = ({
+const NudgeEditForm = ({
+    nudge,
     returnTeams,
-    initialTeam,
-    initialTimezone,
     userSession,
     plan
-}: NudgeCreateFormProps) => {
+}: NudgeEditFormProps) => {
     const [isPending, startTransition] = useTransition();
     const [submitMessage, setSubmitMessage] = useState<{
         type: 'success' | 'error';
@@ -35,42 +34,45 @@ const NudgeCreateForm = ({
     const form = useForm<z.infer<typeof CreateNudgeSchema>>({
         resolver: zodResolver(CreateNudgeSchema),
         defaultValues: {
-            name: '',
-            description: '',
-            frequency: 'DAILY',
-            teamId: initialTeam,
-            interval: 1,
-            endType: 'NEVER',
-            timezone: initialTimezone,
-            recipients: [{ firstName: '', email: '' }],
-            timeOfDay: '9:00 AM',
-            monthlyType: undefined, // or a default enum value
-            dayOfMonth: undefined,
-            nthOccurrence: undefined,
-            dayOfWeekForMonthly: undefined
+            name: nudge.name,
+            description: nudge.description || '',
+            frequency: nudge.frequency,
+            teamId: nudge.teamId,
+            interval: nudge.interval,
+            endType: nudge.endType,
+            timezone: nudge.timezone,
+            recipients: nudge.recipients,
+            timeOfDay: nudge.timeOfDay,
+            monthlyType: nudge.monthlyType ?? undefined,
+            dayOfMonth: nudge.dayOfMonth ?? undefined,
+            nthOccurrence: nudge.nthOccurrence ?? undefined,
+            dayOfWeekForMonthly: nudge.dayOfWeekForMonthly ?? undefined,
+            dayOfWeek: nudge.dayOfWeek ?? undefined,
+            endDate: nudge.endDate?.toString() ?? undefined,
+            endAfterOccurrences: nudge.endAfterOccurrences ?? undefined
         }
     });
 
     const onSubmit = async (data: z.infer<typeof CreateNudgeSchema>) => {
         setSubmitMessage(null);
         startTransition(async () => {
-            const result = await createNudge(data);
-            if (result.nudge) {
-                if (userSession) {
-                    await logNudgeCreated(userSession.user.id, {
-                        nudgeId: result.nudge.id,
-                        teamName: result.nudge.name
-                    });
-                }
-                toast.success('Nudge successfully created');
-                router.push(`/nudges/${result.nudge.slug}`);
-            } else {
-                setSubmitMessage({
-                    type: 'error',
-                    message: result.error || 'Failed to create nudge'
-                });
-                toast.error(result.error);
-            }
+            // const result = await createNudge(data);
+            // if (result.nudge) {
+            //     if (userSession) {
+            //         await logNudgeCreated(userSession.user.id, {
+            //             nudgeId: result.nudge.id,
+            //             teamName: result.nudge.name
+            //         });
+            //     }
+            //     toast.success('Nudge successfully created');
+            //     router.push(`/nudges/${result.nudge.slug}`);
+            // } else {
+            //     setSubmitMessage({
+            //         type: 'error',
+            //         message: result.error || 'Failed to create nudge'
+            //     });
+            //     toast.error(result.error);
+            // }
         });
     };
 
@@ -131,4 +133,4 @@ const NudgeCreateForm = ({
     );
 };
 
-export default NudgeCreateForm;
+export default NudgeEditForm;

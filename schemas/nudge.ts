@@ -36,7 +36,7 @@ export const CreateNudgeSchema = z
         recipients: z
             .array(
                 z.object({
-                    firstName: z.string().min(1, 'First name is required'),
+                    name: z.string().min(1, 'First name is required'),
                     email: z.email('Invalid email address')
                 })
             )

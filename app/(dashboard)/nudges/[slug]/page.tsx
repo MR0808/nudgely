@@ -1,94 +1,91 @@
-'use client';
+import type { Metadata } from 'next';
+import Link from 'next/link';
 
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { authCheck } from '@/lib/authCheck';
+import siteMetadata from '@/utils/siteMetaData';
+import { ParamsSlug } from '@/types/global';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { MoreHorizontal } from 'lucide-react';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+import { getNudgeBySlug } from '@/actions/nudges';
+import { Button } from '@/components/ui/button';
+import NudgeDropdown from '@/components/nudges/view/NudgeDropdown';
 
-// Example placeholder data (replace with fetch in production)
-const mockNudge = {
-    id: 1,
-    title: 'Send Weekly Report',
-    description: 'Send updates to client with progress and blockers.',
-    frequency: 'Weekly',
-    time: '09:00 AM',
-    timezone: 'Australia/Melbourne',
-    recipients: ['alice@example.com', 'bob@example.com'],
-    status: 'Active',
-    history: [
-        {
-            id: 'h1',
-            date: '2025-10-01',
-            status: 'Completed',
-            completedBy: 'alice@example.com'
+export async function generateMetadata({
+    params
+}: {
+    params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+    const { slug } = await params;
+    const nudge = await getNudgeBySlug(slug);
+    if (!nudge) {
+        return { title: 'Nudge not found' };
+    }
+    const title = `${nudge.name}`;
+    const description = 'Nudge view';
+    const images = [siteMetadata.siteLogo];
+    return {
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            url: `${siteMetadata.siteUrl}/nudges/${slug}`,
+            siteName: siteMetadata.title,
+            locale: 'en_AU',
+            type: 'article',
+            publishedTime: '2024-08-15 13:00:00',
+            modifiedTime: '2024-08-15 13:00:00',
+            images,
+            authors: [siteMetadata.author]
         },
-        {
-            id: 'h2',
-            date: '2025-09-24',
-            status: 'Completed',
-            completedBy: 'bob@example.com'
-        },
-        { id: 'h3', date: '2025-09-17', status: 'Failed' }
-    ]
-};
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images
+        }
+    };
+}
 
-export default function NudgeDetailPage() {
-    const router = useRouter();
+const NudgeDetailPage = async (props: { params: ParamsSlug }) => {
+    const { slug } = await props.params;
+    const userSession = await authCheck(`/nudges/${slug}`);
+
+    const nudge = await getNudgeBySlug(slug);
+
+    if (!nudge) {
+        return (
+            <div className="min-h-screen bg-background">
+                <div className="max-w-4xl mx-auto p-6">
+                    <div className="text-center py-12">
+                        <h2 className="text-2xl font-bold mb-2">
+                            Nudge Not Found
+                        </h2>
+                        <p className="text-muted-foreground mb-4">
+                            The Nudge you&apos;re looking for doesn&apos;t exist
+                            or you don&apos;t have access to it.
+                        </p>
+                        <Link href="/nudges">
+                            <Button>Back to Nudges</Button>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto max-w-4xl py-10 space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">{mockNudge.title}</h1>
-
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={() => router.push('/dashboard/nudges')}
-                    >
-                        Back
-                    </Button>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-5 w-5" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                onClick={() => alert('Edit Nudge')}
-                            >
-                                Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() => alert('Pause/Resume Nudge')}
-                            >
-                                {mockNudge.status === 'Active'
-                                    ? 'Pause'
-                                    : 'Resume'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() => confirm('Delete Nudge?')}
-                                className="text-red-600"
-                            >
-                                Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
+                <h1 className="text-2xl font-bold">{nudge.name}</h1>
+                <NudgeDropdown
+                    status={nudge.status}
+                    name={nudge.name}
+                    nudgeId={nudge.id}
+                    slug={nudge.slug}
+                />
             </div>
 
             {/* Nudge Info */}
@@ -97,32 +94,44 @@ export default function NudgeDetailPage() {
                     <CardTitle>Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    <p className="text-gray-700">{mockNudge.description}</p>
+                    <p className="text-gray-700">{nudge.description}</p>
                     <Separator />
                     <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                             <span className="font-medium">Frequency:</span>{' '}
-                            {mockNudge.frequency}
+                            {nudge.frequency}
                         </div>
                         <div>
                             <span className="font-medium">Time:</span>{' '}
-                            {mockNudge.time} ({mockNudge.timezone})
+                            {nudge.timeOfDay} ({nudge.timezone})
                         </div>
-                        <div>
-                            <span className="font-medium">Recipients:</span>{' '}
-                            {mockNudge.recipients.join(', ')}
+                        <div className="flex flex-col">
+                            <span className="font-medium">Recipients:</span>
+                            <div>
+                                {nudge.recipients.map((recipient, index) => (
+                                    <div
+                                        key={index}
+                                    >{`${recipient.name} - ${recipient.email}`}</div>
+                                ))}
+                            </div>
                         </div>
                         <div>
                             <span className="font-medium">Status:</span>{' '}
-                            <Badge
-                                variant={
-                                    mockNudge.status === 'Active'
-                                        ? 'default'
-                                        : 'secondary'
-                                }
+                            <span
+                                className={`px-2 py-1 rounded text-sm font-medium ${
+                                    nudge.status == 'ACTIVE'
+                                        ? 'bg-green-100 text-green-700'
+                                        : nudge.status === 'PAUSED'
+                                          ? 'bg-gray-200 text-gray-600'
+                                          : 'bg-red-100 text-red-700'
+                                }`}
                             >
-                                {mockNudge.status}
-                            </Badge>
+                                {nudge.status === 'ACTIVE'
+                                    ? 'Active'
+                                    : nudge.status === 'PAUSED'
+                                      ? 'Paused'
+                                      : 'Finished'}
+                            </span>
                         </div>
                     </div>
                 </CardContent>
@@ -134,7 +143,7 @@ export default function NudgeDetailPage() {
                     <CardTitle>History</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                         {mockNudge.history.map((h) => (
                             <div
                                 key={h.id}
@@ -159,9 +168,11 @@ export default function NudgeDetailPage() {
                                 )}
                             </div>
                         ))}
-                    </div>
+                    </div> */}
                 </CardContent>
             </Card>
         </div>
     );
-}
+};
+
+export default NudgeDetailPage;

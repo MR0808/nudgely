@@ -1,14 +1,16 @@
 import { Dispatch, SetStateAction } from 'react';
 
-import { getTeamNudges } from '@/actions/nudges';
+import { getNudgeBySlug, getTeamNudges } from '@/actions/nudges';
 import { getUserTeams } from '@/actions/team';
 import { SessionType } from '@/types/session';
-import { Plan } from '@/generated/prisma';
+import { NudgeStatus, Plan } from '@/generated/prisma';
 
 // export type UserTeams = Awaited<ReturnType<typeof getUserTeams>>;
 export type UserTeams = NonNullable<Awaited<ReturnType<typeof getUserTeams>>>;
 
 export type Nudges = Awaited<ReturnType<typeof getTeamNudges>>;
+
+export type Nudge = NonNullable<Awaited<ReturnType<typeof getNudgeBySlug>>>;
 
 export type UserTeam = NonNullable<UserTeams>[number];
 
@@ -40,6 +42,13 @@ export interface NudgeCreateFormProps {
     plan: Plan;
 }
 
+export interface NudgeEditFormProps {
+    nudge: Nudge;
+    returnTeams: UserTeams;
+    userSession: SessionType | null;
+    plan: Plan;
+}
+
 export interface NudgeCreateFormBasicInformationProps {
     returnTeams: UserTeams;
 }
@@ -54,6 +63,12 @@ export interface NudgePauseDialogProps {
     open: boolean;
     setOpen: (open: boolean) => void;
     nudgeId: string;
-    teamId: string;
-    setNudges: (nudges: Nudges) => void;
+    setNudges?: (nudges: Nudges) => void;
+}
+
+export interface NudgeDropdownProps {
+    name: string;
+    nudgeId: string;
+    status: NudgeStatus;
+    slug: string;
 }

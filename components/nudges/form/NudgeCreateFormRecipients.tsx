@@ -38,9 +38,9 @@ const NudgeCreateFormRecipients = ({
 
     const addRecipient = () => {
         if (maxRecipients === 0) {
-            append({ firstName: '', email: '' });
+            append({ name: '', email: '' });
         } else if (totalRecipients < maxRecipients) {
-            append({ firstName: '', email: '' });
+            append({ name: '', email: '' });
             setTotalRecipients(totalRecipients + 1);
         } else {
             toast.error(`Maximum recipients reached - ${maxRecipients}`);
@@ -77,7 +77,7 @@ const NudgeCreateFormRecipients = ({
                         <div className="flex-1 grid sm:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
-                                name={`recipients.${index}.firstName`}
+                                name={`recipients.${index}.name`}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-sm font-semibold">

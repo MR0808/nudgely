@@ -131,13 +131,12 @@ const NudgeMain = ({
                                                 Actions
                                             </DropdownMenuLabel>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                                onClick={() =>
-                                                    alert('Edit Nudge')
-                                                }
-                                                className="cursor-pointer"
-                                            >
-                                                Edit
+                                            <DropdownMenuItem className="cursor-pointer">
+                                                <Link
+                                                    href={`/nudges/edit/${nudge.slug}`}
+                                                >
+                                                    Edit
+                                                </Link>
                                             </DropdownMenuItem>
 
                                             <DropdownMenuItem
@@ -209,7 +208,6 @@ const NudgeMain = ({
                     name={name}
                     open={pauseDialogOpen}
                     setOpen={setPauseDialogOpen}
-                    teamId={teamId}
                     setNudges={setNudges}
                 />
                 <NudgeResumeDialog
@@ -217,7 +215,6 @@ const NudgeMain = ({
                     name={name}
                     open={resumeDialogOpen}
                     setOpen={setResumeDialogOpen}
-                    teamId={teamId}
                     setNudges={setNudges}
                 />
             </div>

@@ -26,9 +26,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { CreateNudgeSchemaData } from '@/schemas/nudge';
 import { HOURS } from '@/data/nudgeFrequency';
-import NudgeCreateFormScheduleSettingsWeekly from '@/components/nudges/create/schedule/NudgeCreateFormScheduleSettingsWeekly';
-import NudgeCreateFormScheduleSettingsMonthly from '@/components/nudges/create/schedule/NudgeCreateFormScheduleSettingsMonthly';
-import NudgeCreateFormScheduleSettingsTimezone from '@/components/nudges/create/schedule/NudgeCreateFormScheduleSettingsTimezone';
+import NudgeCreateFormScheduleSettingsWeekly from '@/components/nudges/form/schedule/NudgeCreateFormScheduleSettingsWeekly';
+import NudgeCreateFormScheduleSettingsMonthly from '@/components/nudges/form/schedule/NudgeCreateFormScheduleSettingsMonthly';
+import NudgeCreateFormScheduleSettingsTimezone from '@/components/nudges/form/schedule/NudgeCreateFormScheduleSettingsTimezone';
 
 const NudgeCreateFormScheduleSettings = () => {
     const form = useFormContext<CreateNudgeSchemaData>();
