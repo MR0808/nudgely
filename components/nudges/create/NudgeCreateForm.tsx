@@ -42,7 +42,7 @@ const NudgeCreateForm = ({
             interval: 1,
             endType: 'NEVER',
             timezone: initialTimezone,
-            recipients: [{ firstName: '', email: '' }],
+            recipients: [{ name: '', email: '' }],
             timeOfDay: '9:00 AM',
             monthlyType: undefined, // or a default enum value
             dayOfMonth: undefined,
