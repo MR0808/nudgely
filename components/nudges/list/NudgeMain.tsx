@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 import NudgeTeamSelector from '@/components/nudges/list/NudgeTeamSelector';
 import { Button } from '@/components/ui/button';
-import { NudgeMainProps } from '@/types/nudge';
+import { NudgeMainProps, allTeamOption } from '@/types/nudge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MoreHorizontal } from 'lucide-react';
 import {
@@ -25,16 +25,19 @@ const NudgeMain = ({
     returnTeams,
     returnNudges,
     plan,
-    totalNudges
+    totalNudges,
+    totalMembers
 }: NudgeMainProps) => {
+    allTeamOption.memberCount = totalMembers;
+    allTeamOption.nudgesCount = totalNudges;
+
     const [nudges, setNudges] = useState(returnNudges);
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedTeam, setSelectedTeam] = useState(returnTeams[0]);
+    const [selectedTeam, setSelectedTeam] = useState(allTeamOption);
     const [pauseDialogOpen, setPauseDialogOpen] = useState(false);
     const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
     const [nudgeId, setNudgeId] = useState('');
     const [name, setName] = useState('');
-    const [teamId, setTeamId] = useState('');
 
     useEffect(() => {
         async function fetchNudges() {
@@ -57,14 +60,12 @@ const NudgeMain = ({
     const onPause = (nudgeId: string, name: string, teamId: string) => {
         setNudgeId(nudgeId);
         setName(name);
-        setTeamId(teamId);
         setPauseDialogOpen(true);
     };
 
     const onResume = (nudgeId: string, name: string, teamId: string) => {
         setNudgeId(nudgeId);
         setName(name);
-        setTeamId(teamId);
         setResumeDialogOpen(true);
     };
 
@@ -78,6 +79,7 @@ const NudgeMain = ({
                         returnTeams={returnTeams}
                         selectedTeam={selectedTeam}
                         setSelectedTeam={setSelectedTeam}
+                        allTeamOption={allTeamOption}
                     />
 
                     {returnTeams &&
@@ -101,103 +103,123 @@ const NudgeMain = ({
                     nudges.map((nudge) => (
                         <Card
                             key={nudge.id}
-                            className="hover:shadow-lg transition"
+                            className="hover:shadow-lg transition cursor-pointer"
                         >
-                            <CardHeader className="flex flex-row justify-between items-center">
-                                <Link
-                                    href={`/nudges/${nudge.slug}`}
-                                    className="block"
-                                >
-                                    <CardTitle className="text-lg hover:text-blue-600 transition hover:underline">
-                                        {nudge.name}
-                                    </CardTitle>
-                                </Link>
-                                {nudge.status !== 'FINISHED' && (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={(e) =>
-                                                    e.preventDefault()
-                                                }
-                                                className="cursor-pointer"
-                                            >
-                                                <MoreHorizontal className="h-5 w-5" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            <DropdownMenuLabel>
-                                                Actions
-                                            </DropdownMenuLabel>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem className="cursor-pointer">
-                                                <Link
-                                                    href={`/nudges/edit/${nudge.slug}`}
+                            <Link
+                                href={`/nudges/${nudge.slug}`}
+                                className="block"
+                            >
+                                <CardHeader className="flex flex-row justify-between items-center">
+                                    <div className="flex flex-col space-y-2">
+                                        <CardTitle className="text-lg hover:text-blue-600 transition hover:underline">
+                                            {nudge.name}
+                                        </CardTitle>
+
+                                        <div className="text-base">
+                                            Team: {nudge.team.name}
+                                        </div>
+                                    </div>
+                                    {nudge.status !== 'FINISHED' && (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={(e) =>
+                                                        e.preventDefault()
+                                                    }
+                                                    className="cursor-pointer"
                                                 >
-                                                    Edit
-                                                </Link>
-                                            </DropdownMenuItem>
+                                                    <MoreHorizontal className="h-5 w-5" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuLabel>
+                                                    Actions
+                                                </DropdownMenuLabel>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem className="cursor-pointer">
+                                                    <Link
+                                                        href={`/nudges/edit/${nudge.slug}`}
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                </DropdownMenuItem>
 
-                                            <DropdownMenuItem
-                                                className="cursor-pointer"
-                                                onClick={() =>
-                                                    nudge.status === 'ACTIVE'
-                                                        ? onPause(
-                                                              nudge.id,
-                                                              nudge.name,
-                                                              nudge.teamId
-                                                          )
-                                                        : onResume(
-                                                              nudge.id,
-                                                              nudge.name,
-                                                              nudge.teamId
-                                                          )
-                                                }
-                                            >
-                                                {nudge.status === 'ACTIVE'
-                                                    ? 'Pause'
-                                                    : 'Resume'}
-                                            </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    className="cursor-pointer"
+                                                    onClick={() =>
+                                                        nudge.status ===
+                                                        'ACTIVE'
+                                                            ? onPause(
+                                                                  nudge.id,
+                                                                  nudge.name,
+                                                                  nudge.teamId
+                                                              )
+                                                            : onResume(
+                                                                  nudge.id,
+                                                                  nudge.name,
+                                                                  nudge.teamId
+                                                              )
+                                                    }
+                                                >
+                                                    {nudge.status === 'ACTIVE'
+                                                        ? 'Pause'
+                                                        : 'Resume'}
+                                                </DropdownMenuItem>
 
-                                            <DropdownMenuItem className="text-red-600 cursor-pointer">
-                                                Delete
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                )}
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-gray-600">
-                                    {nudge.description}
-                                </p>
-                                <div className="mt-2 text-sm text-gray-500">
-                                    Frequency:{' '}
-                                    <span className="font-medium">
-                                        {nudge.frequency}
-                                    </span>{' '}
-                                    <br />
-                                    Time: {nudge.timeOfDay} <br />
-                                    Recipients: {nudge.recipients.join(', ')}
-                                </div>
-                                <div className="mt-2">
-                                    <span
-                                        className={`px-2 py-1 rounded text-xs font-medium ${
-                                            nudge.status == 'ACTIVE'
-                                                ? 'bg-green-100 text-green-700'
+                                                <DropdownMenuItem className="text-red-600 cursor-pointer">
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    )}
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-gray-600">
+                                        {nudge.description}
+                                    </p>
+                                    <div className="mt-2 text-sm text-gray-500">
+                                        Frequency:{' '}
+                                        <span className="font-medium">
+                                            {nudge.frequency}
+                                        </span>{' '}
+                                        <br />
+                                        Time: {nudge.timeOfDay} <br />
+                                        <div className="flex flex-col pt-2">
+                                            <span className="font-medium">
+                                                Recipients:
+                                            </span>
+                                            <div>
+                                                {nudge.recipients.map(
+                                                    (recipient, index) => (
+                                                        <div
+                                                            key={index}
+                                                        >{`${recipient.name} - ${recipient.email}`}</div>
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2">
+                                        <span
+                                            className={`px-2 py-1 rounded text-xs font-medium ${
+                                                nudge.status == 'ACTIVE'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : nudge.status === 'PAUSED'
+                                                      ? 'bg-gray-200 text-gray-600'
+                                                      : 'bg-red-100 text-red-700'
+                                            }`}
+                                        >
+                                            {nudge.status === 'ACTIVE'
+                                                ? 'Active'
                                                 : nudge.status === 'PAUSED'
-                                                  ? 'bg-gray-200 text-gray-600'
-                                                  : 'bg-red-100 text-red-700'
-                                        }`}
-                                    >
-                                        {nudge.status === 'ACTIVE'
-                                            ? 'Active'
-                                            : nudge.status === 'PAUSED'
-                                              ? 'Paused'
-                                              : 'Finished'}
-                                    </span>
-                                </div>
-                            </CardContent>
+                                                  ? 'Paused'
+                                                  : 'Finished'}
+                                        </span>
+                                    </div>
+                                </CardContent>
+                            </Link>
                         </Card>
                     ))
                 ) : (

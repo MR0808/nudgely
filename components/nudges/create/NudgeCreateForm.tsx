@@ -1,7 +1,7 @@
 'use client';
 
 import type * as z from 'zod';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';

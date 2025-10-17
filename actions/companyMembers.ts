@@ -634,3 +634,22 @@ export const reactivateMember = async (memberId: string) => {
         return { data: null, error: 'Failed to remove team member' };
     }
 };
+
+export const getTotalActiveCompanyMembers = async () => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        throw new Error('Not authorised');
+    }
+
+    const { user, company, userCompany } = userSession;
+    try {
+        const members = await prisma.companyMember.findMany({
+            where: { companyId: company.id, user: { status: 'ACTIVE' } }
+        });
+
+        return members.length;
+    } catch (error) {
+        throw new Error(`Error fetching nudge count: ${error}`);
+    }
+};

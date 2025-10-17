@@ -8,6 +8,7 @@ import NudgeMain from '@/components/nudges/list/NudgeMain';
 import { getUserTeams } from '@/actions/team';
 import { getTeamNudges, getTotalCompanyNudges } from '@/actions/nudges';
 import { getPlan } from '@/actions/plan';
+import { getTotalActiveCompanyMembers } from '@/actions/companyMembers';
 
 export async function generateMetadata(): Promise<Metadata> {
     const title = `Nudges`;
@@ -65,6 +66,7 @@ const NudgesPage = async () => {
 
     const nudges = await getTeamNudges(teams[0].id);
     const totalNudges = await getTotalCompanyNudges();
+    const totalMembers = await getTotalActiveCompanyMembers();
 
     return (
         <NudgeMain
@@ -72,6 +74,7 @@ const NudgesPage = async () => {
             returnNudges={nudges}
             plan={plan.plan}
             totalNudges={totalNudges}
+            totalMembers={totalMembers}
         />
     );
 };

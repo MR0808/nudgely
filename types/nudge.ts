@@ -25,6 +25,7 @@ export interface NudgeTeamSelectorProps {
     returnTeams: UserTeams;
     selectedTeam: UserTeam | null;
     setSelectedTeam: Dispatch<SetStateAction<UserTeam>>;
+    allTeamOption: UserTeam;
 }
 
 export interface NudgeMainProps {
@@ -32,6 +33,7 @@ export interface NudgeMainProps {
     returnNudges: Nudges;
     plan: Plan;
     totalNudges: number;
+    totalMembers: number;
 }
 
 export interface NudgeCreateFormProps {
@@ -72,3 +74,11 @@ export interface NudgeDropdownProps {
     status: NudgeStatus;
     slug: string;
 }
+
+export const allTeamOption: UserTeam = {
+    id: 'all',
+    name: 'All',
+    role: 'TEAM_MEMBER',
+    memberCount: 0,
+    nudgesCount: 0
+};

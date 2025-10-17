@@ -79,7 +79,10 @@ const NudgeDetailPage = async (props: { params: ParamsSlug }) => {
         <div className="container mx-auto max-w-4xl py-10 space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">{nudge.name}</h1>
+                <div className="flex flex-col space-y-2">
+                    <h1 className="text-2xl font-bold">{nudge.name}</h1>
+                    <h2 className="text-xl font-semibold">{nudge.team.name}</h2>
+                </div>
                 <NudgeDropdown
                     status={nudge.status}
                     name={nudge.name}

@@ -8,7 +8,6 @@ import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { CreateNudgeSchema } from '@/schemas/nudge';
 import {
-    logNudgeCreated,
     logNudgePaused,
     logNudgeResumed,
     logNudgeUpdated
@@ -86,12 +85,19 @@ export const getTeamNudges = async (teamId: string) => {
 
     const { user, company, userCompany } = userSession;
     try {
-        const nudges = await prisma.nudge.findMany({
-            where: { teamId },
-            include: { recipients: true }
-        });
-
-        return nudges;
+        if (teamId === 'all') {
+            const nudges = await prisma.nudge.findMany({
+                where: { team: { companyId: company.id } },
+                include: { recipients: true, team: true }
+            });
+            return nudges;
+        } else {
+            const nudges = await prisma.nudge.findMany({
+                where: { teamId },
+                include: { recipients: true, team: true }
+            });
+            return nudges;
+        }
     } catch (error) {
         console.error('Error fetching nudge count:', error);
     }
@@ -308,11 +314,6 @@ export const createNudge = async (
             });
         }
 
-        await logNudgeCreated(userSession.user.id, {
-            nudgeId: nudge.id,
-            nudge: nudge.name
-        });
-
         return { success: true, nudge };
     } catch (error) {
         console.error('Error creating nudge:', error);
@@ -386,7 +387,8 @@ export const updateNudge = async (
         }
 
         const oldNudge = await prisma.nudge.findUnique({
-            where: { id: nudgeId }
+            where: { id: nudgeId },
+            include: { team: true, recipients: true }
         });
 
         if (!oldNudge) {
@@ -523,29 +525,56 @@ export const updateNudge = async (
                 creatorId: user.id
             },
             include: {
-                team: true
+                team: true,
+                recipients: true
             }
         });
 
-        for (const recipient of recipients) {
-            let userId: string | null = null;
-            const recipientUser = await prisma.user.findUnique({
-                where: { email: recipient.email }
-            });
-            if (recipientUser) userId = recipientUser.id;
-            await prisma.nudgeRecipient.create({
-                data: {
-                    name: recipient.firstName,
-                    email: recipient.email,
-                    userId,
-                    nudgeId: nudge.id
+        // Get current recipients from the database
+        const currentRecipients = nudge.recipients;
+        const submittedRecipients = validatedData.recipients;
+
+        // Identify emails in the submitted form and current database
+        const submittedEmails = new Set(
+            submittedRecipients.map((r) => r.email)
+        );
+        const currentEmails = new Set(currentRecipients.map((r) => r.email));
+
+        // Determine recipients to delete (in DB but not in form)
+        const recipientsToDelete = currentRecipients.filter(
+            (r) => !submittedEmails.has(r.email)
+        );
+
+        // Determine recipients to add (in form but not in DB)
+        const recipientsToAdd = submittedRecipients.filter(
+            (r) => !currentEmails.has(r.email)
+        );
+
+        // Delete removed recipients
+        if (recipientsToDelete.length > 0) {
+            await prisma.nudgeRecipient.deleteMany({
+                where: {
+                    nudgeId,
+                    email: { in: recipientsToDelete.map((r) => r.email) }
                 }
+            });
+        }
+
+        // Add new recipients
+        if (recipientsToAdd.length > 0) {
+            await prisma.nudgeRecipient.createMany({
+                data: recipientsToAdd.map((recipient) => ({
+                    nudgeId,
+                    name: recipient.name,
+                    email: recipient.email
+                }))
             });
         }
 
         await logNudgeUpdated(userSession.user.id, {
             nudgeId: nudge.id,
             nudge: nudge.name,
+            oldNudge,
             slug,
             name: validatedData.name,
             description: validatedData.description || null,
@@ -588,6 +617,8 @@ export const updateNudge = async (
                     : null,
             creatorId: user.id
         });
+
+        revalidatePath(`/nudges/${slug}`);
 
         return { success: true, nudge };
     } catch (error) {
@@ -700,7 +731,7 @@ export const getNudgeBySlug = async (slug: string) => {
             where: {
                 slug
             },
-            include: { recipients: true }
+            include: { recipients: true, team: true }
         });
 
         if (!nudge) return null;

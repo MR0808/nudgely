@@ -7,25 +7,19 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Check, ChevronDown, Crown, Users, CheckSquare } from 'lucide-react';
-import { NudgeTeamSelectorProps, UserTeam } from '@/types/nudge';
+import { NudgeTeamSelectorProps } from '@/types/nudge';
 
 const NudgeTeamSelector = ({
     returnTeams,
     selectedTeam,
-    setSelectedTeam
+    setSelectedTeam,
+    allTeamOption
 }: NudgeTeamSelectorProps) => {
     const [teams, setTeams] = useState(returnTeams || []);
-    const [currentTeam, setCurrentTeam] = useState<UserTeam | null>(
-        selectedTeam ? selectedTeam : teams[0]
-    );
-
-    const switchTeam = (newTeam: UserTeam) => {
-        setSelectedTeam(newTeam);
-        setCurrentTeam(newTeam);
-    };
 
     return (
         <div className="space-y-2">
@@ -42,12 +36,12 @@ const NudgeTeamSelector = ({
                             <div className="flex items-center gap-2 min-w-0">
                                 <div className="w-6 h-6 bg-primary rounded flex items-center justify-center flex-shrink-0">
                                     <span className="text-primary-foreground text-xs font-medium">
-                                        {currentTeam?.name.charAt(0)}
+                                        {selectedTeam?.name.charAt(0)}
                                     </span>
                                 </div>
                                 <div className="flex flex-row items-start min-w-0 gap-5">
                                     <span className="truncate text-sm font-medium max-w-[120px]">
-                                        {currentTeam?.name}
+                                        {selectedTeam?.name}
                                     </span>
                                 </div>
                             </div>
@@ -56,10 +50,43 @@ const NudgeTeamSelector = ({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-80" align="start">
+                    <DropdownMenuItem
+                        onClick={() => setSelectedTeam(allTeamOption)}
+                        className="flex items-center justify-between p-3 cursor-pointer"
+                    >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center flex-shrink-0">
+                                <span className="text-primary-foreground text-xs font-medium">
+                                    A
+                                </span>
+                            </div>
+                            <div className="flex flex-col min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-sm font-medium truncate">
+                                        All
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-1">
+                                        <Users className="h-3 w-3" />
+                                        {allTeamOption.memberCount}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <CheckSquare className="h-3 w-3" />
+                                        {allTeamOption.nudgesCount}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {selectedTeam?.id === 'all' && (
+                            <Check className="h-4 w-4 flex-shrink-0" />
+                        )}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     {teams.map((team) => (
                         <DropdownMenuItem
                             key={team.id}
-                            onClick={() => switchTeam(team)}
+                            onClick={() => setSelectedTeam(team)}
                             className="flex items-center justify-between p-3 cursor-pointer"
                         >
                             <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -84,12 +111,12 @@ const NudgeTeamSelector = ({
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <CheckSquare className="h-3 w-3" />
-                                            {team.tasksCount}
+                                            {team.nudgesCount}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            {team.id === currentTeam?.id && (
+                            {team.id === selectedTeam?.id && (
                                 <Check className="h-4 w-4 flex-shrink-0" />
                             )}
                         </DropdownMenuItem>

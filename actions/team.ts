@@ -100,7 +100,7 @@ export const getUserTeams = async () => {
             name: membership.team.name,
             role: membership.role,
             memberCount: membership.team.members.length,
-            tasksCount: membership.team.nudges.length
+            nudgesCount: membership.team.nudges.length
         }));
     } catch (error) {
         console.log(error);

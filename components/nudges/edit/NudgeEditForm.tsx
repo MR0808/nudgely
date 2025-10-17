@@ -1,7 +1,7 @@
 'use client';
 
 import type * as z from 'zod';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,8 +15,7 @@ import NudgeCreateFormBasicInformation from '@/components/nudges/form/NudgeCreat
 import NudgeCreateFormScheduleSettings from '@/components/nudges/form/NudgeCreateFormScheduleSettings';
 import NudgeCreateFormEndDate from '@/components/nudges/form/NudgeCreateFormEndDate';
 import NudgeCreateFormRecipients from '@/components/nudges/form/NudgeCreateFormRecipients';
-import { createNudge } from '@/actions/nudges';
-import { logNudgeCreated } from '@/actions/audit/audit-nudge';
+import { updateNudge } from '@/actions/nudges';
 
 const NudgeEditForm = ({
     nudge,
@@ -56,23 +55,17 @@ const NudgeEditForm = ({
     const onSubmit = async (data: z.infer<typeof CreateNudgeSchema>) => {
         setSubmitMessage(null);
         startTransition(async () => {
-            // const result = await createNudge(data);
-            // if (result.nudge) {
-            //     if (userSession) {
-            //         await logNudgeCreated(userSession.user.id, {
-            //             nudgeId: result.nudge.id,
-            //             teamName: result.nudge.name
-            //         });
-            //     }
-            //     toast.success('Nudge successfully created');
-            //     router.push(`/nudges/${result.nudge.slug}`);
-            // } else {
-            //     setSubmitMessage({
-            //         type: 'error',
-            //         message: result.error || 'Failed to create nudge'
-            //     });
-            //     toast.error(result.error);
-            // }
+            const result = await updateNudge(data, nudge.id);
+            if (result.nudge) {
+                toast.success('Nudge successfully updated');
+                router.push(`/nudges/${nudge.slug}`);
+            } else {
+                setSubmitMessage({
+                    type: 'error',
+                    message: result.error || 'Failed to update nudge'
+                });
+                toast.error(result.error);
+            }
         });
     };
 
@@ -125,7 +118,7 @@ const NudgeEditForm = ({
                         disabled={isPending}
                         className="px-12 text-lg bg-secondary hover:bg-secondary/90 text-secondary-foreground disabled:opacity-50"
                     >
-                        {isPending ? 'Creating...' : 'Create Nudge'}
+                        {isPending ? 'Updating...' : 'Update Nudge'}
                     </Button>
                 </div>
             </form>
