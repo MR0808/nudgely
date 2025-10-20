@@ -4,7 +4,7 @@
 // const plans = [
 //     {
 //         name: 'Free',
-//         price: 0,
+//         level: 1,
 //         maxAdmin: 1,
 //         maxUsers: 3,
 //         maxTeams: 1,
@@ -21,7 +21,7 @@
 //     },
 //     {
 //         name: 'Starter',
-//         price: 1900,
+//         level: 2,
 //         maxAdmin: 0,
 //         maxUsers: 10,
 //         maxTeams: 2,
@@ -87,7 +87,6 @@
 //                 data: {
 //                     slug,
 //                     name: plan.name,
-//                     price: plan.price,
 //                     maxAdmin: plan.maxAdmin,
 //                     maxUsers: plan.maxUsers,
 //                     maxTeams: plan.maxTeams,

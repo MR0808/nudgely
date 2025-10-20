@@ -562,11 +562,29 @@ export const updateNudge = async (
 
         // Add new recipients
         if (recipientsToAdd.length > 0) {
+            let newRecipients: {
+                name: string;
+                email: string;
+                userId: string | null;
+            }[] = [];
+            for (const recipient of recipientsToAdd) {
+                let userId: string | null = null;
+                const recipientUser = await prisma.user.findUnique({
+                    where: { email: recipient.email }
+                });
+                if (recipientUser) userId = recipientUser.id;
+                newRecipients.push({
+                    name: recipient.name,
+                    email: recipient.email,
+                    userId
+                });
+            }
             await prisma.nudgeRecipient.createMany({
-                data: recipientsToAdd.map((recipient) => ({
+                data: newRecipients.map((recipient) => ({
                     nudgeId,
                     name: recipient.name,
-                    email: recipient.email
+                    email: recipient.email,
+                    userId: recipient.userId
                 }))
             });
         }
@@ -731,7 +749,16 @@ export const getNudgeBySlug = async (slug: string) => {
             where: {
                 slug
             },
-            include: { recipients: true, team: true }
+            include: {
+                recipients: true,
+                team: true,
+                instances: {
+                    include: {
+                        reminders: true,
+                        completion: { include: { user: true } }
+                    }
+                }
+            }
         });
 
         if (!nudge) return null;

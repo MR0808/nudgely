@@ -146,32 +146,32 @@ const NudgeDetailPage = async (props: { params: ParamsSlug }) => {
                     <CardTitle>History</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {/* <div className="space-y-2">
-                        {mockNudge.history.map((h) => (
+                    <div className="space-y-2">
+                        {nudge.instances.map((instance) => (
                             <div
-                                key={h.id}
+                                key={instance.id}
                                 className="flex justify-between items-center border-b py-2 text-sm"
                             >
-                                <span>{h.date}</span>
+                                <span>{instance.createdAt.toISOString()}</span>
                                 <span
                                     className={`font-medium ${
-                                        h.status === 'Completed'
+                                        instance.status === 'COMPLETED'
                                             ? 'text-green-600'
-                                            : h.status === 'Failed'
+                                            : instance.status === 'FAILED'
                                               ? 'text-red-600'
                                               : 'text-gray-600'
                                     }`}
                                 >
-                                    {h.status}
+                                    {instance.status}
                                 </span>
-                                {h.completedBy && (
+                                {instance.completion && (
                                     <span className="text-gray-500 text-xs">
-                                        by {h.completedBy}
+                                        by {instance.completion.completedBy}
                                     </span>
                                 )}
                             </div>
                         ))}
-                    </div> */}
+                    </div>
                 </CardContent>
             </Card>
         </div>

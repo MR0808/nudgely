@@ -164,6 +164,7 @@ model User {
   nudges             Nudge[]
   nudgeCompletions   NudgeCompletion[]
   nudgeRecipients    NudgeRecipient[]
+  ReminderEvent      ReminderEvent[]
 
   @@map("users")
 }
@@ -595,6 +596,10 @@ model Nudge {
   endDate             DateTime?
   endAfterOccurrences Int?
 
+  // Tracking fields for cron job
+  startDate             DateTime  @default(now()) // When to start sending nudges
+  lastInstanceCreatedAt DateTime? // Last time we created a NudgeInstance (prevents duplicates)
+
   team        Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId      String
   creator     User              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
@@ -608,6 +613,8 @@ model Nudge {
 
   @@index([frequency])
   @@index([endType])
+  @@index([status])
+  @@index([lastInstanceCreatedAt])
   @@map("nudges")
 }
 
@@ -623,10 +630,10 @@ model NudgeInstance {
   completedAt  DateTime?
   failedAt     DateTime?
 
-  nudge       Nudge             @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
-  nudgeId     String
-  reminders   ReminderEvent[]
-  completions NudgeCompletion[]
+  nudge      Nudge            @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
+  nudgeId    String
+  reminders  ReminderEvent[]
+  completion NudgeCompletion?
 
   @@index([scheduledFor])
   @@index([status])
@@ -667,6 +674,8 @@ model ReminderEvent {
 
   completedBy  String?
   completedAt  DateTime?
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId       String?
   completionIp String?
   completionUa String?
 
@@ -689,7 +698,7 @@ model NudgeCompletion {
   nudge           Nudge         @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
   nudgeId         String
   nudgeInstance   NudgeInstance @relation(fields: [nudgeInstanceId], references: [id], onDelete: Cascade)
-  nudgeInstanceId String
+  nudgeInstanceId String        @unique
   user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId          String?
 
