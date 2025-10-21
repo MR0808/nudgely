@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
                 // Create ReminderEvent records for each recipient
                 const reminderEvents = await Promise.all(
                     nudge.recipients.map((recipient) =>
-                        prisma.reminderEvent.create({
+                        prisma.nudgeRecipientEvent.create({
                             data: {
                                 nudgeInstanceId: nudgeInstance.id,
                                 recipientEmail: recipient.email,
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
                 });
 
                 // Mark reminder events as sent (after email sending succeeds)
-                await prisma.reminderEvent.updateMany({
+                await prisma.nudgeRecipientEvent.updateMany({
                     where: {
                         nudgeInstanceId: nudgeInstance.id
                     },

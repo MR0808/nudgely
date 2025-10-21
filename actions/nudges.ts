@@ -754,7 +754,7 @@ export const getNudgeBySlug = async (slug: string) => {
                 team: true,
                 instances: {
                     include: {
-                        reminders: true,
+                        events: true,
                         completion: { include: { user: true } }
                     }
                 }

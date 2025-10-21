@@ -139,32 +139,32 @@ model User {
   banReason     String?
   banExpires    DateTime?
 
-  sessions           Session[]
-  accounts           Account[]
-  gender             Gender?
-  dateOfBirth        DateTime?
-  jobTitle           String?
-  phoneNumber        String?             @unique
-  bio                String?
-  phoneVerified      Boolean             @default(false)
-  status             UserStatus          @default(ACTIVE)
-  timezone           String? // IANA timezone identifier
-  locale             String? // Language/locale preference
-  country            Country?            @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  countryId          String?
-  region             Region?             @relation(fields: [regionId], references: [id], onDelete: Cascade)
-  regionId           String?
-  emailChangeRecords EmailChangeRecord[]
-  phoneChangeRecords PhoneChangeRecord[]
-  auditLogs          AuditLog[]
-  company            Company[]
-  companyMember      CompanyMember[]
-  teams              Team[]
-  teamMembers        TeamMember[]
-  nudges             Nudge[]
-  nudgeCompletions   NudgeCompletion[]
-  nudgeRecipients    NudgeRecipient[]
-  ReminderEvent      ReminderEvent[]
+  sessions             Session[]
+  accounts             Account[]
+  gender               Gender?
+  dateOfBirth          DateTime?
+  jobTitle             String?
+  phoneNumber          String?               @unique
+  bio                  String?
+  phoneVerified        Boolean               @default(false)
+  status               UserStatus            @default(ACTIVE)
+  timezone             String? // IANA timezone identifier
+  locale               String? // Language/locale preference
+  country              Country?              @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  countryId            String?
+  region               Region?               @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  regionId             String?
+  emailChangeRecords   EmailChangeRecord[]
+  phoneChangeRecords   PhoneChangeRecord[]
+  auditLogs            AuditLog[]
+  company              Company[]
+  companyMember        CompanyMember[]
+  teams                Team[]
+  teamMembers          TeamMember[]
+  nudges               Nudge[]
+  nudgeCompletions     NudgeCompletion[]
+  nudgeRecipients      NudgeRecipient[]
+  nudgeRecipientEvents NudgeRecipientEvent[]
 
   @@map("users")
 }
@@ -630,9 +630,9 @@ model NudgeInstance {
   completedAt  DateTime?
   failedAt     DateTime?
 
-  nudge      Nudge            @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
+  nudge      Nudge                 @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
   nudgeId    String
-  reminders  ReminderEvent[]
+  events     NudgeRecipientEvent[]
   completion NudgeCompletion?
 
   @@index([scheduledFor])
@@ -657,7 +657,7 @@ model NudgeRecipient {
   @@map("nudge_recipients")
 }
 
-model ReminderEvent {
+model NudgeRecipientEvent {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -682,7 +682,7 @@ model ReminderEvent {
   nudgeInstance   NudgeInstance @relation(fields: [nudgeInstanceId], references: [id], onDelete: Cascade)
   nudgeInstanceId String
 
-  @@map("reminder_events")
+  @@map("nudge_recipient_events")
 }
 
 model NudgeCompletion {

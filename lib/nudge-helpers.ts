@@ -19,8 +19,11 @@ export function calculateNextOccurrence(nudge: {
 }): Date | null {
     const now = new Date();
 
-    // Parse time (format: "HH:mm" in 24-hour format)
-    const [hours, minutes] = nudge.timeOfDay.split(':').map(Number);
+    let timeString = nudge.timeOfDay;
+    if (timeString.includes('AM') || timeString.includes('PM')) {
+        timeString = convertTo24Hour(timeString);
+    }
+    const [hours, minutes] = timeString.split(':').map(Number);
 
     // Convert current time to nudge's timezone
     const nudgeTime = new Date(
@@ -65,18 +68,32 @@ export function calculateNextOccurrence(nudge: {
 
         candidateDate.setDate(candidateDate.getDate() + daysToAdd);
 
-        // Now calculate how many week-intervals have passed since this first occurrence
-        const weeksSinceFirst = Math.floor(
-            (nudgeTime.getTime() - candidateDate.getTime()) /
-                (1000 * 60 * 60 * 24 * 7)
-        );
-        const intervalsPassed = Math.floor(weeksSinceFirst / nudge.interval);
+        // Check if candidateDate is today and within a reasonable window (past 2 hours)
+        const nudgeTimeMs = nudgeTime.getTime();
+        const candidateDateMs = candidateDate.getTime();
+        const hoursSinceCandidate =
+            (nudgeTimeMs - candidateDateMs) / (1000 * 60 * 60);
 
-        // Calculate next occurrence
-        nextDate = new Date(candidateDate);
-        nextDate.setDate(
-            candidateDate.getDate() + (intervalsPassed + 1) * nudge.interval * 7
-        );
+        // If we're on the same day as the candidate and within 2 hours after scheduled time,
+        // this IS the occurrence we should process
+        if (hoursSinceCandidate >= 0 && hoursSinceCandidate < 2) {
+            nextDate = candidateDate;
+        } else {
+            // Calculate how many week-intervals have passed since the first occurrence
+            const weeksSinceFirst = Math.floor(
+                (nudgeTimeMs - candidateDateMs) / (1000 * 60 * 60 * 24 * 7)
+            );
+            const intervalsPassed = Math.floor(
+                weeksSinceFirst / nudge.interval
+            );
+
+            // Calculate next occurrence
+            nextDate = new Date(candidateDate);
+            nextDate.setDate(
+                candidateDate.getDate() +
+                    (intervalsPassed + 1) * nudge.interval * 7
+            );
+        }
     } else if (nudge.frequency === Frequency.MONTHLY) {
         // Monthly frequency: every X months on specific day or nth occurrence from reference date
         nextDate = new Date(referenceDate);
@@ -351,10 +368,12 @@ export function shouldCreateInstance(
         }
     }
 
-    // Only create instances for occurrences within the next 24 hours
+    // This accounts for cron delays, server time drift, and processing time
     const hoursUntilOccurrence =
         (nextOccurrence.getTime() - Date.now()) / (1000 * 60 * 60);
-    if (hoursUntilOccurrence < 0 || hoursUntilOccurrence > 24) {
+
+    // Accept occurrences from 2 hours ago up to 24 hours in the future
+    if (hoursUntilOccurrence < -2 || hoursUntilOccurrence > 24) {
         return false;
     }
 
