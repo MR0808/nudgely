@@ -6,8 +6,8 @@ const siteMetadata = {
         'Nudgely is a simple SaaS for recurring task reminders via email. Perfect for teams, startups, and solopreneurs. Never miss a task again.',
     language: 'en-au',
     theme: 'system', // system, dark or light
-    siteUrl: 'https://www.buxmate.com', // your website URL
-    siteLogo: '/images/logo/logo.png',
+    siteUrl: 'https://www.nudgelyapp.com', // your website URL
+    siteLogo: '/logo.png',
     email: 'mark@buxmate.com',
     twitter: 'https://twitter.com/buxmate',
     facebook: 'https://www.facebook.com/profile.php?id=61571110355312',
