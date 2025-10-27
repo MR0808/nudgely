@@ -58,7 +58,7 @@ const NudgeEditForm = ({
             const result = await updateNudge(data, nudge.id);
             if (result.nudge) {
                 toast.success('Nudge successfully updated');
-                router.push(`/nudges/${nudge.slug}`);
+                router.push(`/nudges/${result.nudge.slug}`);
             } else {
                 setSubmitMessage({
                     type: 'error',
