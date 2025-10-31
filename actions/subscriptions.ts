@@ -1,15 +1,12 @@
 'use server';
 import Stripe from 'stripe';
-import { stringify } from 'csv-stringify/sync';
 
 // import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
 import { authCheckServer } from '@/lib/authCheck';
-import { error } from 'console';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-09-30.clover'
+    apiVersion: '2025-10-29.clover'
 });
 
 export const createCheckoutSessions = async (
