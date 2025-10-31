@@ -46,7 +46,7 @@ export async function generateMetadata({
     };
 }
 
-const TeamMembersPage = async (props: { params: ParamsSlug }) => {
+const TeamMembersPage = async (props: { params: Promise<ParamsSlug> }) => {
     const { slug } = await props.params;
     const userSession = await authCheck(`/team/${slug}/members`);
 

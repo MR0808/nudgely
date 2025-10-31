@@ -47,7 +47,7 @@ export async function generateMetadata({
     };
 }
 
-const EditNudgePage = async (props: { params: ParamsSlug }) => {
+const EditNudgePage = async (props: { params: Promise<ParamsSlug> }) => {
     const { slug } = await props.params;
     const userSession = await authCheck(`/nudges/edit/${slug}`);
     const nudge = await getNudgeBySlug(slug);

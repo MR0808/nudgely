@@ -31,7 +31,7 @@ export function generateMetadata(): Metadata {
     };
 }
 
-const RegisterCompanyAdminPage = async (props: { params: ParamsToken }) => {
+const RegisterCompanyAdminPage = async (props: { params: Promise<ParamsToken> }) => {
     await isLoggedIn();
 
     const { token } = await props.params;
