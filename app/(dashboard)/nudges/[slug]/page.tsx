@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { formatInTimeZone } from 'date-fns-tz';
 
 import { authCheck } from '@/lib/authCheck';
 import siteMetadata from '@/utils/siteMetaData';
-import { ParamsSlug } from '@/types/global';
+import type { ParamsSlug } from '@/types/global';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -53,6 +54,11 @@ const NudgeDetailPage = async (props: { params: Promise<ParamsSlug> }) => {
     const userSession = await authCheck(`/nudges/${slug}`);
 
     const nudge = await getNudgeBySlug(slug);
+
+    const formatDate = (date: Date, timeZone: string) => {
+        console.log(date, timeZone);
+        return formatInTimeZone(date, timeZone, 'hh:mm a dd/MM/yyyy');
+    };
 
     if (!nudge) {
         return (
@@ -146,28 +152,145 @@ const NudgeDetailPage = async (props: { params: Promise<ParamsSlug> }) => {
                     <CardTitle>History</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-2">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b">
+                                    <th className="text-left py-3 px-4 font-semibold text-sm">
+                                        Created At
+                                    </th>
+                                    <th className="text-left py-3 px-4 font-semibold text-sm">
+                                        Status
+                                    </th>
+                                    <th className="text-left py-3 px-4 font-semibold text-sm">
+                                        Completed At
+                                    </th>
+                                    <th className="text-left py-3 px-4 font-semibold text-sm">
+                                        Completed By
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {nudge.instances.map((instance) => (
+                                    <tr
+                                        key={instance.id}
+                                        className="border-b last:border-0 hover:bg-muted/50 transition-colors"
+                                    >
+                                        <td className="py-3 px-4 text-sm">
+                                            {formatDate(
+                                                instance.createdAt,
+                                                nudge.timezone
+                                            )}
+                                        </td>
+                                        <td className="py-3 px-4">
+                                            <Badge
+                                                variant={
+                                                    instance.status ===
+                                                    'COMPLETED'
+                                                        ? 'default'
+                                                        : instance.status ===
+                                                            'FAILED'
+                                                          ? 'destructive'
+                                                          : 'secondary'
+                                                }
+                                                className={
+                                                    instance.status ===
+                                                    'COMPLETED'
+                                                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                                        : ''
+                                                }
+                                            >
+                                                {instance.status}
+                                            </Badge>
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-muted-foreground">
+                                            {instance.completion?.createdAt
+                                                ? formatDate(
+                                                      instance.completion
+                                                          .createdAt,
+                                                      nudge.timezone
+                                                  )
+                                                : '—'}
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-muted-foreground">
+                                            {instance.completion
+                                                ?.completedByName || '—'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-4">
                         {nudge.instances.map((instance) => (
                             <div
                                 key={instance.id}
-                                className="flex justify-between items-center border-b py-2 text-sm"
+                                className="border rounded-lg p-4 space-y-3"
                             >
-                                <span>{instance.createdAt.toISOString()}</span>
-                                <span
-                                    className={`font-medium ${
-                                        instance.status === 'COMPLETED'
-                                            ? 'text-green-600'
-                                            : instance.status === 'FAILED'
-                                              ? 'text-red-600'
-                                              : 'text-gray-600'
-                                    }`}
-                                >
-                                    {instance.status}
-                                </span>
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="text-xs text-muted-foreground mb-1">
+                                            Created At
+                                        </p>
+                                        <p className="text-sm font-medium">
+                                            {formatDate(
+                                                instance.createdAt,
+                                                nudge.timezone
+                                            )}
+                                        </p>
+                                    </div>
+                                    <Badge
+                                        variant={
+                                            instance.status === 'COMPLETED'
+                                                ? 'default'
+                                                : instance.status === 'FAILED'
+                                                  ? 'destructive'
+                                                  : 'secondary'
+                                        }
+                                        className={
+                                            instance.status === 'COMPLETED'
+                                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                                : ''
+                                        }
+                                    >
+                                        {instance.status}
+                                    </Badge>
+                                </div>
                                 {instance.completion && (
-                                    <span className="text-gray-500 text-xs">
-                                        by {instance.completion.completedBy}
-                                    </span>
+                                    <>
+                                        <Separator />
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground mb-1">
+                                                    Completed At
+                                                </p>
+                                                <p className="text-sm">
+                                                    {instance.completion
+                                                        ?.createdAt
+                                                        ? formatDate(
+                                                              instance
+                                                                  .completion
+                                                                  .createdAt,
+                                                              nudge.timezone
+                                                          )
+                                                        : '—'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground mb-1">
+                                                    Completed By
+                                                </p>
+                                                <p className="text-sm">
+                                                    {instance.completion
+                                                        ?.completedByName ||
+                                                        '—'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         ))}
