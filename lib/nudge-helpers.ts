@@ -1,4 +1,4 @@
-import { Frequency, MonthlyType, EndType } from '@prisma/client';
+import { Frequency, MonthlyType, EndType } from '@/generated/prisma';
 
 /**
  * Calculate the next occurrence date for a nudge based on its frequency settings
