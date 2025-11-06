@@ -2,7 +2,14 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { shouldSendNudge } from '@/lib/nudge-helpers';
+import {
+    shouldSendNudge,
+    hasNudgeEnded,
+    wouldOccurAfterEndDate,
+    calculateNextOccurrence,
+    formatScheduleInfo
+} from '@/lib/nudge-helpers';
+import { sendNudgeEmail } from '@/lib/mail';
 
 export async function GET(request: NextRequest) {
     try {
@@ -39,6 +46,7 @@ export async function GET(request: NextRequest) {
             processed: 0,
             sent: 0,
             skipped: 0,
+            finished: 0,
             errors: 0
         };
 
@@ -47,6 +55,52 @@ export async function GET(request: NextRequest) {
             results.processed++;
 
             try {
+                const instanceCount = await prisma.nudgeInstance.count({
+                    where: { nudgeId: nudge.id }
+                });
+
+                const hasEnded = await hasNudgeEnded(
+                    {
+                        endType: nudge.endType,
+                        endDate: nudge.endDate,
+                        endAfterOccurrences: nudge.endAfterOccurrences
+                    },
+                    instanceCount
+                );
+
+                if (hasEnded) {
+                    console.log(
+                        `[v0] Nudge ${nudge.name} (${nudge.id}) has reached its end condition`
+                    );
+
+                    // Update nudge status to FINISHED
+                    await prisma.nudge.update({
+                        where: { id: nudge.id },
+                        data: { status: 'FINISHED' }
+                    });
+
+                    results.finished++;
+                    continue;
+                }
+
+                const nextOccurrence = calculateNextOccurrence(nudge);
+                if (
+                    nextOccurrence &&
+                    wouldOccurAfterEndDate(nextOccurrence, nudge)
+                ) {
+                    console.log(
+                        `[v0] Next occurrence for ${nudge.name} would be after end date, marking as FINISHED`
+                    );
+
+                    await prisma.nudge.update({
+                        where: { id: nudge.id },
+                        data: { status: 'FINISHED' }
+                    });
+
+                    results.finished++;
+                    continue;
+                }
+
                 // Check if this nudge should be sent now
                 const shouldSend = shouldSendNudge(nudge);
 
@@ -89,38 +143,98 @@ export async function GET(request: NextRequest) {
                     }
                 });
 
-                // Create ReminderEvent records for each recipient
-                const reminderEvents = await Promise.all(
-                    nudge.recipients.map((recipient) =>
-                        prisma.nudgeRecipientEvent.create({
-                            data: {
-                                nudgeInstanceId: nudgeInstance.id,
-                                recipientEmail: recipient.email,
-                                recipientName: recipient.name,
-                                token: `${nudgeInstance.id}-${recipient.id}-${Date.now()}`,
-                                expiresAt: new Date(
-                                    Date.now() + 30 * 24 * 60 * 60 * 1000
-                                ), // 30 days
-                                sent: false
-                            }
-                        })
-                    )
-                );
+                const scheduleInfo = formatScheduleInfo({
+                    frequency: nudge.frequency,
+                    interval: nudge.interval,
+                    dayOfWeek: nudge.dayOfWeek,
+                    monthlyType: nudge.monthlyType,
+                    dayOfMonth: nudge.dayOfMonth,
+                    nthOccurrence: nudge.nthOccurrence,
+                    dayOfWeekForMonthly: nudge.dayOfWeekForMonthly,
+                    timeOfDay: nudge.timeOfDay
+                });
+
+                let successfulSends = 0;
+                let failedSends = 0;
+
+                for (const recipient of nudge.recipients) {
+                    try {
+                        // Generate unique token for this recipient event
+                        const token = `${nudgeInstance.id}-${recipient.id}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+                        const expiresAt = new Date(
+                            Date.now() + 30 * 24 * 60 * 60 * 1000
+                        ); // 30 days
+
+                        // Create the completion URL with token
+                        const completionUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://yourdomain.com'}/complete/${token}`;
+
+                        // Create NudgeRecipientEvent record
+                        const recipientEvent =
+                            await prisma.nudgeRecipientEvent.create({
+                                data: {
+                                    nudgeInstanceId: nudgeInstance.id,
+                                    recipientEmail: recipient.email,
+                                    recipientName: recipient.name,
+                                    token: token,
+                                    expiresAt: expiresAt,
+                                    sent: false,
+                                    attempts: 0
+                                }
+                            });
+
+                        // Send the email
+                        const emailResult = await sendNudgeEmail({
+                            // email: recipient.email,
+                            email: 'kram@grebnesor.com',
+                            name: recipient.name,
+                            nudgeName: nudge.name,
+                            nudgeDescription: nudge.description,
+                            completionUrl: completionUrl,
+                            scheduleInfo
+                        });
+
+                        // Update the recipient event based on send result
+                        if (emailResult.success) {
+                            await prisma.nudgeRecipientEvent.update({
+                                where: { id: recipientEvent.id },
+                                data: {
+                                    sent: true,
+                                    attempts: 1,
+                                    lastAttemptAt: new Date()
+                                }
+                            });
+                            successfulSends++;
+                            console.log(
+                                `[v0] Email sent successfully to ${recipient.email}`
+                            );
+                        } else {
+                            await prisma.nudgeRecipientEvent.update({
+                                where: { id: recipientEvent.id },
+                                data: {
+                                    sent: false,
+                                    attempts: 1,
+                                    lastAttemptAt: new Date(),
+                                    errorMessage:
+                                        emailResult.error || 'Unknown error'
+                                }
+                            });
+                            failedSends++;
+                            console.error(
+                                `[v0] Failed to send email to ${recipient.email}: ${emailResult.error}`
+                            );
+                        }
+                    } catch (recipientError) {
+                        failedSends++;
+                        console.error(
+                            `[v0] Error processing recipient ${recipient.email}:`,
+                            recipientError
+                        );
+                    }
+                }
 
                 console.log(
-                    `[v0] Created ${reminderEvents.length} reminder events for nudge ${nudge.id}`
+                    `[v0] Email sending complete: ${successfulSends} successful, ${failedSends} failed`
                 );
-
-                // TODO: Send emails to recipients
-                // This is where you would integrate with your email service (Resend, SendGrid, etc.)
-                // For each reminderEvent, send an email to the recipient
-                // Example:
-                // await sendEmail({
-                //   to: reminderEvent.recipientEmail,
-                //   subject: nudge.name,
-                //   body: nudge.description,
-                //   token: reminderEvent.token
-                // });
 
                 // Update the nudge's lastInstanceCreatedAt
                 await prisma.nudge.update({
@@ -130,15 +244,22 @@ export async function GET(request: NextRequest) {
                     }
                 });
 
-                // Mark reminder events as sent (after email sending succeeds)
-                await prisma.nudgeRecipientEvent.updateMany({
-                    where: {
-                        nudgeInstanceId: nudgeInstance.id
-                    },
+                // Update instance status based on email results
+                const instanceStatus =
+                    failedSends === 0
+                        ? 'COMPLETED'
+                        : failedSends === nudge.recipients.length
+                          ? 'FAILED'
+                          : 'COMPLETED';
+
+                await prisma.nudgeInstance.update({
+                    where: { id: nudgeInstance.id },
                     data: {
-                        sent: true,
-                        lastAttemptAt: new Date(),
-                        attempts: 1
+                        status: instanceStatus,
+                        completedAt:
+                            instanceStatus === 'COMPLETED' ? new Date() : null,
+                        failedAt:
+                            instanceStatus === 'FAILED' ? new Date() : null
                     }
                 });
 
