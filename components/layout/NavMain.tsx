@@ -1,8 +1,7 @@
 'use client';
 
 import { type LucideIcon } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
-import { useOptimistic, useTransition } from 'react';
+import { usePathname } from 'next/navigation';
 
 import {
     SidebarGroup,

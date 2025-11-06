@@ -694,6 +694,7 @@ model NudgeCompletion {
   ipAddress       String?
   userAgent       String?
   reminderToken   String?
+  comments        String?
 
   nudge           Nudge         @relation(fields: [nudgeId], references: [id], onDelete: Cascade)
   nudgeId         String

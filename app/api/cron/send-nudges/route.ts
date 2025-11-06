@@ -161,12 +161,24 @@ export async function GET(request: NextRequest) {
                     try {
                         // Generate unique token for this recipient event
                         const token = `${nudgeInstance.id}-${recipient.id}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-                        const expiresAt = new Date(
+                        let expiresAt = new Date(
                             Date.now() + 30 * 24 * 60 * 60 * 1000
                         ); // 30 days
 
+                        if (nudge.frequency === 'DAILY') {
+                            expiresAt = new Date(
+                                Date.now() + 24 * 60 * 60 * 1000
+                            ); // 1 days
+                        }
+
+                        if (nudge.frequency === 'WEEKLY') {
+                            expiresAt = new Date(
+                                Date.now() + 7 * 24 * 60 * 60 * 1000
+                            ); // 7 days
+                        }
+
                         // Create the completion URL with token
-                        const completionUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://yourdomain.com'}/complete/${token}`;
+                        const completionUrl = `${process.env.NEXT_PUBLIC_APP_URL}/complete/${token}`;
 
                         // Create NudgeRecipientEvent record
                         const recipientEvent =
@@ -189,7 +201,7 @@ export async function GET(request: NextRequest) {
                             name: recipient.name,
                             nudgeName: nudge.name,
                             nudgeDescription: nudge.description,
-                            completionUrl: completionUrl,
+                            completionUrl,
                             scheduleInfo
                         });
 

@@ -22,7 +22,7 @@ export const getCompanyNudgeCount = async () => {
         throw new Error('Not authorised');
     }
 
-    const { user, company, userCompany } = userSession;
+    const { company, userCompany } = userSession;
 
     if (userCompany.role !== 'COMPANY_ADMIN') {
         throw new Error('Not authorised');
@@ -64,7 +64,7 @@ export const getTotalCompanyNudges = async () => {
         throw new Error('Not authorised');
     }
 
-    const { user, company, userCompany } = userSession;
+    const { company } = userSession;
     try {
         const nudges = await prisma.nudge.findMany({
             where: { team: { companyId: company.id } }
@@ -83,7 +83,7 @@ export const getTeamNudges = async (teamId: string) => {
         throw new Error('Not authorised');
     }
 
-    const { user, company, userCompany } = userSession;
+    const { company } = userSession;
     try {
         if (teamId === 'all') {
             const nudges = await prisma.nudge.findMany({
@@ -112,7 +112,7 @@ export const createNudge = async (
         throw new Error('Not authorised');
     }
 
-    const { user, company, userCompany } = userSession;
+    const { user, company } = userSession;
     try {
         const plan = await prisma.plan.findUnique({
             where: { id: company.planId }
@@ -341,7 +341,7 @@ export const updateNudge = async (
         throw new Error('Not authorised');
     }
 
-    const { user, company, userCompany } = userSession;
+    const { user, company } = userSession;
     try {
         const plan = await prisma.plan.findUnique({
             where: { id: company.planId }
@@ -742,8 +742,6 @@ export const getNudgeBySlug = async (slug: string) => {
         if (!userSession) {
             throw new Error('Not authorised');
         }
-
-        const { user } = userSession;
 
         const nudge = await prisma.nudge.findUnique({
             where: {
