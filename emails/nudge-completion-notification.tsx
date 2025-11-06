@@ -19,7 +19,7 @@ interface NudgeCompletionNotificationEmailProps {
     nudgeDescription?: string;
     completedBy: string;
     completedAt: string;
-    comment?: string;
+    comments?: string;
     isCreator?: boolean;
 }
 
@@ -33,7 +33,7 @@ export const NudgeCompletionNotificationEmail = ({
     nudgeDescription,
     completedBy,
     completedAt,
-    comment,
+    comments,
     isCreator = false
 }: NudgeCompletionNotificationEmailProps) => {
     const previewText = `${nudgeName} has been completed by ${completedBy}`;
@@ -85,12 +85,12 @@ export const NudgeCompletionNotificationEmail = ({
                             <Text style={detailValue}>{completedAt}</Text>
                         </Section>
 
-                        {comment && (
+                        {comments && (
                             <>
                                 <Hr style={divider} />
                                 <Section style={commentSection}>
                                     <Text style={commentLabel}>Comment:</Text>
-                                    <Text style={commentText}>{comment}</Text>
+                                    <Text style={commentText}>{comments}</Text>
                                 </Section>
                             </>
                         )}

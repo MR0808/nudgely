@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { CompleteNudgeResult } from '@/types/complete';
+import { sendCompletionNotificationEmail } from '@/lib/mail';
 
 export const getRecipientEvent = async (token: string) => {
     try {
@@ -71,7 +72,8 @@ export const completeNudge = async ({
                                 name: true,
                                 description: true,
                                 frequency: true,
-                                interval: true
+                                interval: true,
+                                timezone: true
                             }
                         },
                         completion: true
@@ -164,6 +166,77 @@ export const completeNudge = async ({
             const next = new Date(recipientEvent.nudgeInstance.scheduledFor);
             next.setMonth(next.getMonth() + nudge.interval);
             nextScheduled = next.toISOString();
+        }
+
+        try {
+            // Get all recipients and creator for this nudge
+            const nudgeWithDetails = await prisma.nudge.findUnique({
+                where: { id: recipientEvent.nudgeInstance.nudge.id },
+                include: {
+                    recipients: true,
+                    creator: {
+                        select: {
+                            email: true,
+                            name: true
+                        }
+                    }
+                }
+            });
+
+            if (nudgeWithDetails) {
+                // Create a map to deduplicate by email
+                const emailMap = new Map<
+                    string,
+                    { email: string; name: string; isCreator: boolean }
+                >();
+
+                // Add all recipients
+                nudgeWithDetails.recipients.forEach((recipient) => {
+                    emailMap.set(recipient.email, {
+                        email: recipient.email,
+                        name: recipient.name,
+                        isCreator: false
+                    });
+                });
+
+                // Add creator (will overwrite if they're also a recipient, marking them as creator)
+                emailMap.set(nudgeWithDetails.creator.email, {
+                    email: nudgeWithDetails.creator.email,
+                    name: nudgeWithDetails.creator.name,
+                    isCreator: true
+                });
+
+                // Format completion date
+                const completedAtFormatted = new Intl.DateTimeFormat('en-US', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                    timeZone: nudgeWithDetails.timezone
+                }).format(completion.createdAt);
+
+                // Send emails to all unique recipients
+                const emailPromises = Array.from(emailMap.values()).map(
+                    (recipient) =>
+                        sendCompletionNotificationEmail({
+                            email: 'kram@grebnesor.com',
+                            name: recipient.name,
+                            nudgeName: nudge.name,
+                            nudgeDescription: nudge.description,
+                            completedBy: recipientEvent.recipientName,
+                            completedAt: completedAtFormatted,
+                            comments,
+                            isCreator: recipient.isCreator
+                        })
+                );
+
+                // Send all emails in parallel
+                await Promise.all(emailPromises);
+            }
+        } catch (emailError) {
+            // Log error but don't fail the completion
+            console.error(
+                '[v0] Error sending completion notification emails:',
+                emailError
+            );
         }
 
         return {

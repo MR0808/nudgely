@@ -16,6 +16,8 @@ import DowngradeEmailTemplate from '@/emails/downgrade-email';
 import DowngradeWarningEmailTemplate from '@/emails/downgrade-warning';
 import CancelSubscriptionEmailTemplate from '@/emails/cancel-subscription';
 import NudgeReminderTemplate from '@/emails/nudge-reminder';
+import { SendCompletionNotificationProps } from '@/types/complete';
+import NudgeCompletionNotificationEmail from '@/emails/nudge-completion-notification';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -267,7 +269,7 @@ export const sendNudgeEmail = async ({
     completionUrl: string;
     scheduleInfo?: string;
 }) => {
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
         from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
         to: email,
         subject: `Nudgely - Reminder: ${nudgeName}`,
@@ -288,4 +290,46 @@ export const sendNudgeEmail = async ({
     }
 
     return { success: true, error: null };
+};
+
+export const sendCompletionNotificationEmail = async ({
+    email,
+    name,
+    nudgeName,
+    nudgeDescription,
+    completedBy,
+    completedAt,
+    comments,
+    isCreator
+}: SendCompletionNotificationProps) => {
+    try {
+        const { error } = await resend.emails.send({
+            from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
+            to: email,
+            subject: `✓ Completed: ${nudgeName}`,
+            react: NudgeCompletionNotificationEmail({
+                name,
+                nudgeName,
+                nudgeDescription: nudgeDescription || undefined,
+                completedBy,
+                completedAt,
+                comments: comments || undefined,
+                isCreator
+            })
+        });
+
+        if (error) {
+            return {
+                success: false,
+                error: error.message || 'Failed to send email'
+            };
+        }
+
+        return { success: true, error: null };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        };
+    }
 };

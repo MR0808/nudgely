@@ -20,3 +20,14 @@ export interface CompletionFormProps {
     recipientName: string;
     scheduledFor: Date;
 }
+
+export interface SendCompletionNotificationProps {
+    email: string;
+    name: string;
+    nudgeName: string;
+    nudgeDescription?: string | null;
+    completedBy: string;
+    completedAt: string;
+    comments?: string | null;
+    isCreator?: boolean;
+}
