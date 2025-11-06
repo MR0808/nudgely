@@ -12,7 +12,8 @@ export type AuditCategory =
     | 'nudge'
     | 'company'
     | 'invite'
-    | 'subscription';
+    | 'subscription'
+    | 'completion';
 
 export type AuditAction =
     // Authentication actions
@@ -72,6 +73,9 @@ export type AuditAction =
     | 'nudge.nudge_paused'
     | 'nudge.nudge_resumed'
     | 'nudge.nudge_updated'
+
+    // Completion actions
+    | 'completion.completed_nudge'
 
     // Subscription actions
     | 'subscription.create_subscription'

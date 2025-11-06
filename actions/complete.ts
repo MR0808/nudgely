@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { CompleteNudgeResult } from '@/types/complete';
 import { sendCompletionNotificationEmail } from '@/lib/mail';
+import { logNudgeCompleted } from '@/actions/audit/audit-complete';
 
 export const getRecipientEvent = async (token: string) => {
     try {
@@ -238,6 +239,10 @@ export const completeNudge = async ({
                 emailError
             );
         }
+        await logNudgeCompleted(userId || '', {
+            nudgeId: recipientEvent.nudgeInstance.nudgeId,
+            comments
+        });
 
         return {
             success: true,

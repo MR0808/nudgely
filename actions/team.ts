@@ -8,7 +8,12 @@ import { authCheckServer } from '@/lib/authCheck';
 import { TeamSchema } from '@/schemas/team';
 import { checkCompanyTeamLimits } from '@/lib/team';
 import { revalidatePath } from 'next/cache';
-import { logTeamDeleted, logTeamEnabled } from '@/actions/audit/audit-team';
+import {
+    logTeamCreated,
+    logTeamDeleted,
+    logTeamEnabled,
+    logTeamUpdated
+} from '@/actions/audit/audit-team';
 import { TeamStatus } from '@/generated/prisma';
 
 const slugger = new GithubSlugger();
