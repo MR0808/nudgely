@@ -34,6 +34,10 @@ const NudgeCreateFormTeamSelection = ({
     const form = useFormContext<CreateNudgeSchemaData>();
     const selectedTeamId = form.watch('teamId');
 
+    console.log(selectedTeamId);
+
+    console.log(returnTeams);
+
     return (
         <Card>
             <CardHeader>

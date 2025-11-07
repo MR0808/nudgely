@@ -54,14 +54,39 @@ const NudgeCreateFormTemplateSelect = ({
         }
     };
 
-    // Group templates by category
-    const templatesByCategory = categories.reduce(
+    const teamTemplates = templates.filter((t) => t.isTeam);
+    const globalTemplates = templates.filter((t) => !t.isTeam);
+
+    // Group team templates by category
+    const teamTemplatesByCategory = categories.reduce(
         (acc, category) => {
-            acc[category] = templates.filter((t) => t.category === category);
+            const categoryTemplates = teamTemplates.filter(
+                (t) => t.category === category
+            );
+            if (categoryTemplates.length > 0) {
+                acc[category] = categoryTemplates;
+            }
             return acc;
         },
         {} as Record<string, CombinedTemplate[]>
     );
+
+    // Group global templates by category
+    const globalTemplatesByCategory = categories.reduce(
+        (acc, category) => {
+            const categoryTemplates = globalTemplates.filter(
+                (t) => t.category === category
+            );
+            if (categoryTemplates.length > 0) {
+                acc[category] = categoryTemplates;
+            }
+            return acc;
+        },
+        {} as Record<string, CombinedTemplate[]>
+    );
+
+    const teamCategories = Object.keys(teamTemplatesByCategory);
+    const globalCategories = Object.keys(globalTemplatesByCategory);
 
     return (
         <FormField
@@ -94,28 +119,59 @@ const NudgeCreateFormTemplateSelect = ({
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                            {categories.map((category) => (
-                                <SelectGroup key={category}>
-                                    <SelectLabel>{category}</SelectLabel>
-                                    {templatesByCategory[category].map(
-                                        (template) => (
-                                            <SelectItem
-                                                key={template.id}
-                                                value={template.id}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    {template.isTeam ? (
+                            {teamCategories.length > 0 && (
+                                <>
+                                    {teamCategories.map((category) => (
+                                        <SelectGroup key={`team-${category}`}>
+                                            <SelectLabel>
+                                                {category} (Team)
+                                            </SelectLabel>
+                                            {teamTemplatesByCategory[
+                                                category
+                                            ].map((template) => (
+                                                <SelectItem
+                                                    key={template.id}
+                                                    value={template.id}
+                                                >
+                                                    <div className="flex items-center gap-2">
                                                         <Building2 className="h-4 w-4 text-muted-foreground" />
-                                                    ) : (
+                                                        <span>
+                                                            {template.name}
+                                                        </span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    ))}
+                                </>
+                            )}
+
+                            {globalCategories.length > 0 && (
+                                <>
+                                    {globalCategories.map((category) => (
+                                        <SelectGroup key={`global-${category}`}>
+                                            <SelectLabel>
+                                                {category} (Global)
+                                            </SelectLabel>
+                                            {globalTemplatesByCategory[
+                                                category
+                                            ].map((template) => (
+                                                <SelectItem
+                                                    key={template.id}
+                                                    value={template.id}
+                                                >
+                                                    <div className="flex items-center gap-2">
                                                         <Globe className="h-4 w-4 text-muted-foreground" />
-                                                    )}
-                                                    <span>{template.name}</span>
-                                                </div>
-                                            </SelectItem>
-                                        )
-                                    )}
-                                </SelectGroup>
-                            ))}
+                                                        <span>
+                                                            {template.name}
+                                                        </span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    ))}
+                                </>
+                            )}
                         </SelectContent>
                     </Select>
                     <FormMessage />

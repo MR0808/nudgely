@@ -16,6 +16,7 @@ import NudgeCreateFormScheduleSettings from '@/components/nudges/form/NudgeCreat
 import NudgeCreateFormEndDate from '@/components/nudges/form/NudgeCreateFormEndDate';
 import NudgeCreateFormRecipients from '@/components/nudges/form/NudgeCreateFormRecipients';
 import { updateNudge } from '@/actions/nudges';
+import NudgeCreateFormTeamSelection from '@/components/nudges/form/NudgeCreateFormTeamSelection';
 
 const NudgeEditForm = ({
     nudge,
@@ -76,7 +77,7 @@ const NudgeEditForm = ({
                 className="max-w-5xl mx-auto p-6 space-y-8"
             >
                 <div className="text-center space-y-2">
-                    <h1 className="text-4xl font-bold">Create Nudge</h1>
+                    <h1 className="text-4xl font-bold">Edit Nudge</h1>
                     <p className="text-muted-foreground text-lg">
                         Set up automated email reminders with flexible
                         scheduling
@@ -96,7 +97,11 @@ const NudgeEditForm = ({
                 )}
 
                 {/* Basic Information */}
-                <NudgeCreateFormBasicInformation returnTeams={returnTeams} />
+                <NudgeCreateFormTeamSelection
+                    returnTeams={returnTeams}
+                    plan={plan}
+                />
+                <NudgeCreateFormBasicInformation />
 
                 {/* Schedule Settings */}
                 <NudgeCreateFormScheduleSettings />
