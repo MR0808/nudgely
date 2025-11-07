@@ -19,7 +19,7 @@ export async function generateMetadata({
     if (!team) {
         return { title: 'Team not found' };
     }
-    const title = `${team.team.name} | Members`;
+    const title = `Team - ${team.team.name} | Members`;
     const description = 'Team members edit';
     const images = [siteMetadata.siteLogo];
     return {

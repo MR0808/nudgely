@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 
 import { Card, CardContent } from '@/components/ui/card';
+import siteMetadata from '@/utils/siteMetaData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { authCheck } from '@/lib/authCheck';
 import DashboardContent from '@/components/dashboard/DashboardContent';
@@ -8,6 +10,34 @@ import { getDashboardStats } from '@/actions/dashboard';
 import { getUserTeams } from '@/actions/team';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const title = `Dashboard`;
+    const description = 'View your company dashboard.';
+    const images = [siteMetadata.siteLogo];
+    return {
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            url: `${siteMetadata.siteUrl}/`,
+            siteName: siteMetadata.title,
+            locale: 'en_AU',
+            type: 'article',
+            publishedTime: '2024-08-15 13:00:00',
+            modifiedTime: '2024-08-15 13:00:00',
+            images,
+            authors: [siteMetadata.author]
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images
+        }
+    };
+}
 
 const DashboardPage = async () => {
     const { userCompany } = await authCheck();

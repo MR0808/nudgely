@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
         return { title: 'Company not found' };
     }
 
-    const title = `${company.name}`;
+    const title = `Company - ${company.name}`;
     const description = 'View company details and settings.';
     const images = [siteMetadata.siteLogo];
     return {

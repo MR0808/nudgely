@@ -32,7 +32,7 @@ export async function generateMetadata({
     if (!team) {
         return { title: 'Team not found' };
     }
-    const title = `${team.team.name}`;
+    const title = `Team - ${team.team.name}`;
     const description = 'Team edit';
     const images = [siteMetadata.siteLogo];
     return {

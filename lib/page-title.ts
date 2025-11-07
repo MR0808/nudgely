@@ -16,17 +16,19 @@ type RoutePattern = {
     title: string | ((slug: string) => string);
 };
 
-const ROUTES: RoutePattern[] = [
-    { pattern: '/', title: 'Dashboard' },
-    { pattern: '/settings', title: 'Settings' },
-    { pattern: '/company', title: 'Company Settings' },
-    { pattern: '/team/create', title: 'Create a Team' },
-    { pattern: '/team', title: 'Teams & Users' },
-    { pattern: '/nudges', title: 'Nudges' },
-    { pattern: '/nudges/create', title: 'Create Nudge' },
-    { pattern: '/billing', title: 'Billing' },
-    { pattern: '/subscription', title: 'Change Subscription' }
-];
+const ROUTES: RoutePattern[] = [];
+
+// const ROUTES: RoutePattern[] = [
+//     { pattern: '/', title: 'Dashboard' },
+//     { pattern: '/settings', title: 'Settings' },
+//     { pattern: '/company', title: 'Company Settings' },
+//     { pattern: '/team/create', title: 'Create a Team' },
+//     { pattern: '/team', title: 'Teams & Users' },
+//     { pattern: '/nudges', title: 'Nudges' },
+//     { pattern: '/nudges/create', title: 'Create Nudge' },
+//     { pattern: '/billing', title: 'Billing' },
+//     { pattern: '/subscription', title: 'Change Subscription' }
+// ];
 
 // --------------------------------------------
 // 🔹 Static lookup helper
