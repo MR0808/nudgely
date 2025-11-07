@@ -135,6 +135,11 @@ enum TemplateCategory {
   ADMIN
   PR
   PERSONAL
+  PROJECTMANAGEMENT
+  REPORTS
+  EVENTS
+  MEETINGS
+  OTHER
 }
 
 enum TemplateTier {
@@ -746,10 +751,9 @@ model TeamTemplate {
   updatedAt DateTime @updatedAt
 
   name        String
-  description String?
-  category    String
-  variables   Json    @default("[]")
-  isActive    Boolean @default(true)
+  description String
+  category    TemplateCategory
+  isActive    Boolean          @default(true)
 
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId String

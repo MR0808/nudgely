@@ -53,6 +53,7 @@ export interface NudgeEditFormProps {
 
 export interface NudgeCreateFormBasicInformationProps {
     returnTeams: UserTeams;
+    plan: Plan;
 }
 
 export interface NudgeCreateFormRecipientsProps {

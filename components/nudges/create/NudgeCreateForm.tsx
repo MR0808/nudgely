@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { NudgeCreateFormProps } from '@/types/nudge';
 import NudgeCreateFormBasicInformation from '@/components/nudges/form/NudgeCreateFormBasicInformation';
+import NudgeCreateFormTeamSelection from '@/components/nudges/form/NudgeCreateFormTeamSelection';
 import NudgeCreateFormScheduleSettings from '@/components/nudges/form/NudgeCreateFormScheduleSettings';
 import NudgeCreateFormEndDate from '@/components/nudges/form/NudgeCreateFormEndDate';
 import NudgeCreateFormRecipients from '@/components/nudges/form/NudgeCreateFormRecipients';
@@ -101,7 +102,14 @@ const NudgeCreateForm = ({
                 )}
 
                 {/* Basic Information */}
-                <NudgeCreateFormBasicInformation returnTeams={returnTeams} />
+                <NudgeCreateFormTeamSelection
+                    returnTeams={returnTeams}
+                    plan={plan}
+                />
+                <NudgeCreateFormBasicInformation
+                // returnTeams={returnTeams}
+                // plan={plan}
+                />
 
                 {/* Schedule Settings */}
                 <NudgeCreateFormScheduleSettings />

@@ -41,7 +41,7 @@ const data = {
         },
         {
             title: 'Templates',
-            url: '/Templates',
+            url: '/templates',
             icon: FileText
         }
     ],

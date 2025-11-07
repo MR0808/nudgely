@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { authCheck } from '@/lib/authCheck';
 import siteMetadata from '@/utils/siteMetaData';
 import NudgeCreateForm from '@/components/nudges/create/NudgeCreateForm';
-import NudgePreview from '@/components/nudges/create/NudgePreview';
 import { getUserTeams } from '@/actions/team';
 import { Button } from '@/components/ui/button';
 import { getPlan } from '@/actions/plan';

@@ -18,6 +18,7 @@ export const CreateNudgeSchema = z
         name: z.string().min(1, 'Name is required'),
         description: z.string().optional(),
         teamId: z.string().min(1, 'Team is required'),
+        templateId: z.string().optional(),
         frequency: z.enum(['DAILY', 'WEEKLY', 'MONTHLY']),
         interval: z
             .number()

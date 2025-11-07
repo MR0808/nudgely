@@ -16,35 +16,20 @@ import {
     FormLabel,
     FormMessage
 } from '@/components/ui/form';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { CreateNudgeSchemaData } from '@/schemas/nudge';
-import { NudgeCreateFormBasicInformationProps } from '@/types/nudge';
+import type { CreateNudgeSchemaData } from '@/schemas/nudge';
 
-const NudgeCreateFormBasicInformation = ({
-    returnTeams
-}: NudgeCreateFormBasicInformationProps) => {
+const NudgeCreateFormBasicInformation = () => {
     const form = useFormContext<CreateNudgeSchemaData>();
 
     return (
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle className="text-2xl">
-                        Basic Information
-                    </CardTitle>
-                    <CardDescription>
-                        Give your nudge a name and description and select your
-                        team
-                    </CardDescription>
-                </div>
+            <CardHeader>
+                <CardTitle className="text-2xl">Basic Information</CardTitle>
+                <CardDescription>
+                    Give your nudge a name and description
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <FormField
@@ -87,41 +72,9 @@ const NudgeCreateFormBasicInformation = ({
                         </FormItem>
                     )}
                 />
-
-                <FormField
-                    control={form.control}
-                    name="teamId"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="text-base font-semibold">
-                                Team
-                            </FormLabel>
-                            <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                            >
-                                <FormControl>
-                                    <SelectTrigger className="border-border text-foreground bg-white w-full">
-                                        <SelectValue placeholder="Select a team" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {returnTeams.map((team) => (
-                                        <SelectItem
-                                            key={team.id}
-                                            value={team.id}
-                                        >
-                                            {team.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
             </CardContent>
         </Card>
     );
 };
+
 export default NudgeCreateFormBasicInformation;
