@@ -1,17 +1,17 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch';
 import { ProfileDropdown } from '@/components/layout/ProfileDropdown';
 import NotificationsDropdown from '@/components/layout/NotificationsDropdown';
-import getPageTitle from '@/lib/page-title';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export function SiteHeader() {
-    const pathname = usePathname();
-    const pageTitle = getPageTitle(pathname);
+    const pageTitle = usePageTitle();
 
     return (
         <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">

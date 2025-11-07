@@ -25,13 +25,10 @@ export async function POST(req: Request) {
             process.env.STRIPE_WEBHOOK_SECRET!
         );
     } catch (err) {
-        console.log(err);
         return new Response(`Webhook Error: ${(err as Error).message}`, {
             status: 400
         });
     }
-
-    console.log(event.type);
 
     switch (event.type) {
         case 'subscription_schedule.updated': {

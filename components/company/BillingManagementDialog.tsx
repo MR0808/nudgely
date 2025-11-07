@@ -43,9 +43,6 @@ export function BillingManagementDialog({
         // setIsLoading(true);
         // try {
         //     // Mock upgrade/downgrade logic
-        //     console.log(
-        //         `[v0] Upgrading to ${planId} plan for company ${companyId}`
-        //     );
         //     // Simulate API call
         //     await new Promise((resolve) => setTimeout(resolve, 1500));
         //     setOpen(false);

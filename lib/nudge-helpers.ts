@@ -50,15 +50,6 @@ export function calculateNextOccurrence(nudge: {
         nextDate.setDate(referenceDate.getDate() + daysToAdd);
         nextDate.setHours(hours, minutes, 0, 0);
     } else if (nudge.frequency === Frequency.WEEKLY) {
-        console.log('[v0] WEEKLY calculation starting');
-        console.log('[v0] nudge.dayOfWeek:', nudge.dayOfWeek);
-        console.log('[v0] nudge.interval:', nudge.interval);
-        console.log('[v0] nudge.timeOfDay:', nudge.timeOfDay);
-        console.log('[v0] nudge.timezone:', nudge.timezone);
-        console.log('[v0] referenceDate:', referenceDate);
-        console.log('[v0] now (server time):', now);
-        console.log('[v0] nowInTimezone:', nowInTimezone);
-
         // Weekly frequency: every X weeks on specific day from reference date
         if (nudge.dayOfWeek === null || nudge.dayOfWeek === undefined) {
             return null;
@@ -74,36 +65,15 @@ export function calculateNextOccurrence(nudge: {
 
         candidateDate.setDate(candidateDate.getDate() + daysToAdd);
 
-        console.log('[v0] candidateDate (first occurrence):', candidateDate);
-        console.log(
-            '[v0] refDay:',
-            refDay,
-            'targetDay:',
-            targetDay,
-            'daysToAdd:',
-            daysToAdd
-        );
-
         // Check if candidateDate is today and within a reasonable window (past 2 hours)
         const nudgeTimeMs = now.getTime();
         const candidateDateMs = candidateDate.getTime();
         const hoursSinceCandidate =
             (nudgeTimeMs - candidateDateMs) / (1000 * 60 * 60);
 
-        console.log('[v0] nudgeTimeMs:', nudgeTimeMs);
-        console.log('[v0] candidateDateMs:', candidateDateMs);
-        console.log('[v0] hoursSinceCandidate:', hoursSinceCandidate);
-        console.log(
-            '[v0] Check: hoursSinceCandidate >= 0 && hoursSinceCandidate < 2:',
-            hoursSinceCandidate >= 0 && hoursSinceCandidate < 2
-        );
-
         // If we're on the same day as the candidate and within 2 hours after scheduled time,
         // this IS the occurrence we should process
         if (hoursSinceCandidate >= 0 && hoursSinceCandidate < 2) {
-            console.log(
-                '[v0] Returning candidateDate (same day, within window)'
-            );
             nextDate = candidateDate;
         } else {
             // Calculate how many week-intervals have passed since the first occurrence
@@ -114,28 +84,14 @@ export function calculateNextOccurrence(nudge: {
                 weeksSinceFirst / nudge.interval
             );
 
-            console.log('[v0] weeksSinceFirst:', weeksSinceFirst);
-            console.log('[v0] intervalsPassed:', intervalsPassed);
-
             // Calculate next occurrence
             nextDate = new Date(candidateDate);
             nextDate.setDate(
                 candidateDate.getDate() +
                     (intervalsPassed + 1) * nudge.interval * 7
             );
-
-            console.log('[v0] Calculated nextDate:', nextDate);
         }
     } else if (nudge.frequency === Frequency.MONTHLY) {
-        console.log('[v0] MONTHLY calculation starting');
-        console.log('[v0] nudge.dayOfMonth:', nudge.dayOfMonth);
-        console.log('[v0] nudge.interval:', nudge.interval);
-        console.log('[v0] nudge.timeOfDay:', nudge.timeOfDay);
-        console.log('[v0] nudge.timezone:', nudge.timezone);
-        console.log('[v0] referenceDate (UTC):', referenceDate.toISOString());
-        console.log('[v0] now (server UTC):', now.toISOString());
-        console.log('[v0] nowInTimezone:', nowInTimezone);
-
         if (nudge.monthlyType === MonthlyType.DAY_OF_MONTH) {
             if (!nudge.dayOfMonth) {
                 return null;
@@ -146,7 +102,6 @@ export function calculateNextOccurrence(nudge: {
                 referenceDate,
                 nudge.timezone
             );
-            console.log('[v0] refComponents:', refComponents);
 
             // Start with current month and the target day
             let candidateYear = nowInTimezone.year;
@@ -178,11 +133,6 @@ export function calculateNextOccurrence(nudge: {
                 nudge.timezone
             );
 
-            console.log(
-                '[v0] Initial candidateDate (UTC):',
-                candidateDate.toISOString()
-            );
-
             // Handle months with fewer days (e.g., Feb 30 -> Feb 28/29)
             const candidateComponents = getDateComponentsInTimezone(
                 candidateDate,
@@ -197,10 +147,6 @@ export function calculateNextOccurrence(nudge: {
                     hours,
                     minutes,
                     nudge.timezone
-                );
-                console.log(
-                    '[v0] Adjusted for short month:',
-                    candidateDate.toISOString()
                 );
             }
 
@@ -219,10 +165,6 @@ export function calculateNextOccurrence(nudge: {
                     minutes,
                     nudge.timezone
                 );
-                console.log(
-                    '[v0] Moved forward to after reference:',
-                    candidateDate.toISOString()
-                );
             }
 
             // Calculate how many month-intervals have passed since candidate
@@ -240,9 +182,6 @@ export function calculateNextOccurrence(nudge: {
                 (candDate.month - refDate.month);
             const intervalsPassed = Math.floor(monthsSinceRef / nudge.interval);
 
-            console.log('[v0] monthsSinceRef:', monthsSinceRef);
-            console.log('[v0] intervalsPassed:', intervalsPassed);
-
             // If we need to skip intervals, calculate the next valid occurrence
             if (monthsSinceRef % nudge.interval !== 0) {
                 const monthsToAdd =
@@ -259,10 +198,6 @@ export function calculateNextOccurrence(nudge: {
                     hours,
                     minutes,
                     nudge.timezone
-                );
-                console.log(
-                    '[v0] Adjusted for interval:',
-                    candidateDate.toISOString()
                 );
             }
 
@@ -323,8 +258,6 @@ export function calculateNextOccurrence(nudge: {
     } else {
         return null;
     }
-
-    console.log('[v0] Final nextDate (UTC):', nextDate.toISOString());
 
     // Ensure we don't return a date before the start date
     if (nextDate < nudge.startDate) {
@@ -553,7 +486,6 @@ export function shouldSendNudge(nudge: {
     }
 
     if (wouldOccurAfterEndDate(nextOccurrence, nudge)) {
-        console.log('[v0] Next occurrence would be after end date, skipping');
         return false;
     }
 

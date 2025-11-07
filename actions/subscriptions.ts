@@ -45,8 +45,6 @@ export const createCheckoutSessions = async (
             cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing`
         });
 
-        console.log(session);
-
         return { sessionId: session.id, url: session.url };
         // }
 
@@ -54,7 +52,6 @@ export const createCheckoutSessions = async (
         //     return { error: 'Company subscription not found' };
         // }
     } catch (error) {
-        console.log(error);
         return { error };
     }
 };
@@ -315,7 +312,6 @@ export const checkDowngradedPlan = async (id: string) => {
         }
         return true;
     } catch (error) {
-        console.log(error);
         return { error };
     }
 };

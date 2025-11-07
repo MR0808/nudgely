@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
         });
 
         if (subscriptions.length === 0) {
-            console.log('No subscriptions to activate today.');
             return NextResponse.json(
                 { message: 'No activations needed' },
                 { status: 200 }
@@ -62,7 +61,6 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        console.log(`Processed ${subscriptions.length} subscriptions.`);
         return NextResponse.json(
             {
                 message: `Activated ${subscriptions.length} subscriptions`,

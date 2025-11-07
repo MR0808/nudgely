@@ -394,46 +394,6 @@ export const removeCompanyAdminMember = async (memberId: string) => {
     }
 };
 
-export const changeCompanyMemberRole = async (
-    memberId: string,
-    newRole: 'COMPANY_ADMIN' | 'COMPANY_MEMBER'
-) => {
-    const userSession = await authCheckServer();
-
-    if (!userSession) {
-        return {
-            data: null,
-            error: 'Not authorised'
-        };
-    }
-
-    const { company, userCompany } = userSession;
-
-    if (userCompany.role !== 'COMPANY_ADMIN') {
-        return {
-            data: null,
-            error: 'Not authorised'
-        };
-    }
-    try {
-        console.log('[v0] Mock: Changing company member role', {
-            memberId,
-            newRole
-        });
-
-        // Mock: Update the role
-        console.log('[v0] Mock: Updated member role', { memberId, newRole });
-
-        // Mock: Create audit log
-        console.log('[v0] Mock: Created audit log for role change');
-
-        return { success: true };
-    } catch (error) {
-        console.error('Failed to change company member role:', error);
-        return { success: false, error: 'Failed to change member role' };
-    }
-};
-
 export const resendCompanyInvitation = async (id: string) => {
     const userSession = await authCheckServer();
 

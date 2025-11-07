@@ -22,7 +22,7 @@ export async function generateMetadata({
     if (!nudge) {
         return { title: 'Nudge not found' };
     }
-    const title = `${nudge.name}`;
+    const title = `Nudge - ${nudge.name}`;
     const description = 'Nudge view';
     const images = [siteMetadata.siteLogo];
     return {
@@ -56,7 +56,6 @@ const NudgeDetailPage = async (props: { params: Promise<ParamsSlug> }) => {
     const nudge = await getNudgeBySlug(slug);
 
     const formatDate = (date: Date, timeZone: string) => {
-        console.log(date, timeZone);
         return formatInTimeZone(date, timeZone, 'hh:mm a dd/MM/yyyy');
     };
 
