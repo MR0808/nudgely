@@ -124,6 +124,24 @@ enum BillingInterval {
   YEARLY
 }
 
+enum TemplateCategory {
+  TEAM
+  FINANCE
+  PRODUCTIVITY
+  LEADERSHIP
+  OPERATIONS
+  MARKETING
+  HR
+  ADMIN
+  PR
+  PERSONAL
+}
+
+enum TemplateTier {
+  FREE
+  PRO
+}
+
 model User {
   id        String   @id @default(uuid())
   createdAt DateTime
@@ -712,12 +730,11 @@ model GlobalTemplate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name        String  @unique
-  description String?
-  content     String
-  variables   Json    @default("[]")
-  isActive    Boolean @default(true)
-  sortOrder   Int     @default(0)
+  name        String           @unique
+  description String
+  category    TemplateCategory
+  tier        TemplateTier
+  isActive    Boolean          @default(true)
 
   @@map("global_templates")
 }
@@ -730,7 +747,7 @@ model TeamTemplate {
 
   name        String
   description String?
-  content     String
+  category    String
   variables   Json    @default("[]")
   isActive    Boolean @default(true)
 
