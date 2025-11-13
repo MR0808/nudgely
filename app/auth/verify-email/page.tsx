@@ -3,7 +3,6 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/lib/auth';
-
 import EmailVerificationForm from '@/components/auth/EmailVerificationForm';
 import AuthTemplate from '@/components/auth/AuthTemplate';
 import { resendEmailOTP } from '@/actions/verify-email';
