@@ -159,6 +159,7 @@ const NudgeCreateFormScheduleSettings = () => {
                                                 `${hour}:00 ${period}`
                                             );
                                         }}
+                                        disabled
                                     >
                                         <FormControl>
                                             <SelectTrigger className="border-border text-foreground bg-white w-24">
@@ -192,6 +193,7 @@ const NudgeCreateFormScheduleSettings = () => {
                                                 `${hour}:00 ${period}`
                                             );
                                         }}
+                                        disabled
                                     >
                                         <FormControl>
                                             <SelectTrigger className="border-border text-foreground bg-white w-24">

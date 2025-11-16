@@ -55,7 +55,7 @@ const NudgeCreateFormScheduleSettingsTimezone = () => {
                         Timezone
                     </FormLabel>
                     <Popover open={openTimezone} onOpenChange={setOpenTimezone}>
-                        <PopoverTrigger asChild className="w-full">
+                        <PopoverTrigger asChild className="w-full" disabled>
                             <FormControl>
                                 <Button
                                     variant="outline"

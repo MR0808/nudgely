@@ -26,7 +26,7 @@ export function SiteHeader() {
                 </div>
                 <div className="flex items-center gap-3 ">
                     <ThemeSwitch />
-                    <NotificationsDropdown />
+                    {/* <NotificationsDropdown /> */}
                     <ProfileDropdown />
                 </div>
             </div>

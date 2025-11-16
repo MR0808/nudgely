@@ -42,9 +42,10 @@ const NudgeCreateForm = ({
             teamId: initialTeam,
             interval: 1,
             endType: 'NEVER',
-            timezone: initialTimezone,
+            // timezone: initialTimezone,
+            timezone: 'Australia/Melbourne',
             recipients: [{ name: '', email: '' }],
-            timeOfDay: '9:00 AM',
+            timeOfDay: '12:00 PM',
             monthlyType: undefined, // or a default enum value
             dayOfMonth: undefined,
             nthOccurrence: undefined,
