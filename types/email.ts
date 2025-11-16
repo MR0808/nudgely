@@ -8,6 +8,7 @@ export interface SendDailySummaryEmailOptions {
     totalActiveNudges: number;
     totalFinishedNudges: number;
     teamStats: Array<{
+        companyName: string;
         teamName: string;
         nudgesSent: number;
         emailsSent: number;
