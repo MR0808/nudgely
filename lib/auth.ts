@@ -71,7 +71,8 @@ const options = {
                 required: true
             },
             role: {
-                type: ['USER', 'SITE_ADMIN'] as Array<SiteRole>
+                type: ['USER', 'SITE_ADMIN'] as Array<SiteRole>,
+                required: false
             },
             gender: {
                 type: ['MALE', 'FEMALE', 'OTHER', 'NOTSAY'] as Array<Gender>,

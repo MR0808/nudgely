@@ -78,8 +78,7 @@ export const registerInitial = async (
                 name,
                 lastName,
                 email,
-                password,
-                role: 'USER'
+                password
             }
         });
 

@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function UsersPage({
+export default async function UsersPage({
     searchParams
 }: {
-    searchParams: { [key: string]: string | string[] | undefined };
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+    const params = await searchParams;
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -30,7 +31,7 @@ export default function UsersPage({
             </Suspense>
 
             <Suspense fallback={<UserListSkeleton />}>
-                <UserList searchParams={searchParams} />
+                <UserList searchParams={params} />
             </Suspense>
         </div>
     );

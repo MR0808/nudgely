@@ -98,6 +98,71 @@ export async function unbanUser(userId: string) {
 }
 
 export async function deleteUser(userId: string) {
-    await prisma.user.delete({ where: { id: userId } });
+    await prisma.user.update({
+        where: { id: userId },
+        data: { status: 'DISABLED' as UserStatus }
+    });
     return { success: true };
+}
+
+export async function getUserDetails(userId: string) {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+            country: { select: { name: true } },
+            region: { select: { name: true } }
+        }
+    });
+
+    if (!user) {
+        throw new Error('User not found');
+    }
+
+    return user;
+}
+
+export async function getUserStats(userId: string) {
+    const [
+        totalCompanies,
+        totalTeams,
+        totalNudgesCreated,
+        totalNudgesCompleted,
+        lastSession
+    ] = await Promise.all([
+        prisma.company.count({ where: { creatorId: userId } }),
+        prisma.team.count({ where: { creatorId: userId } }),
+        prisma.nudge.count({ where: { creatorId: userId } }),
+        prisma.nudgeCompletion.count({ where: { userId } }),
+        prisma.session.findFirst({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            select: { createdAt: true }
+        })
+    ]);
+
+    return {
+        totalCompanies,
+        totalTeams,
+        totalNudgesCreated,
+        totalNudgesCompleted,
+        lastLoginAt: lastSession?.createdAt || null
+    };
+}
+
+export async function getUserAuditLogs(userId: string) {
+    const logs = await prisma.auditLog.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 50, // Limit to most recent 50 logs
+        select: {
+            id: true,
+            action: true,
+            category: true,
+            description: true,
+            ipAddress: true,
+            createdAt: true
+        }
+    });
+
+    return logs;
 }
