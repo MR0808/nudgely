@@ -76,3 +76,29 @@ export const authCheckOnboarding = async () => {
 
     return session;
 };
+
+export const authCheckAdmin = async (callbackUrl?: string) => {
+    const headerList = await headers();
+
+    const session = await auth.api.getSession({
+        headers: headerList
+    });
+
+    if (!session) {
+        if (callbackUrl) {
+            return redirect(
+                `/auth/login?callbackURL=${encodeURIComponent(callbackUrl)}`
+            );
+        } else {
+            return redirect('/auth/login');
+        }
+    }
+
+    console.log(session.user.role);
+
+    if (session.user.role !== 'SITE_ADMIN') {
+        return redirect('/');
+    }
+
+    return session;
+};

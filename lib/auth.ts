@@ -2,7 +2,7 @@ import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { createAuthMiddleware } from 'better-auth/api';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
-import { UserRole, Gender } from '@/generated/prisma';
+import { SiteRole, Gender } from '@/generated/prisma';
 import { admin, customSession, openAPI } from 'better-auth/plugins';
 
 import { prisma } from '@/lib/prisma';
@@ -71,7 +71,7 @@ const options = {
                 required: true
             },
             role: {
-                type: ['USER', 'ADMIN'] as Array<UserRole>
+                type: ['USER', 'SITE_ADMIN'] as Array<SiteRole>
             },
             gender: {
                 type: ['MALE', 'FEMALE', 'OTHER', 'NOTSAY'] as Array<Gender>,
@@ -134,8 +134,8 @@ const options = {
     plugins: [
         nextCookies(),
         admin({
-            defaultRole: UserRole.USER,
-            adminRoles: [UserRole.ADMIN],
+            defaultRole: SiteRole.USER,
+            adminRoles: [SiteRole.SITE_ADMIN],
             ac,
             roles
         })
