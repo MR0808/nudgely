@@ -1,9 +1,4 @@
-import {
-    getUsers,
-    getUserDetails,
-    getUserStats,
-    getUserAuditLogs
-} from '@/actions/admin/users';
+import { getUsers } from '@/actions/admin/users';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -35,17 +30,11 @@ export async function UserList({
     return (
         <div className="space-y-4">
             <div className="space-y-3">
-                {users.map(async (user) => {
+                {users.map((user) => {
                     const canModify = !(
                         currentUser.role === 'SITE_ADMIN' &&
                         user.role === 'SITE_ADMIN'
                     );
-
-                    const [userDetails, stats, auditLogs] = await Promise.all([
-                        getUserDetails(user.id),
-                        getUserStats(user.id),
-                        getUserAuditLogs(user.id)
-                    ]);
 
                     return (
                         <Card key={user.id} className="p-4">
@@ -117,12 +106,9 @@ export async function UserList({
                                         </div>
                                     </div>
                                 </div>
+
                                 <div className="flex items-center gap-1">
-                                    <UserInfoDialog
-                                        user={userDetails}
-                                        stats={stats}
-                                        auditLogs={auditLogs}
-                                    />
+                                    <UserInfoDialog user={user} />
                                     <UserActions
                                         user={user}
                                         canModify={canModify}

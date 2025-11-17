@@ -20,10 +20,6 @@ export default async function UsersPage({
                         Manage all users, roles, and permissions
                     </p>
                 </div>
-                <Button>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add User
-                </Button>
             </div>
 
             <Suspense fallback={<FiltersSkeleton />}>
