@@ -7,19 +7,12 @@ import {
     Settings,
     ChevronRight,
     ChevronLeft,
-    MoreHorizontal,
     Search
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 import DeleteTeamDialog from '@/components/team/view/DeleteTeamDialog';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
 import {
     Card,
     CardContent,

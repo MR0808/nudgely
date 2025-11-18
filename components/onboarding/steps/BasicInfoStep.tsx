@@ -1,7 +1,8 @@
 'use client';
 
 import { useFormContext } from 'react-hook-form';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 import {
     FormField,
@@ -13,14 +14,28 @@ import {
 import { Input } from '@/components/ui/input';
 import type { CompanyOnboardingData } from '@/schemas/onboarding';
 import ImageUploadField from '@/components/onboarding/steps/ImageUploadField';
+import { BasicInfoStepProps } from '@/types/onboarding';
 
-const BasicInfoStep = () => {
-    const [url, setUrl] = useState('');
+const BasicInfoStep = ({ image }: BasicInfoStepProps) => {
+    const [url, setUrl] = useState(image?.image || '');
 
     const form = useFormContext<CompanyOnboardingData>();
 
     return (
         <div className="space-y-6">
+            {/* {image && (
+                <div className="flex justify-center mb-4">
+                    <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-border">
+                        <Image
+                            src={image.image || '/placeholder.svg'}
+                            alt="Company Logo"
+                            fill
+                            className="object-cover"
+                        />
+                    </div>
+                </div>
+            )} */}
+
             {/* Logo Upload */}
             <FormField
                 control={form.control}

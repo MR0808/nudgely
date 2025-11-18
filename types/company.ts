@@ -15,6 +15,7 @@ import {
 } from '@/actions/companyMembers';
 import { getCompanyTeams } from '@/actions/team';
 import { SessionType } from '@/types/session';
+import { getCustomerPaymentInformation } from '@/actions/subscriptions';
 
 export type CompanyData = Awaited<ReturnType<typeof getCompany>>;
 
@@ -44,6 +45,12 @@ export type TeamsUpper = NonNullable<
 
 export type Teams = NonNullable<
     TeamsUpper extends { teams: infer T } ? T : never
+>;
+
+export type Details = Awaited<ReturnType<typeof getCustomerPaymentInformation>>;
+
+export type Payment = NonNullable<
+    Details extends { payment: infer T } ? T : never
 >;
 
 export interface CompanyProps {
@@ -120,10 +127,20 @@ export interface CompanyTeamsCardProps {
 export interface CompanyBillingCardProps {
     company: Company;
     nudgeCount: number;
+    payment: Payment | null;
+    nextBillingDate: Date | null;
 }
 
 export interface BillingManagementDialogProps {
     trigger: React.ReactNode;
     company: Company;
     plans: Plan[];
+}
+
+export interface CompanyCheckResult {
+    isCompanyAdmin: boolean;
+    companyId: string | null;
+    companyName: string | null;
+    isComplete: boolean;
+    missingFields: string[];
 }

@@ -536,6 +536,7 @@ model Team {
   description String?
   isFrozen    Boolean    @default(false)
   status      TeamStatus @default(ACTIVE)
+  defaultTeam Boolean    @default(false)
 
   // Relations
   company     Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)

@@ -12,6 +12,7 @@ import {
 } from '@/lib/location';
 import { getAllCompanySizes } from '@/lib/companySize';
 import { getAllIndustries } from '@/lib/industries';
+import { getCompany } from '@/actions/company';
 
 export async function generateMetadata(): Promise<Metadata> {
     const title = 'Onboarding';
@@ -50,6 +51,9 @@ const OnboardingPage = async () => {
     const country = await getCountryById(defaultCountry.id);
     const companySizes = await getAllCompanySizes();
     const industries = await getAllIndustries();
+    const { company, userCompany, image } = await getCompany();
+
+    if (!company) return null;
 
     return (
         <div className="min-h-screen bg-background pt-10">
@@ -60,6 +64,8 @@ const OnboardingPage = async () => {
                 companySizes={companySizes!}
                 industries={industries!}
                 userSession={userSession}
+                company={company}
+                image={image}
             />
         </div>
     );

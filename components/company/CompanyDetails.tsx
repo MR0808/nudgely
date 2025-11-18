@@ -2,7 +2,7 @@
 
 import { differenceInDays } from 'date-fns';
 import { useState } from 'react';
-import parsePhoneNumber, { PhoneNumber } from 'libphonenumber-js';
+import parsePhoneNumber from 'libphonenumber-js';
 
 import {
     Card,
@@ -206,7 +206,7 @@ const CompanyDetails = ({
                                         Timezone
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        {company.timezone || <br />}
+                                        {company.timezone || ''}
                                     </p>
                                 </div>
                             </div>
@@ -217,7 +217,7 @@ const CompanyDetails = ({
                                         Locale
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        {company.locale || <br />}
+                                        {company.locale || ''}
                                     </p>
                                 </div>
                             </div>
@@ -230,7 +230,7 @@ const CompanyDetails = ({
                                         Industry
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        {company.industry?.name || <br />}
+                                        {company.industry?.name || ''}
                                     </p>
                                 </div>
                             </div>
@@ -250,7 +250,7 @@ const CompanyDetails = ({
                                                 {company.companySize?.size}
                                             </>
                                         ) : (
-                                            <br />
+                                            ''
                                         )}
                                     </p>
                                 </div>

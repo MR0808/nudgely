@@ -20,29 +20,6 @@ import {
 import type { CompanyOnboardingData } from '@/schemas/onboarding';
 import { CompanySize, Industry } from '@/generated/prisma';
 
-const companySizes = [
-    { value: '1-10', label: '1-10 employees' },
-    { value: '11-50', label: '11-50 employees' },
-    { value: '51-200', label: '51-200 employees' },
-    { value: '201-500', label: '201-500 employees' },
-    { value: '501-1000', label: '501-1000 employees' },
-    { value: '1000+', label: '1000+ employees' }
-];
-
-const industries = [
-    { value: 'technology', label: 'Technology' },
-    { value: 'healthcare', label: 'Healthcare' },
-    { value: 'finance', label: 'Finance' },
-    { value: 'education', label: 'Education' },
-    { value: 'retail', label: 'Retail' },
-    { value: 'manufacturing', label: 'Manufacturing' },
-    { value: 'consulting', label: 'Consulting' },
-    { value: 'marketing', label: 'Marketing' },
-    { value: 'real-estate', label: 'Real Estate' },
-    { value: 'non-profit', label: 'Non-Profit' },
-    { value: 'other', label: 'Other' }
-];
-
 const AdditionalInfoStep = ({
     companySizes,
     industries
@@ -68,6 +45,12 @@ const AdditionalInfoStep = ({
                                 type="url"
                                 placeholder="https://www.yourcompany.com"
                                 {...field}
+                                onBlur={(e) => {
+                                    const value = e.target.value;
+                                    if (value && !/^https?:\/\//i.test(value)) {
+                                        field.onChange(`https://${value}`);
+                                    }
+                                }}
                                 className="border-border text-foreground"
                             />
                         </FormControl>

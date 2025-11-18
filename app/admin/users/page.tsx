@@ -4,12 +4,14 @@ import { UserFilters } from '@/components/admin/users/UserFilters';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { authCheckAdmin } from '@/lib/authCheck';
 
 export default async function UsersPage({
     searchParams
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+    await authCheckAdmin('/admin/users');
     const params = await searchParams;
     return (
         <div className="space-y-6">

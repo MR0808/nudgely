@@ -1,6 +1,17 @@
+import { getCompany } from '@/actions/company';
 import { CompanySize, Country, Industry, Region } from '@/generated/prisma';
 
 import { SessionType } from '@/types/session';
+
+export type CompanyData = Awaited<ReturnType<typeof getCompany>>;
+
+export type Company = NonNullable<
+    CompanyData extends { company: infer T } ? T : never
+>;
+
+export type Image = NonNullable<
+    CompanyData extends { image: infer T } ? T : never
+>;
 
 export interface CompanyOnboardingWizardProps {
     countryProp?: Country;
@@ -9,6 +20,12 @@ export interface CompanyOnboardingWizardProps {
     companySizes: CompanySize[];
     industries: Industry[];
     userSession: SessionType | null;
+    company: Company;
+    image: Image | null;
+}
+
+export interface BasicInfoStepProps {
+    image: Image | null;
 }
 
 export interface LocationProps {

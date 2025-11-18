@@ -1,8 +1,8 @@
 'use client';
 
 import type * as z from 'zod';
-import { useEffect, useState, useTransition } from 'react';
-import { useForm, SubmitErrorHandler } from 'react-hook-form';
+import { useState, useTransition } from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
@@ -29,8 +29,12 @@ import BasicInfoStep from '@/components/onboarding/steps/BasicInfoStep';
 import AddressStep from '@/components/onboarding/steps/AddressStep';
 import ContactStep from '@/components/onboarding/steps/ContactStep';
 import AdditionalInfoStep from '@/components/onboarding/steps/AdditionalInfoStep';
-import { updateCompany } from '@/actions/onboarding';
-import { logCompanyUpdated } from '@/actions/audit/audit-company';
+import {
+    saveBasicInfo,
+    saveAddress,
+    saveContact,
+    saveAdditionalInfo
+} from '@/actions/onboarding';
 
 const steps = [
     {
@@ -65,7 +69,9 @@ const CompanyOnboardingWizard = ({
     regions,
     companySizes,
     industries,
-    userSession
+    userSession,
+    company,
+    image
 }: CompanyOnboardingWizardProps) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [isPending, startTransition] = useTransition();
@@ -75,19 +81,20 @@ const CompanyOnboardingWizard = ({
         resolver: zodResolver(CompanyOnboardingSchema),
         defaultValues: {
             name: userSession?.company.name || '',
-            address1: '',
-            address2: '',
-            city: '',
-            region: '',
-            postalCode: '',
-            country: countryProp?.id || '',
-            timezone: '',
-            locale: '',
-            contactEmail: '',
-            contactPhone: '',
-            website: '',
-            companySize: '',
-            industry: ''
+            logo: company.image || '',
+            address1: company.address1 || '',
+            address2: company.address2 || '',
+            city: company.city || '',
+            region: company.regionId || '',
+            postalCode: company.postalCode || '',
+            country: company.countryId || countryProp?.id || '',
+            timezone: company.timezone || '',
+            locale: company.locale || '',
+            contactEmail: company.contactEmail || '',
+            contactPhone: company.contactPhone || '',
+            website: company.website || '',
+            companySize: company.companySizeId || '',
+            industry: company.industryId || ''
         }
     });
 
@@ -95,16 +102,94 @@ const CompanyOnboardingWizard = ({
         formState: { errors }
     } = form;
 
+    const saveCurrentStep = async () => {
+        const values = form.getValues();
+
+        try {
+            switch (currentStep) {
+                case 1: {
+                    const result = await saveBasicInfo({
+                        name: values.name,
+                        logo: values.logo
+                    });
+                    if (result.error) {
+                        toast.error(result.error);
+                        return false;
+                    }
+                    toast.success('Basic information saved');
+                    return true;
+                }
+                case 2: {
+                    const result = await saveAddress({
+                        address1: values.address1,
+                        address2: values.address2,
+                        city: values.city,
+                        region: values.region,
+                        postalCode: values.postalCode,
+                        country: values.country,
+                        timezone: values.timezone,
+                        locale: values.locale
+                    });
+                    if (result.error) {
+                        toast.error(result.error);
+                        return false;
+                    }
+                    toast.success('Address information saved');
+                    return true;
+                }
+                case 3: {
+                    const result = await saveContact({
+                        contactEmail: values.contactEmail,
+                        contactPhone: values.contactPhone
+                    });
+                    if (result.error) {
+                        toast.error(result.error);
+                        return false;
+                    }
+                    toast.success('Contact information saved');
+                    return true;
+                }
+                case 4: {
+                    const result = await saveAdditionalInfo({
+                        website: values.website,
+                        companySize: values.companySize,
+                        industry: values.industry
+                    });
+                    if (result.error) {
+                        toast.error(result.error);
+                        return false;
+                    }
+                    toast.success('Additional information saved');
+                    return true;
+                }
+                default:
+                    return true;
+            }
+        } catch (error) {
+            console.error('Error saving step:', error);
+            toast.error('Failed to save. Please try again.');
+            return false;
+        }
+    };
+
     const nextStep = async () => {
         const fieldsToValidate = getFieldsForStep(currentStep);
         const isValid = await form.trigger(fieldsToValidate);
 
         if (isValid) {
-            if (currentStep < steps.length) {
-                setCurrentStep(currentStep + 1);
-            } else {
-                onSubmit(form.getValues());
-            }
+            startTransition(async () => {
+                const saved = await saveCurrentStep();
+                if (saved) {
+                    if (currentStep < steps.length) {
+                        setCurrentStep(currentStep + 1);
+                    } else {
+                        setIsComplete(true);
+                        toast.success(
+                            'Company profile completed successfully!'
+                        );
+                    }
+                }
+            });
         }
     };
 
@@ -139,39 +224,15 @@ const CompanyOnboardingWizard = ({
         }
     };
 
-    const onSubmit = (values: z.infer<typeof CompanyOnboardingSchema>) => {
-        startTransition(async () => {
-            const data = await updateCompany(values);
-            if (data.error) {
-                toast.error(data.error);
-            }
-            if (data.data) {
-                if (userSession) {
-                    await logCompanyUpdated(userSession.user.id, {
-                        companyId: data.data.id
-                    });
-                }
-                setIsComplete(true);
-                toast.success('Company successfully created');
-            }
-        });
-    };
-
     const progress = (currentStep / steps.length) * 100;
 
     if (isComplete) {
         return <SuccessStep />;
     }
 
-    // const onError: SubmitErrorHandler<
-    //     z.infer<typeof CompanyOnboardingSchema>
-    // > = (errors) => {
-    //     console.log(errors);
-    // };
-
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form>
                 <div className="container mx-auto px-4 py-8 max-w-2xl">
                     <div className="text-center mb-8">
                         <div className="flex flex-row w-full justify-center">
@@ -188,8 +249,7 @@ const CompanyOnboardingWizard = ({
                         </h1>
                         <p className="text-muted-foreground">
                             Let&apos;s set up your company profile to get
-                            started. You need a company to create teams and
-                            tasks.
+                            started.
                         </p>
                     </div>
 
@@ -257,7 +317,9 @@ const CompanyOnboardingWizard = ({
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            {currentStep === 1 && <BasicInfoStep />}
+                            {currentStep === 1 && (
+                                <BasicInfoStep image={image} />
+                            )}
                             {currentStep === 2 && (
                                 <AddressStep
                                     countries={countries}
@@ -280,7 +342,7 @@ const CompanyOnboardingWizard = ({
                                     type="button"
                                     variant="outline"
                                     onClick={prevStep}
-                                    disabled={currentStep === 1}
+                                    disabled={currentStep === 1 || isPending}
                                     className="border-border bg-transparent cursor-pointer"
                                 >
                                     Back
@@ -289,10 +351,10 @@ const CompanyOnboardingWizard = ({
                                     type="button"
                                     onClick={nextStep}
                                     disabled={isPending}
-                                    className="bg-primary text-primary-foreground hover:bg-primary/90  cursor-pointer"
+                                    className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                                 >
                                     {isPending
-                                        ? 'Creating...'
+                                        ? 'Saving...'
                                         : currentStep === steps.length
                                           ? 'Complete Setup'
                                           : 'Next'}

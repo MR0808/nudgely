@@ -4,12 +4,14 @@ import { CompanyFilters } from '@/components/admin/companies/CompanyFilters';
 import { Button } from '@/components/ui/button';
 import { Building2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { authCheckAdmin } from '@/lib/authCheck';
 
 export default async function CompaniesPage({
     searchParams
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+    await authCheckAdmin('/admin/companies');
     const params = await searchParams;
     return (
         <div className="space-y-6">

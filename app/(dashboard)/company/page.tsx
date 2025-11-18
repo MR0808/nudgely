@@ -19,6 +19,7 @@ import { getCompanyTeams } from '@/actions/team';
 import { Button } from '@/components/ui/button';
 import CompanyBillingCard from '@/components/company/CompanyBillingCard';
 import { getCompanyNudgeCount } from '@/actions/nudges';
+import { getCustomerPaymentInformation } from '@/actions/subscriptions';
 
 export async function generateMetadata(): Promise<Metadata> {
     const { company } = await getCompany();
@@ -111,6 +112,16 @@ const CompanyPage = async () => {
         );
     }
 
+    const details = await getCustomerPaymentInformation(
+        company.stripeCustomerId,
+        company.companySubscription?.stripeSubscriptionId
+    );
+
+    let nextBillingDate = new Date();
+    if (details.nextBillingDate) {
+        nextBillingDate = new Date(details.nextBillingDate * 1000);
+    }
+
     return (
         <div className="px-4 py-6 flex grow flex-col overflow-hidden mx-auto w-3/4 ">
             <div className="space-y-0.5">
@@ -147,7 +158,14 @@ const CompanyPage = async () => {
                     />
                 </div>
 
-                <CompanyBillingCard company={company} nudgeCount={nudgeCount} />
+                <CompanyBillingCard
+                    company={company}
+                    nudgeCount={nudgeCount}
+                    payment={details.payment}
+                    nextBillingDate={
+                        details.nextBillingDate ? nextBillingDate : null
+                    }
+                />
 
                 {/* <CompanyDangerZone /> */}
             </div>

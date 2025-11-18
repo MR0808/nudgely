@@ -1,9 +1,7 @@
 import * as z from 'zod';
 
 export const RegisterSchema = z.object({
-    companyName: z.string().min(1, {
-        message: 'Company name is required'
-    }),
+    companyName: z.string().optional(),
     email: z.email({
         message: 'Email is required'
     }),

@@ -20,30 +20,11 @@ import { formatDollarsForDisplayNoDecimals } from '@/utils/currency';
 
 const CompanyBillingCard = ({
     company,
-    nudgeCount
+    nudgeCount,
+    payment,
+    nextBillingDate
 }: CompanyBillingCardProps) => {
     const { plan } = company;
-    // Mock billing data
-    const billing = {
-        plan: 'PRO' as const,
-        isTrialing: true,
-        trialDaysLeft: 8,
-        memberCount: 12,
-        monthlyAmount: 120, // $10 per member
-        nextBillingDate: new Date('2024-03-15'),
-        paymentMethod: {
-            type: 'card',
-            last4: '4242',
-            brand: 'visa',
-            expiryMonth: 12,
-            expiryYear: 2025
-        },
-        usage: {
-            teams: { current: 3, limit: 'unlimited' },
-            tasks: { current: 42, limit: 'unlimited' },
-            members: { current: 12, limit: 'unlimited' }
-        }
-    };
 
     return (
         <Card>
@@ -147,44 +128,43 @@ const CompanyBillingCard = ({
                 </div>
 
                 {/* Payment Method & Next Billing */}
-                <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                        <h4 className="text-sm font-medium flex items-center gap-2">
-                            <CreditCard className="h-4 w-4" />
-                            Payment Method
-                        </h4>
-                        <div className="flex items-center gap-3 p-3 border rounded-lg">
-                            <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                {payment && (
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                            <h4 className="text-sm font-medium flex items-center gap-2">
                                 <CreditCard className="h-4 w-4" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium">
-                                    •••• •••• •••• {billing.paymentMethod.last4}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    Expires {billing.paymentMethod.expiryMonth}/
-                                    {billing.paymentMethod.expiryYear}
-                                </p>
+                                Payment Method
+                            </h4>
+                            <div className="flex items-center gap-3 p-3 border rounded-lg">
+                                <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                                    <CreditCard className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium">
+                                        •••• •••• •••• {payment.card?.last4}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {`Expires ${payment.card?.exp_month.toString().padStart(2, '0')}/${payment.card?.exp_year.toString().slice(-2)}`}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="space-y-3">
-                        <h4 className="text-sm font-medium flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
-                            Next Billing
-                        </h4>
-                        <div className="p-3 border rounded-lg">
-                            <p className="text-sm font-medium">
-                                {billing.nextBillingDate.toLocaleDateString()}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                ${billing.monthlyAmount} for{' '}
-                                {billing.memberCount} members
-                            </p>
-                        </div>
+                        {nextBillingDate && (
+                            <div className="space-y-3">
+                                <h4 className="text-sm font-medium flex items-center gap-2">
+                                    <Calendar className="h-4 w-4" />
+                                    Next Billing
+                                </h4>
+                                <div className="p-3 border rounded-lg">
+                                    <p className="text-sm font-medium">
+                                        {nextBillingDate.toLocaleDateString()}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </div>
+                )}
             </CardContent>
         </Card>
     );

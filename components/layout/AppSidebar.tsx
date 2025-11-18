@@ -54,11 +54,6 @@ const data = {
     ],
     admin: [
         {
-            title: 'Analytics',
-            url: '/analytics',
-            icon: ChartColumn
-        },
-        {
             title: 'Teams and Users',
             url: '/team',
             icon: UsersRound

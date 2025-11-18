@@ -48,6 +48,7 @@ const InitialRegistrationForm = ({
 
     const onSubmit = (values: z.infer<typeof RegisterSchema>) => {
         startTransition(async () => {
+            toast.dismiss();
             const result = await registerInitial(values);
             if (result.error) {
                 toast.error(result.error, { position: 'top-center' });
@@ -98,7 +99,7 @@ const InitialRegistrationForm = ({
                             render={({ field }) => (
                                 <FormItem className="w-full">
                                     <FormLabel className="flex cursor-pointer items-center gap-2 text-xs font-medium leading-none text-gray-700 dark:text-gray-200 mb-3">
-                                        Company Name
+                                        Company Name (optional)
                                     </FormLabel>
                                     <FormControl>
                                         <InputAuth

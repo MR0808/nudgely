@@ -7,6 +7,7 @@ import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { deleteImage, uploadImage } from '@/actions/supabase';
 import Image from 'next/image';
+import { removeImageFromCompany } from '@/actions/onboarding';
 
 interface ImageUploadProps {
     name?: string;
@@ -197,6 +198,7 @@ const ImageUploadField = ({
     const handleRemove = useCallback(async () => {
         const data = await deleteImage(url, bucket, value);
         if (data.success) {
+            await removeImageFromCompany();
             setError(null);
             setUrl('');
             setValue(name, '');

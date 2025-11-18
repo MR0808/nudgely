@@ -3,14 +3,93 @@
 import * as z from 'zod';
 import GithubSlugger from 'github-slugger';
 import { revalidatePath } from 'next/cache';
+import { CompanyRole } from '@/generated/prisma';
 
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { EditCompanySchema } from '@/schemas/company';
 import { deleteImage } from '@/actions/supabase';
 import { logCompanyUpdated } from '@/actions/audit/audit-company';
+import { CompanyCheckResult } from '@/types/company';
 
 const slugger = new GithubSlugger();
+
+export const checkCompanyStatus =
+    async (): Promise<CompanyCheckResult | null> => {
+        const userSession = await authCheckServer();
+
+        if (!userSession) {
+            return null;
+        }
+
+        const { user } = userSession;
+
+        // Get the user's company membership
+        const companyMember = await prisma.companyMember.findFirst({
+            where: {
+                userId: user.id,
+                role: CompanyRole.COMPANY_ADMIN
+            },
+            include: {
+                company: {
+                    include: {
+                        region: true,
+                        country: true
+                    }
+                }
+            }
+        });
+
+        if (!companyMember) {
+            return {
+                isCompanyAdmin: false,
+                companyId: null,
+                companyName: null,
+                isComplete: true,
+                missingFields: []
+            };
+        }
+
+        const company = companyMember.company;
+
+        // Check required fields
+        const requiredFields = [
+            { field: 'name', value: company.name, label: 'Company Name' },
+            { field: 'address1', value: company.address1, label: 'Address' },
+            { field: 'city', value: company.city, label: 'City' },
+            { field: 'region', value: company.regionId, label: 'Region' },
+            {
+                field: 'postalCode',
+                value: company.postalCode,
+                label: 'Postal Code'
+            },
+            { field: 'country', value: company.countryId, label: 'Country' },
+            { field: 'timezone', value: company.timezone, label: 'Timezone' },
+            { field: 'locale', value: company.locale, label: 'Locale' },
+            {
+                field: 'contactEmail',
+                value: company.contactEmail,
+                label: 'Contact Email'
+            },
+            {
+                field: 'contactPhone',
+                value: company.contactPhone,
+                label: 'Contact Phone'
+            }
+        ];
+
+        const missingFields = requiredFields
+            .filter(({ value }) => !value)
+            .map(({ label }) => label);
+
+        return {
+            isCompanyAdmin: true,
+            companyId: company.id,
+            companyName: company.name,
+            isComplete: missingFields.length === 0,
+            missingFields
+        };
+    };
 
 export const getUserCompany = async () => {
     try {
@@ -202,6 +281,13 @@ export const updateCompany = async (
             locale: values.locale
         });
 
+        const companyStatus = await checkCompanyStatus();
+        let profileCompleted = true;
+
+        if (companyStatus) {
+            profileCompleted = companyStatus.isComplete;
+        }
+
         // Create the team
         const companyDb = await prisma.company.update({
             where: { id: company.id },
@@ -220,7 +306,8 @@ export const updateCompany = async (
                 companySizeId: values.companySize,
                 industryId: values.industry,
                 timezone: values.timezone,
-                locale: values.locale
+                locale: values.locale,
+                profileCompleted
             }
         });
 
@@ -264,14 +351,9 @@ export const updateCompanyLogo = async (imageId: string) => {
                 where: { id: company.image }
             });
 
-            if (!oldImage) {
-                return {
-                    data: null,
-                    error: 'Original image not found.'
-                };
+            if (oldImage) {
+                await deleteImage(oldImage?.image, 'images', oldImage.id);
             }
-
-            await deleteImage(oldImage?.image, 'images', oldImage.id);
         }
 
         if (imageId === 'removedLogo') {

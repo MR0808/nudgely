@@ -26,6 +26,7 @@ export type Invoices = NonNullable<
 export interface BillingPlanSelectionProps {
     company: Company;
     plans: Plan[];
+    isComplete: boolean;
 }
 
 export interface BillingPlanSelectionDowngradeDialogProps {

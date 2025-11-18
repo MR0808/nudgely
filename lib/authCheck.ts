@@ -38,11 +38,11 @@ export const authCheck = async (callbackUrl?: string) => {
 
     if (!session.user.emailVerified) return redirect('/auth/verify-email');
 
-    if (
-        session.company.creatorId === session.user.id &&
-        !session.company.profileCompleted
-    )
-        return redirect('/onboarding');
+    // if (
+    //     session.company.creatorId === session.user.id &&
+    //     !session.company.profileCompleted
+    // )
+    //     return redirect('/onboarding');
 
     // if (!session.user.phoneVerified) return redirect('/auth/verify-phone');
 
@@ -72,7 +72,7 @@ export const authCheckOnboarding = async () => {
 
     if (session.company.profileCompleted) return redirect('/');
 
-    if (session.company.creatorId !== session.user.id) return redirect('/');
+    if (session.userCompany.role !== 'COMPANY_ADMIN') return redirect('/');
 
     return session;
 };

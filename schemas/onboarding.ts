@@ -55,7 +55,17 @@ export const CompanyOnboardingSchema = z.object({
     contactPhone: phoneNumberSchema,
 
     // Step 4: Additional Information
-    website: z.url('Please enter a valid URL').optional().or(z.literal('')),
+    website: z
+        .string()
+        .trim()
+        .transform((value) => {
+            if (!value) return ''; // keep empty string
+            if (!/^https?:\/\//i.test(value)) {
+                return `https://${value}`;
+            }
+            return value;
+        })
+        .pipe(z.url('Please enter a valid URL').or(z.literal(''))),
     companySize: z.string().optional(),
     industry: z.string().optional()
 });

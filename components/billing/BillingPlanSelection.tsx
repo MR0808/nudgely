@@ -23,10 +23,12 @@ import {
     createPortalSession
 } from '@/actions/subscriptions';
 import BillingPlanSelectionDowngradeDialog from '@/components/billing/BillingPlanSelectionDowngradeDialogProps';
+import Link from 'next/link';
 
 const BillingPlanSelection = ({
     company,
-    plans
+    plans,
+    isComplete
 }: BillingPlanSelectionProps) => {
     const [isPending, startTransition] = useTransition();
     const [open, setOpen] = useState(false);
@@ -134,6 +136,21 @@ const BillingPlanSelection = ({
                         </button>
                     </div>
                 </div>
+                {!isComplete && (
+                    <div>
+                        <p className="text-sm text-muted-foreground h-16">
+                            You cannot upgrade until you complete your company
+                            profile. Click{' '}
+                            <Link
+                                className="underline text-blue-700"
+                                href="/onboarding"
+                            >
+                                here
+                            </Link>{' '}
+                            to continue the wizard or head to settings.
+                        </p>
+                    </div>
+                )}
 
                 <div className="grid md:grid-cols-4 gap-6">
                     {plans.map((plan) => {
@@ -243,7 +260,11 @@ const BillingPlanSelection = ({
                                     <Button
                                         variant="outline"
                                         className="w-full mt-4 cursor-pointer"
-                                        disabled={isCurrentPlan || isPending}
+                                        disabled={
+                                            !isComplete ||
+                                            isCurrentPlan ||
+                                            isPending
+                                        }
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handlePlanSelect(plan);

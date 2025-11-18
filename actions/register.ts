@@ -34,6 +34,8 @@ export const registerInitial = async (
     const { name, lastName, email, password, companyName } =
         validatedFields.data;
 
+    let compName = companyName || `${name} ${lastName}`;
+
     try {
         const isEmailDisposable = await checkEmail(email);
 
@@ -85,7 +87,7 @@ export const registerInitial = async (
         const otp = generateOTP();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-        let slug = slugger.slug(values.companyName);
+        let slug = slugger.slug(compName);
         let slugExists = true;
 
         while (slugExists) {
@@ -96,7 +98,7 @@ export const registerInitial = async (
                 slugExists = false;
                 break;
             } else {
-                slug = slugger.slug(values.companyName);
+                slug = slugger.slug(compName);
             }
         }
 
@@ -110,7 +112,7 @@ export const registerInitial = async (
         const company = await prisma.company.create({
             data: {
                 slug,
-                name: values.companyName,
+                name: compName,
                 creatorId: data.user.id,
                 planId: plan.id
             }
@@ -126,6 +128,42 @@ export const registerInitial = async (
                 companyId: company.id,
                 userId: data.user.id,
                 role: 'COMPANY_ADMIN'
+            }
+        });
+
+        let teamSlug = slugger.slug(compName);
+        let teamSlugExists = true;
+
+        slugger.reset();
+
+        while (teamSlugExists) {
+            const checkSlug = await prisma.team.findUnique({
+                where: { slug: teamSlug }
+            });
+            if (!checkSlug) {
+                teamSlugExists = false;
+                break;
+            } else {
+                teamSlug = slugger.slug(compName);
+            }
+        }
+
+        const team = await prisma.team.create({
+            data: {
+                slug: teamSlug,
+                name: compName,
+                description: `The default team for ${compName}`,
+                companyId: company.id,
+                creatorId: data.user.id,
+                defaultTeam: true
+            }
+        });
+
+        await prisma.teamMember.create({
+            data: {
+                role: 'TEAM_ADMIN',
+                teamId: team.id,
+                userId: data.user.id
             }
         });
 
