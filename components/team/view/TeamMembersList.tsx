@@ -315,19 +315,22 @@ const TeamMembersList = ({
                                                                 </DropdownMenuItem>
                                                             )}
                                                             <DropdownMenuSeparator />
-                                                            <DropdownMenuItem
-                                                                className="text-destructive cursor-pointer"
-                                                                onClick={() =>
-                                                                    handleRemoveMember(
-                                                                        member.id,
-                                                                        `${member.firstName} ${member.lastName}`,
-                                                                        member.email
-                                                                    )
-                                                                }
-                                                            >
-                                                                <UserMinus className="h-4 w-4 mr-2" />
-                                                                Remove from Team
-                                                            </DropdownMenuItem>
+                                                            {!team.defaultTeam && (
+                                                                <DropdownMenuItem
+                                                                    className="text-destructive cursor-pointer"
+                                                                    onClick={() =>
+                                                                        handleRemoveMember(
+                                                                            member.id,
+                                                                            `${member.firstName} ${member.lastName}`,
+                                                                            member.email
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <UserMinus className="h-4 w-4 mr-2" />
+                                                                    Remove from
+                                                                    Team
+                                                                </DropdownMenuItem>
+                                                            )}
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 )}

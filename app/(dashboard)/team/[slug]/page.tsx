@@ -140,7 +140,7 @@ const TeamPage = async (props: { params: Promise<ParamsSlug> }) => {
                                 Manage Members
                             </Button>
                         </Link>
-                        {canManageCompany && (
+                        {canManageCompany && !team.defaultTeam && (
                             <DeleteTeamDialog
                                 teamId={team.id}
                                 status={team.status}

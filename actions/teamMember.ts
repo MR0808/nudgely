@@ -470,6 +470,13 @@ export const removeTeamMember = async (memberId: string, teamId: string) => {
             return { data: null, error: 'Team member not found' };
         }
 
+        if (member.team.defaultTeam) {
+            return {
+                data: null,
+                error: 'Cannot remove an team member from the defaul team'
+            };
+        }
+
         // Prevent removing the team creator
         if (member.team.creatorId === member.userId) {
             return { data: null, error: 'Cannot remove the team creator' };

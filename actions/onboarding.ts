@@ -109,15 +109,6 @@ export const saveBasicInfo = async (values: z.infer<typeof step1Schema>) => {
                 data: { relatedEntity: companyMember.companyId }
             });
         }
-        // Check if profile is complete after this update
-        const isComplete = checkProfileComplete(updatedCompany);
-
-        if (isComplete && !updatedCompany.profileCompleted) {
-            await prisma.company.update({
-                where: { id: companyMember.companyId },
-                data: { profileCompleted: true }
-            });
-        }
 
         return { data: updatedCompany, error: null };
     } catch (error) {
@@ -156,16 +147,6 @@ export const saveAddress = async (values: z.infer<typeof step2Schema>) => {
             }
         });
 
-        // Check if profile is complete after this update
-        const isComplete = checkProfileComplete(updatedCompany);
-
-        if (isComplete && !updatedCompany.profileCompleted) {
-            await prisma.company.update({
-                where: { id: companyMember.companyId },
-                data: { profileCompleted: true }
-            });
-        }
-
         return { data: updatedCompany, error: null };
     } catch (error) {
         console.error(error);
@@ -196,16 +177,6 @@ export const saveContact = async (values: z.infer<typeof step3Schema>) => {
                 contactPhone: values.contactPhone
             }
         });
-
-        // Check if profile is complete after this update
-        const isComplete = checkProfileComplete(updatedCompany);
-
-        if (isComplete && !updatedCompany.profileCompleted) {
-            await prisma.company.update({
-                where: { id: companyMember.companyId },
-                data: { profileCompleted: true }
-            });
-        }
 
         return { data: updatedCompany, error: null };
     } catch (error) {
@@ -244,6 +215,16 @@ export const saveAdditionalInfo = async (
                 industryId
             }
         });
+
+        // This happens only after the final step
+        const isComplete = checkProfileComplete(updatedCompany);
+
+        if (isComplete && !updatedCompany.profileCompleted) {
+            await prisma.company.update({
+                where: { id: companyMember.companyId },
+                data: { profileCompleted: true }
+            });
+        }
 
         return { data: updatedCompany, error: null };
     } catch (error) {

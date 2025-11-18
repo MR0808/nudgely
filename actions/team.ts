@@ -8,12 +8,7 @@ import { authCheckServer } from '@/lib/authCheck';
 import { TeamSchema } from '@/schemas/team';
 import { checkCompanyTeamLimits } from '@/lib/team';
 import { revalidatePath } from 'next/cache';
-import {
-    logTeamCreated,
-    logTeamDeleted,
-    logTeamEnabled,
-    logTeamUpdated
-} from '@/actions/audit/audit-team';
+import { logTeamDeleted, logTeamEnabled } from '@/actions/audit/audit-team';
 import { TeamStatus } from '@/generated/prisma';
 
 const slugger = new GithubSlugger();
@@ -520,6 +515,10 @@ export const deleteTeam = async (teamId: string) => {
 
         if (!team) {
             return { data: null, error: 'Team not found' };
+        }
+
+        if (team.defaultTeam) {
+            return { data: null, error: 'Cannot delete default team' };
         }
 
         // Prevent deleting team with active tasks

@@ -125,13 +125,14 @@ const TeamsList = ({
                                                 )}
                                             </CardDescription>
                                         </div>
-                                        {canManageCompany && (
-                                            <DeleteTeamDialog
-                                                teamId={team.id}
-                                                setTeams={setTeams}
-                                                status={team.status}
-                                            />
-                                        )}
+                                        {canManageCompany &&
+                                            !team.defaultTeam && (
+                                                <DeleteTeamDialog
+                                                    teamId={team.id}
+                                                    setTeams={setTeams}
+                                                    status={team.status}
+                                                />
+                                            )}
                                     </div>
                                 </CardHeader>
                                 <CardContent className="pt-0">
