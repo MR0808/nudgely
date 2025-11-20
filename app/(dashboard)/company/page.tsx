@@ -128,8 +128,8 @@ const CompanyPage = async () => {
     );
 
     let nextBillingDate = new Date();
-    if (details.nextBillingDate) {
-        nextBillingDate = new Date(details.nextBillingDate * 1000);
+    if (details.data?.nextBillingDate) {
+        nextBillingDate = new Date(details.data.nextBillingDate * 1000);
     }
 
     return (
@@ -171,9 +171,9 @@ const CompanyPage = async () => {
                 <CompanyBillingCard
                     company={company}
                     nudgeCount={nudgeCount}
-                    payment={details.payment}
+                    payment={details.data?.payment || null}
                     nextBillingDate={
-                        details.nextBillingDate ? nextBillingDate : null
+                        details.data?.nextBillingDate ? nextBillingDate : null
                     }
                 />
 

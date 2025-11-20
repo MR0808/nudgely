@@ -45,7 +45,9 @@ const CreateNudgePage = async ({
     const teams = await getUserTeams();
     const params = await searchParams;
     const initialTeam = params.id ? params.id : '';
-    const plan = await getPlan();
+    const resPlan = await getPlan();
+
+    if (!resPlan.data || !resPlan.success) return null;
 
     let initialTimezone = 'UTC';
     if (userSession.company.timezone) {
@@ -54,7 +56,7 @@ const CreateNudgePage = async ({
         initialTimezone = userSession.user.timezone;
     }
 
-    if (!teams || teams.length === 0 || !plan.plan) {
+    if (!teams || teams.length === 0 || !resPlan.data.plan) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -84,7 +86,7 @@ const CreateNudgePage = async ({
                 initialTeam={initialTeam}
                 initialTimezone={initialTimezone}
                 userSession={userSession}
-                plan={plan.plan}
+                plan={resPlan.data.plan}
             />
 
             {/* Right Column: Live Preview */}

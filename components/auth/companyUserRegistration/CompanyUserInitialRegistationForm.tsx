@@ -15,10 +15,7 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import {
-    companyUserRegisterInitial,
-    registerInitial
-} from '@/actions/register';
+import { companyUserRegisterInitial } from '@/actions/register';
 import { InviteUserRegisterSchema } from '@/schemas/register';
 import type { CompanyUserInitialRegistationFormProps } from '@/types/register';
 import {
@@ -55,13 +52,13 @@ const CompanyUserInitialRegistationForm = ({
                 companyId,
                 inviteId
             );
-            if (result.error) {
-                toast.error(result.error, { position: 'top-center' });
-            } else if (result.userId) {
+            if (!result.success || !result.data) {
+                toast.error(result.message, { position: 'top-center' });
+            } else if (result.data.userId) {
                 // toast.success('Account created! Please verify your email.', {
                 //     position: 'top-center'
                 // });
-                onNext({ ...values, userId: result.userId });
+                onNext({ ...values, userId: result.data.userId });
             }
         });
     };

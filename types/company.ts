@@ -48,11 +48,14 @@ export type Teams = NonNullable<
     TeamsUpper extends { teams: infer T } ? T : never
 >;
 
-export type Details = Awaited<ReturnType<typeof getCustomerPaymentInformation>>;
-
-export type Payment = NonNullable<
-    Details extends { payment: infer T } ? T : never
+export type GetPaymentReturn = Awaited<
+    ReturnType<typeof getCustomerPaymentInformation>
 >;
+
+export type Payment = Extract<
+    GetPaymentReturn,
+    { success: true }
+>['data']['payment'];
 
 export interface CompanyProps {
     company: Company;

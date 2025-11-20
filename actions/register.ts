@@ -1,8 +1,8 @@
 'use server';
 
 import * as z from 'zod';
-import { APIError } from 'better-auth/api';
 import GithubSlugger from 'github-slugger';
+import { APIError } from 'better-auth/api';
 
 import { InviteUserRegisterSchema, RegisterSchema } from '@/schemas/register';
 import { prisma } from '@/lib/prisma';
@@ -16,65 +16,107 @@ import { sendVerificationEmail } from '@/lib/mail';
 import { EmailCheckResult } from '@/types/register';
 import { logCompanyCreated } from '@/actions/audit/audit-company';
 import { TeamRole } from '@/generated/prisma';
+import { ActionResult } from '@/types/global';
 
 let cachedDomains: string[] | null = null;
 let lastFetched: number | null = null;
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in ms
 const slugger = new GithubSlugger();
+
+/* ------------------------------------------------------------------
+ * Types for external actions
+ * ------------------------------------------------------------------ */
+
+type RegisterInitialData = {
+    userId?: string;
+    companyToken?: string;
+    teamToken?: string;
+};
+
+type InviteRegisterData = {
+    userId: string;
+};
+
+/* ------------------------------------------------------------------
+ * registerInitial
+ * ------------------------------------------------------------------ */
 
 export const registerInitial = async (
     values: z.infer<typeof RegisterSchema>
-) => {
+): Promise<ActionResult<RegisterInitialData>> => {
     const validatedFields = RegisterSchema.safeParse(values);
 
     if (!validatedFields.success) {
-        return { error: 'Invalid fields!' };
+        return {
+            success: false,
+            message: 'Invalid fields'
+        };
     }
 
     const { name, lastName, email, password, companyName } =
         validatedFields.data;
 
-    let compName = companyName || `${name} ${lastName}`;
+    const compName = companyName || `${name} ${lastName}`;
 
     try {
-        const isEmailDisposable = await checkEmail(email);
+        const emailCheck = await checkEmail(email);
 
-        if (isEmailDisposable.error) {
+        if (emailCheck.error) {
             return {
-                error: `Email is invalid - ${isEmailDisposable.error}`
+                success: false,
+                message: `Email is invalid - ${emailCheck.error}`
             };
-        } else {
-            if (isEmailDisposable.isDisposable) {
-                return {
-                    error: `Email is invalid`
-                };
-            }
+        }
+        if (emailCheck.isDisposable) {
+            return {
+                success: false,
+                message: 'Email is invalid'
+            };
         }
 
+        // Check if there is an existing company invite
         const existingCompanyInvite = await prisma.companyInvite.findFirst({
             where: { email }
         });
 
         if (existingCompanyInvite) {
-            return { companyToken: existingCompanyInvite.token };
+            return {
+                success: true,
+                message: 'Existing company invitation found',
+                data: {
+                    companyToken: existingCompanyInvite.token
+                }
+            };
         }
 
+        // Check if there is an existing team invite
         const existingTeamInvite = await prisma.teamInvite.findFirst({
             where: { email }
         });
 
         if (existingTeamInvite) {
-            return { teamToken: existingTeamInvite.token };
+            return {
+                success: true,
+                message: 'Existing team invitation found',
+                data: {
+                    teamToken: existingTeamInvite.token
+                }
+            };
         }
 
+        // Check if user already exists
         const existingUser = await prisma.user.findUnique({
             where: { email }
         });
 
         if (existingUser) {
-            return { error: 'An account with this email already exists.' };
+            return {
+                success: false,
+                message: 'An account with this email already exists.'
+            };
         }
 
+        // Register via Better Auth
         const data = await auth.api.signUpEmail({
             body: {
                 name,
@@ -87,6 +129,7 @@ export const registerInitial = async (
         const otp = generateOTP();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
+        // Create unique company slug
         let slug = slugger.slug(compName);
         let slugExists = true;
 
@@ -94,9 +137,9 @@ export const registerInitial = async (
             const checkSlug = await prisma.company.findUnique({
                 where: { slug }
             });
+
             if (!checkSlug) {
                 slugExists = false;
-                break;
             } else {
                 slug = slugger.slug(compName);
             }
@@ -104,10 +147,12 @@ export const registerInitial = async (
 
         const plan = await prisma.plan.findUnique({ where: { slug: 'free' } });
 
-        if (!plan)
+        if (!plan) {
             return {
-                error: `Plan is invalid`
+                success: false,
+                message: 'Default plan not found'
             };
+        }
 
         const company = await prisma.company.create({
             data: {
@@ -131,18 +176,20 @@ export const registerInitial = async (
             }
         });
 
+        // Reset slugger to avoid weird cumulative state
+        slugger.reset();
+
+        // Create default team
         let teamSlug = slugger.slug(compName);
         let teamSlugExists = true;
-
-        slugger.reset();
 
         while (teamSlugExists) {
             const checkSlug = await prisma.team.findUnique({
                 where: { slug: teamSlug }
             });
+
             if (!checkSlug) {
                 teamSlugExists = false;
-                break;
             } else {
                 teamSlug = slugger.slug(compName);
             }
@@ -167,6 +214,7 @@ export const registerInitial = async (
             }
         });
 
+        // Email verification record
         await prisma.verification.create({
             data: {
                 identifier: `email-otp:${data.user.id}`,
@@ -179,7 +227,8 @@ export const registerInitial = async (
 
         if (emailSent.error) {
             return {
-                error: 'Failed to send verification email'
+                success: false,
+                message: 'Failed to send verification email'
             };
         }
 
@@ -190,30 +239,45 @@ export const registerInitial = async (
 
         await logEmailVerifyRequested(data.user.id, data.user.email);
 
-        return { userId: data.user.id, error: null };
-    } catch (err) {
+        return {
+            success: true,
+            message: 'Registration started successfully',
+            data: {
+                userId: data.user.id
+            }
+        };
+    } catch (err: unknown) {
         if (err instanceof APIError) {
-            return { error: err.message };
+            return {
+                success: false,
+                message: err.message
+            };
         }
 
-        return { error: 'Internal Server Error' };
+        return {
+            success: false,
+            message: 'Internal Server Error'
+        };
     }
 };
 
+/* ------------------------------------------------------------------
+ * checkEmail (kept as EmailCheckResult)
+ * ------------------------------------------------------------------ */
+
 export const checkEmail = async (email: string): Promise<EmailCheckResult> => {
     try {
-        // Validate email format
+        // Basic format validation
         if (!email || !email.includes('@')) {
             return { isDisposable: false, error: 'Invalid email format' };
         }
 
-        // Extract domain from email
         const domain = email.split('@')[1]?.toLowerCase();
         if (!domain) {
             return { isDisposable: false, error: 'Invalid email domain' };
         }
 
-        // Check cache
+        // Refresh disposable domain list if needed
         const now = Date.now();
         if (
             !cachedDomains ||
@@ -237,7 +301,6 @@ export const checkEmail = async (email: string): Promise<EmailCheckResult> => {
             lastFetched = now;
         }
 
-        // Check if the email's domain is in the disposable list
         const isDisposable = cachedDomains.includes(domain);
 
         return { isDisposable, error: null };
@@ -247,32 +310,41 @@ export const checkEmail = async (email: string): Promise<EmailCheckResult> => {
     }
 };
 
+/* ------------------------------------------------------------------
+ * companyUserRegisterInitial
+ *   – user signing up from a *company* invite (company admin)
+ * ------------------------------------------------------------------ */
+
 export const companyUserRegisterInitial = async (
     values: z.infer<typeof InviteUserRegisterSchema>,
     companyId: string,
     inviteId: string
-) => {
+): Promise<ActionResult<InviteRegisterData>> => {
     const validatedFields = InviteUserRegisterSchema.safeParse(values);
 
     if (!validatedFields.success) {
-        return { error: 'Invalid fields!' };
+        return {
+            success: false,
+            message: 'Invalid fields'
+        };
     }
 
     const { name, lastName, email, password } = validatedFields.data;
 
     try {
-        const isEmailDisposable = await checkEmail(email);
+        const emailCheck = await checkEmail(email);
 
-        if (isEmailDisposable.error) {
+        if (emailCheck.error) {
             return {
-                error: `Email is invalid - ${isEmailDisposable.error}`
+                success: false,
+                message: `Email is invalid - ${emailCheck.error}`
             };
-        } else {
-            if (isEmailDisposable.isDisposable) {
-                return {
-                    error: `Email is invalid`
-                };
-            }
+        }
+        if (emailCheck.isDisposable) {
+            return {
+                success: false,
+                message: 'Email is invalid'
+            };
         }
 
         const existingUser = await prisma.user.findUnique({
@@ -280,7 +352,10 @@ export const companyUserRegisterInitial = async (
         });
 
         if (existingUser) {
-            return { error: 'An account with this email already exists.' };
+            return {
+                success: false,
+                message: 'An account with this email already exists.'
+            };
         }
 
         const data = await auth.api.signUpEmail({
@@ -301,9 +376,13 @@ export const companyUserRegisterInitial = async (
         });
 
         if (!company) {
-            return { error: 'Company not found' };
+            return {
+                success: false,
+                message: 'Company not found'
+            };
         }
 
+        // Make them a company admin & attach invite
         await prisma.companyMember.create({
             data: {
                 companyId: company.id,
@@ -313,6 +392,7 @@ export const companyUserRegisterInitial = async (
             }
         });
 
+        // Add them as TEAM_ADMIN on all teams for this company
         const teams = await prisma.team.findMany({ where: { companyId } });
 
         for (const team of teams) {
@@ -325,6 +405,7 @@ export const companyUserRegisterInitial = async (
             });
         }
 
+        // OTP verification record
         await prisma.verification.create({
             data: {
                 identifier: `email-otp:${data.user.id}`,
@@ -337,10 +418,12 @@ export const companyUserRegisterInitial = async (
 
         if (emailSent.error) {
             return {
-                error: 'Failed to send verification email'
+                success: false,
+                message: 'Failed to send verification email'
             };
         }
 
+        // Mark invitation as accepted
         await prisma.companyInvite.update({
             where: { id: inviteId },
             data: {
@@ -355,15 +438,33 @@ export const companyUserRegisterInitial = async (
 
         await logEmailVerifyRequested(data.user.id, data.user.email);
 
-        return { userId: data.user.id, error: null };
-    } catch (err) {
+        return {
+            success: true,
+            message: 'User registered via company invite',
+            data: {
+                userId: data.user.id
+            }
+        };
+    } catch (err: unknown) {
         if (err instanceof APIError) {
-            return { error: err.message };
+            return {
+                success: false,
+                message: err.message
+            };
         }
 
-        return { error: 'Internal Server Error' };
+        console.error('[companyUserRegisterInitial] error:', err);
+        return {
+            success: false,
+            message: 'Internal Server Error'
+        };
     }
 };
+
+/* ------------------------------------------------------------------
+ * teamUserRegisterInitial
+ *   – user signing up from a *team* invite
+ * ------------------------------------------------------------------ */
 
 export const teamUserRegisterInitial = async (
     values: z.infer<typeof InviteUserRegisterSchema>,
@@ -371,28 +472,32 @@ export const teamUserRegisterInitial = async (
     teamId: string,
     role: TeamRole,
     inviteId: string
-) => {
+): Promise<ActionResult<InviteRegisterData>> => {
     const validatedFields = InviteUserRegisterSchema.safeParse(values);
 
     if (!validatedFields.success) {
-        return { error: 'Invalid fields!' };
+        return {
+            success: false,
+            message: 'Invalid fields'
+        };
     }
 
     const { name, lastName, email, password } = validatedFields.data;
 
     try {
-        const isEmailDisposable = await checkEmail(email);
+        const emailCheck = await checkEmail(email);
 
-        if (isEmailDisposable.error) {
+        if (emailCheck.error) {
             return {
-                error: `Email is invalid - ${isEmailDisposable.error}`
+                success: false,
+                message: `Email is invalid - ${emailCheck.error}`
             };
-        } else {
-            if (isEmailDisposable.isDisposable) {
-                return {
-                    error: `Email is invalid`
-                };
-            }
+        }
+        if (emailCheck.isDisposable) {
+            return {
+                success: false,
+                message: 'Email is invalid'
+            };
         }
 
         const existingUser = await prisma.user.findUnique({
@@ -400,7 +505,10 @@ export const teamUserRegisterInitial = async (
         });
 
         if (existingUser) {
-            return { error: 'An account with this email already exists.' };
+            return {
+                success: false,
+                message: 'An account with this email already exists.'
+            };
         }
 
         const data = await auth.api.signUpEmail({
@@ -421,9 +529,13 @@ export const teamUserRegisterInitial = async (
         });
 
         if (!company) {
-            return { error: 'Company not found' };
+            return {
+                success: false,
+                message: 'Company not found'
+            };
         }
 
+        // Add them as a company member
         await prisma.companyMember.create({
             data: {
                 companyId: company.id,
@@ -435,7 +547,10 @@ export const teamUserRegisterInitial = async (
         const team = await prisma.team.findUnique({ where: { id: teamId } });
 
         if (!team) {
-            return { error: 'Team not found' };
+            return {
+                success: false,
+                message: 'Team not found'
+            };
         }
 
         await prisma.teamMember.create({
@@ -459,7 +574,8 @@ export const teamUserRegisterInitial = async (
 
         if (emailSent.error) {
             return {
-                error: 'Failed to send verification email'
+                success: false,
+                message: 'Failed to send verification email'
             };
         }
 
@@ -477,12 +593,25 @@ export const teamUserRegisterInitial = async (
 
         await logEmailVerifyRequested(data.user.id, data.user.email);
 
-        return { userId: data.user.id, error: null };
-    } catch (err) {
+        return {
+            success: true,
+            message: 'User registered via team invite',
+            data: {
+                userId: data.user.id
+            }
+        };
+    } catch (err: unknown) {
         if (err instanceof APIError) {
-            return { error: err.message };
+            return {
+                success: false,
+                message: err.message
+            };
         }
 
-        return { error: `Internal Server Error - ${err}` };
+        console.error('[teamUserRegisterInitial] error:', err);
+        return {
+            success: false,
+            message: `Internal Server Error`
+        };
     }
 };

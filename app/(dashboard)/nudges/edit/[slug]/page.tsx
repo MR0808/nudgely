@@ -74,9 +74,11 @@ const EditNudgePage = async (props: { params: Promise<ParamsSlug> }) => {
     }
 
     const teams = await getUserTeams();
-    const plan = await getPlan();
+    const resPlan = await getPlan();
 
-    if (!teams || teams.length === 0 || !plan.plan) {
+    if (!resPlan.data || !resPlan.success) return null;
+
+    if (!teams || teams.length === 0 || !resPlan.data.plan) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -102,7 +104,7 @@ const EditNudgePage = async (props: { params: Promise<ParamsSlug> }) => {
             <NudgeEditForm
                 returnTeams={teams}
                 userSession={userSession}
-                plan={plan.plan}
+                plan={resPlan.data.plan}
                 nudge={nudge.data.nudge}
             />
         </div>

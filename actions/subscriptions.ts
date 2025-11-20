@@ -1,222 +1,253 @@
 'use server';
-import Stripe from 'stripe';
 
-// import { stripe } from '@/lib/stripe';
+import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
+import {
+    Plan,
+    PendingCompanySubscription,
+    Company,
+    CompanySubscription
+} from '@/generated/prisma';
+
+type ActionResult<T> =
+    | { success: true; message: string; data: T }
+    | {
+          success: false;
+          message: string;
+          data?: undefined;
+          cooldownTime?: number;
+      };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-11-17.clover'
 });
 
-export const createCheckoutSessions = async (
-    planId: string,
-    companyId: string
-) => {
-    const userSession = await authCheckServer();
+/* ────────────────────────────────────────────────────────────────────────────
+   Create Checkout Session
+──────────────────────────────────────────────────────────────────────────── */
 
-    if (!userSession) {
-        return {
-            error: 'Not authorised'
-        };
+export async function createCheckoutSessions(
+    priceId: string,
+    companyId: string
+): Promise<ActionResult<{ sessionId: string; url: string | null }>> {
+    const session = await authCheckServer();
+    if (!session) {
+        return { success: false, message: 'Not authorised' };
     }
+
     try {
         const company = await prisma.company.findUnique({
-            where: { id: companyId },
-            include: { companySubscription: true }
+            where: { id: companyId }
         });
-        if (!company) return { error: 'Company not found' };
 
-        // if (method === 'create') {
-        const session = await stripe.checkout.sessions.create({
+        if (!company) {
+            return { success: false, message: 'Company not found' };
+        }
+
+        const stripeSession = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [
                 {
-                    price: planId,
+                    price: priceId,
                     quantity: 1
                 }
             ],
             billing_address_collection: 'required',
             client_reference_id: companyId,
             customer: company.stripeCustomerId || undefined,
-            metadata: { userId: userSession.user.id },
+            metadata: { userId: session.user.id },
             mode: 'subscription',
             success_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing`
         });
 
-        return { sessionId: session.id, url: session.url };
-        // }
-
-        // if (!company.companySubscription?.stripeSubscriptionId) {
-        //     return { error: 'Company subscription not found' };
-        // }
-    } catch (error) {
-        return { error };
-    }
-};
-
-export const getPendingSubscriptions = async () => {
-    const userSession = await authCheckServer();
-
-    if (!userSession) {
         return {
-            data: null,
-            message: 'Not authorised'
+            success: true,
+            message: 'Checkout session created',
+            data: {
+                sessionId: stripeSession.id,
+                url: stripeSession.url
+            }
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: `Failed to create checkout session - ${error}`
         };
     }
+}
 
-    const { user, company, userCompany } = userSession;
+/* ────────────────────────────────────────────────────────────────────────────
+   Get Pending Subscriptions
+──────────────────────────────────────────────────────────────────────────── */
+
+export async function getPendingSubscriptions(): Promise<
+    ActionResult<{
+        planName: string;
+        planPrice: number;
+        planInterval: 'MONTHLY' | 'YEARLY';
+        planColour: string;
+        planIcon: string;
+        planIconClassName: string | null;
+        activeDate: Date;
+    }>
+> {
+    const session = await authCheckServer();
+    if (!session) {
+        return { success: false, message: 'Not authorised' };
+    }
+
+    const { company, userCompany } = session;
 
     if (userCompany.role !== 'COMPANY_ADMIN') {
-        return {
-            data: null,
-            message: 'Not authorised'
-        };
+        return { success: false, message: 'Not authorised' };
     }
-    try {
-        const pendingCompanySubscription =
-            await prisma.pendingCompanySubscription.findFirst({
-                where: { company: { id: company.id } }
-            });
 
-        if (!pendingCompanySubscription) {
-            return { data: null, message: 'No pending subscription' };
+    try {
+        const pending = await prisma.pendingCompanySubscription.findFirst({
+            where: { company: { id: company.id } }
+        });
+
+        if (!pending) {
+            return {
+                success: false,
+                message: 'No pending subscription'
+            };
         }
 
         const plan = await prisma.plan.findFirst({
             where: {
                 OR: [
-                    { stripeMonthlyId: pendingCompanySubscription.priceId },
-                    { stripeYearlyId: pendingCompanySubscription.priceId }
+                    { stripeMonthlyId: pending.priceId },
+                    { stripeYearlyId: pending.priceId }
                 ]
             }
         });
 
         if (!plan) {
-            return { data: null, message: 'No plan found' };
+            return { success: false, message: 'No plan found' };
         }
 
-        const planPrice =
-            plan.stripeYearlyId === pendingCompanySubscription.priceId
-                ? plan.priceYearly
-                : plan.priceMonthly;
-
-        const planInterval =
-            plan.stripeYearlyId === pendingCompanySubscription.priceId
-                ? 'YEARLY'
-                : 'MONTHLY';
+        const isYearly = plan.stripeYearlyId === pending.priceId;
 
         return {
+            success: true,
+            message: 'Pending subscription found',
             data: {
                 planName: plan.name,
-                planPrice,
-                planInterval,
+                planPrice: isYearly ? plan.priceYearly : plan.priceMonthly,
+                planInterval: isYearly ? 'YEARLY' : 'MONTHLY',
                 planColour: plan.colour,
                 planIcon: plan.icon,
                 planIconClassName: plan.iconClassname,
-                activeDate: pendingCompanySubscription.activeDate
-            },
-            message: ''
+                activeDate: pending.activeDate
+            }
         };
     } catch (error) {
         return {
-            message: `There was an error - ${error}`,
-            data: null
+            success: false,
+            message: `Failed to load pending subscription - ${error}`
         };
     }
-};
+}
 
-export const getCustomerPaymentInformation = async (
+/* ────────────────────────────────────────────────────────────────────────────
+   Get Payment Information (cards, invoices)
+──────────────────────────────────────────────────────────────────────────── */
+
+export async function getCustomerPaymentInformation(
     customerId: string | null,
     subscriptionId?: string
-) => {
-    if (!subscriptionId || !customerId)
+): Promise<
+    ActionResult<{
+        payment: {
+            address: Stripe.Address | null;
+            card: Stripe.PaymentMethod.Card | null | undefined;
+        } | null;
+        invoices: Stripe.ApiList<Stripe.Invoice> | null;
+        nextBillingDate: number | null;
+    }>
+> {
+    if (!customerId || !subscriptionId) {
         return {
-            error: 'Not applicable',
-            payment: null,
-            invoices: null,
-            nextBillingDate: null
-        };
-
-    const userSession = await authCheckServer();
-
-    if (!userSession) {
-        return {
-            error: 'Not authorised',
-            payment: null,
-            invoices: null,
-            nextBillingDate: null
+            success: false,
+            message: 'Not applicable',
+            data: undefined
         };
     }
 
-    const { user, company, userCompany } = userSession;
-
-    if (userCompany.role !== 'COMPANY_ADMIN') {
+    const session = await authCheckServer();
+    if (!session || session.userCompany.role !== 'COMPANY_ADMIN') {
         return {
-            error: 'Not authorised',
-            payment: null,
-            invoices: null,
-            nextBillingDate: null
+            success: false,
+            message: 'Not authorised',
+            data: undefined
         };
     }
 
     try {
         const subscription =
             await stripe.subscriptions.retrieve(subscriptionId);
-        let paymentId = '';
-        if (typeof subscription.default_payment_method === 'string') {
-            paymentId = subscription.default_payment_method;
-        } else {
-            paymentId = subscription.default_payment_method?.id || '';
-        }
-        const paymentMethod = await stripe.paymentMethods.retrieve(paymentId);
-        const payment = {
-            address: paymentMethod.billing_details.address,
-            card: paymentMethod.card
-        };
-        const nextBillingDate = subscription.items.data[0].current_period_end;
+
+        const paymentMethodId =
+            typeof subscription.default_payment_method === 'string'
+                ? subscription.default_payment_method
+                : subscription.default_payment_method?.id || '';
+
+        const paymentMethod =
+            await stripe.paymentMethods.retrieve(paymentMethodId);
 
         const invoices = await stripe.invoices.list({
             customer: customerId
         });
-        return { payment, invoices, nextBillingDate, error: null };
+
+        return {
+            success: true,
+            message: 'Payment information loaded',
+            data: {
+                payment: {
+                    address: paymentMethod.billing_details.address,
+                    card: paymentMethod.card
+                },
+                invoices,
+                nextBillingDate:
+                    subscription.items.data[0].current_period_end ?? null
+            }
+        };
     } catch (error) {
         return {
-            error: `There was an error - ${error}`,
-            payment: null,
-            invoices: null,
-            nextBillingDate: null
+            success: false,
+            message: `Failed to load payment information - ${error}`,
+            data: undefined
         };
     }
-};
+}
 
-export const createPortalSession = async (
+/* ────────────────────────────────────────────────────────────────────────────
+   Stripe Billing Portal
+──────────────────────────────────────────────────────────────────────────── */
+
+export async function createPortalSession(
     customerId: string,
     subscriptionId?: string
-) => {
-    const userSession = await authCheckServer();
+): Promise<ActionResult<{ url: string }>> {
+    const session = await authCheckServer();
+    if (!session) return { success: false, message: 'Not authorised' };
 
-    if (!userSession) {
-        return {
-            error: 'Not authorised'
-        };
+    if (!customerId) {
+        return { success: false, message: 'Customer ID is required' };
     }
+
     try {
-        // Assume you have the customer ID (e.g., from your database or session)
-
-        if (!customerId) {
-            return { error: 'Customer ID is required' };
-        }
-
-        let portalSessionParams: any = {
+        let params: Stripe.BillingPortal.SessionCreateParams = {
             customer: customerId,
-            return_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing` // URL to redirect back to after the portal
+            return_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing`
         };
 
         if (subscriptionId) {
-            portalSessionParams = {
-                ...portalSessionParams,
+            params = {
+                ...params,
                 flow_data: {
                     type: 'subscription_update',
                     subscription_update: { subscription: subscriptionId }
@@ -224,46 +255,64 @@ export const createPortalSession = async (
             };
         }
 
-        // Create a billing portal session
         const portalSession =
-            await stripe.billingPortal.sessions.create(portalSessionParams);
+            await stripe.billingPortal.sessions.create(params);
 
-        // Return the portal session URL
-        return { url: portalSession.url };
+        return {
+            success: true,
+            message: 'Portal session created',
+            data: { url: portalSession.url }
+        };
     } catch (error) {
-        console.error('Error creating portal session:', error);
-        return { error: `Internal server error - ${error}` };
+        return {
+            success: false,
+            message: `Failed to create portal session - ${error}`
+        };
     }
-};
+}
 
-export const checkDowngradedPlan = async (id: string) => {
+/* ────────────────────────────────────────────────────────────────────────────
+   Validate Downgraded Plan — disable excess users/teams/nudges
+──────────────────────────────────────────────────────────────────────────── */
+
+export async function checkDowngradedPlan(
+    companyId: string
+): Promise<ActionResult<true>> {
     try {
         const company = await prisma.company.findUnique({
-            where: { id },
+            where: { id: companyId },
             include: {
                 plan: true,
                 members: true,
                 teams: { include: { nudges: true } }
             }
         });
-        if (!company) return null;
+
+        if (!company) {
+            return { success: false, message: 'Company not found' };
+        }
+
         const { maxNudges, maxTeams, maxUsers, maxRecipients } = company.plan;
-        if (company.members.length > maxUsers && maxUsers !== 0) {
+
+        // Disable extra users
+        if (maxUsers !== 0 && company.members.length > maxUsers) {
             await prisma.user.updateMany({
-                where: { companyMember: { some: { companyId: id } } },
+                where: { companyMember: { some: { companyId } } },
                 data: { status: 'DISABLED' }
             });
         }
-        if (company.teams.length > maxTeams && maxTeams !== 0) {
+
+        // Disable extra teams
+        if (maxTeams !== 0 && company.teams.length > maxTeams) {
             await prisma.team.updateMany({
-                where: { companyId: id },
+                where: { companyId },
                 data: { status: 'DISABLED' }
             });
-            for (const team of company.teams) {
-                await prisma.teamMember.updateMany({
-                    where: { teamId: team.id },
-                    data: { status: 'DISABLED' }
-                });
+        }
+
+        // Disable teams' nudges
+        for (const team of company.teams) {
+            if (maxTeams !== 0 && company.teams.length > maxTeams) {
                 await prisma.nudge.updateMany({
                     where: { teamId: team.id },
                     data: { status: 'DISABLED' }
@@ -271,47 +320,42 @@ export const checkDowngradedPlan = async (id: string) => {
             }
         }
 
+        // Count nudges
         const totalNudges = company.teams.reduce(
             (acc, team) => acc + team.nudges.length,
             0
         );
-        if (totalNudges > maxNudges && maxNudges !== 0) {
+
+        if (maxNudges !== 0 && totalNudges > maxNudges) {
             await prisma.nudge.updateMany({
-                where: {
-                    team: {
-                        companyId: id // pass your company.id here
-                    }
-                },
-                data: {
-                    status: 'DISABLED' // whatever you want to update
-                }
+                where: { team: { companyId } },
+                data: { status: 'DISABLED' }
             });
         }
+
+        // Check recipients
         const nudges = await prisma.nudge.findMany({
-            where: {
-                team: {
-                    companyId: id
-                }
-            },
-            include: {
-                recipients: true
-            }
+            where: { team: { companyId } },
+            include: { recipients: true }
         });
+
         for (const nudge of nudges) {
             if (
-                nudge.recipients.length > maxRecipients &&
-                maxRecipients !== 0
+                maxRecipients !== 0 &&
+                nudge.recipients.length > maxRecipients
             ) {
                 await prisma.nudge.update({
                     where: { id: nudge.id },
-                    data: {
-                        status: 'DISABLED' // or whatever update you need
-                    }
+                    data: { status: 'DISABLED' }
                 });
             }
         }
-        return true;
+
+        return { success: true, message: 'Plan checks completed', data: true };
     } catch (error) {
-        return { error };
+        return {
+            success: false,
+            message: `Failed to process plan downgrade - ${error}`
+        };
     }
-};
+}

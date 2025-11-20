@@ -13,19 +13,19 @@ export type Company = NonNullable<
     CompanyDataData extends { company: infer T } ? T : never
 >;
 
-export type Details = Awaited<ReturnType<typeof getCustomerPaymentInformation>>;
-
-export type Payment = NonNullable<
-    Details extends { payment: infer T } ? T : never
+export type GetPaymentReturn = Awaited<
+    ReturnType<typeof getCustomerPaymentInformation>
 >;
 
-export type InvoicesObject = NonNullable<
-    Details extends { invoices: infer T } ? T : never
->;
+export type Payment = Extract<
+    GetPaymentReturn,
+    { success: true }
+>['data']['payment'];
 
-export type Invoices = NonNullable<
-    InvoicesObject extends { data: infer T } ? T : never
->;
+export type Invoices = Extract<
+    GetPaymentReturn,
+    { success: true }
+>['data']['invoices'];
 
 export interface BillingPlanSelectionProps {
     company: Company;

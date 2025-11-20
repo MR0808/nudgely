@@ -15,11 +15,7 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import {
-    companyUserRegisterInitial,
-    registerInitial,
-    teamUserRegisterInitial
-} from '@/actions/register';
+import { teamUserRegisterInitial } from '@/actions/register';
 import { InviteUserRegisterSchema } from '@/schemas/register';
 import type { TeamUserInitialRegistationFormProps } from '@/types/register';
 import {
@@ -57,10 +53,10 @@ const TeamUserInitialRegistationForm = ({
                 invite.role,
                 invite.id
             );
-            if (result.error) {
-                toast.error(result.error, { position: 'top-center' });
-            } else if (result.userId) {
-                onNext({ ...values, userId: result.userId });
+            if (!result.success || !result.data) {
+                toast.error(result.message, { position: 'top-center' });
+            } else if (result.data.userId) {
+                onNext({ ...values, userId: result.data.userId });
             }
         });
     };

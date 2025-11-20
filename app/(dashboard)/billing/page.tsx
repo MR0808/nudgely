@@ -93,8 +93,8 @@ const BillingPage = async ({
     );
 
     let nextBillingDate = new Date();
-    if (details.nextBillingDate) {
-        nextBillingDate = new Date(details.nextBillingDate * 1000);
+    if (details?.data?.nextBillingDate) {
+        nextBillingDate = new Date(details.data.nextBillingDate * 1000);
     }
 
     const pendingCompanySubscription = await getPendingSubscriptions();
@@ -254,7 +254,7 @@ const BillingPage = async ({
                                             ? ' • Billed yearly'
                                             : ' • Billed monthly')}
                                 </p>
-                                {details.nextBillingDate && (
+                                {details?.data?.nextBillingDate && (
                                     <p className="text-sm text-muted-foreground mt-1">
                                         Next billing date:{' '}
                                         {nextBillingDate.toLocaleDateString()}
@@ -316,11 +316,11 @@ const BillingPage = async ({
                 {company.companySubscription && (
                     <>
                         <BillingPaymentMethod
-                            payment={details.payment}
+                            payment={details?.data?.payment || null}
                             customerId={company.stripeCustomerId || null}
                         />
                         <BillingInvoices
-                            invoices={details.invoices?.data}
+                            invoices={details?.data?.invoices}
                             customerId={company.stripeCustomerId || null}
                         />
                     </>

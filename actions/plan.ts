@@ -2,14 +2,21 @@
 
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
+import { ActionResult } from '@/types/global';
+import { Plan } from '@/generated/prisma';
 
-export const getPlan = async () => {
+//
+// ---------------------------------------------------------
+// GET CURRENT COMPANY PLAN
+// ---------------------------------------------------------
+//
+export const getPlan = async (): Promise<ActionResult<{ plan: Plan }>> => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
         return {
-            plan: null,
-            error: 'Not authorised'
+            success: false,
+            message: 'Not authorised'
         };
     }
 
@@ -20,22 +27,46 @@ export const getPlan = async () => {
             where: { id: company.planId }
         });
 
-        if (!plan) return { plan: null, error: 'Failed to get plan' };
+        if (!plan) {
+            return {
+                success: false,
+                message: 'Failed to fetch plan'
+            };
+        }
 
-        return { plan, error: null };
+        return {
+            success: true,
+            message: 'Plan retrieved successfully',
+            data: { plan }
+        };
     } catch (error) {
-        return { plan: null, error: `Failed to get plan - ${error}` };
+        return {
+            success: false,
+            message: `Failed to get plan - ${String(error)}`
+        };
     }
 };
 
-export const getPlans = async () => {
+//
+// ---------------------------------------------------------
+// GET ALL PLANS
+// ---------------------------------------------------------
+//
+export const getPlans = async (): Promise<ActionResult<{ plans: Plan[] }>> => {
     try {
         const plans = await prisma.plan.findMany({
             orderBy: { priceMonthly: 'asc' }
         });
 
-        return { plans, error: null };
+        return {
+            success: true,
+            message: 'Plans retrieved successfully',
+            data: { plans }
+        };
     } catch (error) {
-        return { plans: null, error: `Failed to get plans - ${error}` };
+        return {
+            success: false,
+            message: `Failed to get plans - ${String(error)}`
+        };
     }
 };

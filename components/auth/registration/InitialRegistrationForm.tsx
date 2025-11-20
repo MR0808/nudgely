@@ -50,14 +50,14 @@ const InitialRegistrationForm = ({
         startTransition(async () => {
             toast.dismiss();
             const result = await registerInitial(values);
-            if (result.error) {
-                toast.error(result.error, { position: 'top-center' });
-            } else if (result.companyToken) {
-                router.push(`/auth/invite/company/${result.companyToken}`);
-            } else if (result.teamToken) {
-                router.push(`/auth/invite/team/${result.teamToken}`);
-            } else if (result.userId) {
-                onNext({ ...values, userId: result.userId });
+            if (!result.success || !result.data) {
+                toast.error(result.message, { position: 'top-center' });
+            } else if (result.data.companyToken) {
+                router.push(`/auth/invite/company/${result.data.companyToken}`);
+            } else if (result.data.teamToken) {
+                router.push(`/auth/invite/team/${result.data.teamToken}`);
+            } else if (result.data.userId) {
+                onNext({ ...values, userId: result.data.userId });
             }
         });
     };

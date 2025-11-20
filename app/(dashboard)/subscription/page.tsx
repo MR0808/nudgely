@@ -42,7 +42,9 @@ const PricingPage = async () => {
     const resCompany = await getCompany();
     if (!resCompany.success || !resCompany.data) return null;
     const { company, userCompany } = resCompany.data;
-    const { plans } = await getPlans();
+    const resPlan = await getPlans();
+
+    if (!resPlan.data || !resPlan.success) return null;
 
     const res = await checkCompanyStatus();
 
@@ -83,7 +85,7 @@ const PricingPage = async () => {
                 </div>
                 <BillingPlanSelection
                     company={company}
-                    plans={plans || []}
+                    plans={resPlan.data.plans || []}
                     isComplete={companyStatus?.isComplete || false}
                 />
             </div>

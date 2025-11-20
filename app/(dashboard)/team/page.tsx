@@ -41,7 +41,11 @@ export async function generateMetadata(): Promise<Metadata> {
 const TeamPage = async () => {
     const { user, userCompany } = await authCheck('/team');
     const { data } = await getCompanyTeams();
-    const { plan } = await getPlan();
+    const resPlan = await getPlan();
+
+    if (!resPlan.data || !resPlan.success) return null;
+
+    const { plan } = resPlan.data;
 
     if (!data || !plan) {
         return (

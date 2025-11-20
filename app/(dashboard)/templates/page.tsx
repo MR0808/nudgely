@@ -39,9 +39,13 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function TemplatesPage() {
     const userSession = await authCheck('/templates');
     const teams = await getUserTeams();
-    const plan = await getPlan();
+    const resPlan = await getPlan();
 
-    if (!plan.plan) {
+    if (!resPlan.data || !resPlan.success) return null;
+
+    const { plan } = resPlan.data;
+
+    if (!plan) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -65,7 +69,7 @@ export default async function TemplatesPage() {
     return (
         <div className="min-h-screen bg-background">
             <div className="max-w-7xl mx-auto p-6">
-                <TemplateManagement teams={teams || []} plan={plan.plan} />
+                <TemplateManagement teams={teams || []} plan={plan} />
             </div>
         </div>
     );

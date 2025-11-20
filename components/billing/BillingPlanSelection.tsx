@@ -68,15 +68,15 @@ const BillingPlanSelection = ({
                     company.companySubscription.stripeSubscriptionId
                 );
 
-                if (response.error) {
-                    const errorData = response.error;
+                if (!response.success || !response.data) {
+                    const errorData = response.message;
                     console.error('API Error:', errorData);
                     return;
                 }
 
-                if (response.url) {
+                if (response.data.url) {
                     // Redirect to the Stripe Customer Portal
-                    window.location.href = response.url;
+                    window.location.href = response.data.url;
                 }
             } else {
                 const planId =
@@ -88,14 +88,14 @@ const BillingPlanSelection = ({
                     company.id
                 );
 
-                if (response.error) {
-                    const errorData = response.error;
+                if (!response.success || !response.data) {
+                    const errorData = response.message;
                     console.error('API Error:', errorData);
                     return;
                 }
 
-                if (response.url) {
-                    window.location.href = response.url;
+                if (response.data.url) {
+                    window.location.href = response.data.url;
                 }
             }
         });
