@@ -60,10 +60,12 @@ const BillingPage = async ({
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) => {
     const userSession = await authCheck('/billing');
-    const { company, userCompany } = await getCompany();
+    const res = await getCompany();
+    if (!res.success || !res.data) return null;
+    const { company, userCompany } = res.data;
     const params = await searchParams;
 
-    if (!company || userCompany.role !== 'COMPANY_ADMIN') {
+    if (userCompany.role !== 'COMPANY_ADMIN') {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">

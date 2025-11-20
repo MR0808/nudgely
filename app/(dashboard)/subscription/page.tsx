@@ -38,10 +38,15 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const PricingPage = async () => {
     const userSession = await authCheck('/subscription');
-    const { company, userCompany } = await getCompany();
+
+    const resCompany = await getCompany();
+    if (!resCompany.success || !resCompany.data) return null;
+    const { company, userCompany } = resCompany.data;
     const { plans } = await getPlans();
 
-    if (!company || userCompany.role !== 'COMPANY_ADMIN') {
+    const res = await checkCompanyStatus();
+
+    if (!company || userCompany.role !== 'COMPANY_ADMIN' || !res.success) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -63,7 +68,7 @@ const PricingPage = async () => {
         );
     }
 
-    const companyStatus = await checkCompanyStatus();
+    const companyStatus = res.data!;
 
     return (
         <div className="min-h-screen bg-background">

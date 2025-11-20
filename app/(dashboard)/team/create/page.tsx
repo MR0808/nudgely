@@ -38,10 +38,14 @@ export function generateMetadata(): Metadata {
 
 const TeamCreatePage = async () => {
     const userSession = await authCheck('/team/create');
+    const res = await getUserCompany();
 
-    const company = await getUserCompany();
+    const company = res.data;
 
-    if (!company.data || userSession.userCompany.role !== 'COMPANY_ADMIN') {
+    if (
+        !company?.companyId ||
+        userSession.userCompany.role !== 'COMPANY_ADMIN'
+    ) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -77,7 +81,7 @@ const TeamCreatePage = async () => {
             <Separator className="my-4 lg:my-6" />
             <CreateTeamForm
                 userSession={userSession}
-                companyId={company.data}
+                companyId={company.companyId}
             />
         </div>
     );

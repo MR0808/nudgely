@@ -22,7 +22,11 @@ import { getCompanyNudgeCount } from '@/actions/nudges';
 import { getCustomerPaymentInformation } from '@/actions/subscriptions';
 
 export async function generateMetadata(): Promise<Metadata> {
-    const { company } = await getCompany();
+    const res = await getCompany();
+    if (!res.data) {
+        return { title: 'Company not found' };
+    }
+    const { company } = res.data;
 
     if (!company) {
         return { title: 'Company not found' };
@@ -57,7 +61,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const CompanyPage = async () => {
     const userSession = await authCheck('/company');
-    const { company, userCompany, image } = await getCompany();
+    const res = await getCompany();
+    if (!res.success || !res.data) return null;
+    const { company, userCompany, image } = res.data;
 
     if (!company || userCompany.role !== 'COMPANY_ADMIN') {
         return (

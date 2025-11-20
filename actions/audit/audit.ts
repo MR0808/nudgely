@@ -1,22 +1,38 @@
 'use server';
 
 import { headers } from 'next/headers';
-
 import { prisma } from '@/lib/prisma';
+
 import type {
     CreateAuditLogParams,
     AuditLogFilters,
     AuditLogResult
 } from '@/types/audit';
 
-/**
- * Core audit logging server action
- */
+/* -------------------------------------------------------
+ *  Types for Prisma GroupBy outputs (Accelerate-safe)
+ * ----------------------------------------------------- */
+
+type EventsByCategory = {
+    category: string;
+    _count: { category: number };
+};
+
+type EventsByAction = {
+    action: string;
+    _count: { action: number };
+};
+
+/* -------------------------------------------------------
+ *  Create Audit Event
+ * ----------------------------------------------------- */
+
 export async function logAuditEvent(
     params: CreateAuditLogParams
 ): Promise<AuditLogResult> {
     try {
         const headersList = await headers();
+
         const ipAddress =
             params.ipAddress ||
             headersList.get('x-forwarded-for') ||
@@ -39,16 +55,23 @@ export async function logAuditEvent(
             }
         });
 
-        return { success: true, message: 'Audit event logged successfully' };
+        return {
+            success: true,
+            message: 'Audit event logged successfully'
+        };
     } catch (error) {
         console.error('Failed to log audit event:', error);
-        return { success: false, error: 'Failed to log audit event' };
+        return {
+            success: false,
+            error: 'Failed to log audit event'
+        };
     }
 }
 
-/**
- * Get audit logs with filters
- */
+/* -------------------------------------------------------
+ *  Get Audit Logs with Filters
+ * ----------------------------------------------------- */
+
 export async function getAuditLogs(filters: AuditLogFilters = {}) {
     try {
         const where: any = {};
@@ -77,9 +100,7 @@ export async function getAuditLogs(filters: AuditLogFilters = {}) {
                     }
                 }
             },
-            orderBy: {
-                createdAt: 'desc'
-            },
+            orderBy: { createdAt: 'desc' },
             take: filters.limit || 100,
             skip: filters.skip || 0
         });
@@ -87,78 +108,85 @@ export async function getAuditLogs(filters: AuditLogFilters = {}) {
         return { success: true, data: logs };
     } catch (error) {
         console.error('Failed to get audit logs:', error);
-        return { success: false, error: 'Failed to retrieve audit logs' };
+        return {
+            success: false,
+            error: 'Failed to retrieve audit logs'
+        };
     }
 }
 
-/**
- * Get audit log statistics
- */
+/* -------------------------------------------------------
+ *  Get Audit Statistics
+ * ----------------------------------------------------- */
+
 export async function getAuditStats(userId?: string) {
     try {
         const where = userId ? { userId } : {};
 
-        const [totalEvents, eventsByCategory, eventsByAction, recentEvents] =
-            await Promise.all([
-                prisma.auditLog.count({ where }),
-                prisma.auditLog.groupBy({
-                    by: ['category'],
-                    where,
-                    _count: {
-                        category: true
-                    }
-                }),
-                prisma.auditLog.groupBy({
-                    by: ['action'],
-                    where,
-                    _count: {
-                        action: true
-                    },
-                    orderBy: {
-                        _count: {
-                            action: 'desc'
-                        }
-                    },
-                    take: 10
-                }),
-                prisma.auditLog.count({
-                    where: {
-                        ...where,
-                        createdAt: {
-                            gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
-                        }
-                    }
-                })
-            ]);
+        const [
+            totalEvents,
+            eventsByCategoryRaw,
+            eventsByActionRaw,
+            recentEvents
+        ] = await Promise.all([
+            prisma.auditLog.count({ where }),
 
-        const eventsByCategoryMap: Record<string, number> = {};
-        eventsByCategory.forEach((item) => {
-            eventsByCategoryMap[item.category] = item._count.category;
+            prisma.auditLog.groupBy({
+                by: ['category'],
+                where,
+                _count: { category: true }
+            }) as unknown as EventsByCategory[],
+
+            prisma.auditLog.groupBy({
+                by: ['action'],
+                where,
+                _count: { action: true },
+                orderBy: { _count: { action: 'desc' } },
+                take: 10
+            }) as unknown as EventsByAction[],
+
+            prisma.auditLog.count({
+                where: {
+                    ...where,
+                    createdAt: {
+                        gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+                    }
+                }
+            })
+        ]);
+
+        const eventsByCategory: Record<string, number> = {};
+        eventsByCategoryRaw.forEach((item) => {
+            eventsByCategory[item.category] = item._count.category;
         });
 
-        const eventsByActionMap: Record<string, number> = {};
-        eventsByAction.forEach((item) => {
-            eventsByActionMap[item.action] = item._count.action;
+        const eventsByAction: Record<string, number> = {};
+        eventsByActionRaw.forEach((item) => {
+            eventsByAction[item.action] = item._count.action;
         });
 
         return {
             success: true,
             data: {
                 totalEvents,
-                eventsByCategory: eventsByCategoryMap,
-                eventsByAction: eventsByActionMap,
+                eventsByCategory,
+                eventsByAction,
                 recentActivityCount: recentEvents
             }
         };
     } catch (error) {
-        console.error('Failed to get audit stats:', error);
-        return { success: false, error: 'Failed to retrieve audit statistics' };
+        console.error('Failed to get audit statistics:', error);
+        return {
+            success: false,
+            error: 'Failed to retrieve audit statistics'
+        };
     }
 }
 
-/**
- * Delete old audit logs (for cleanup/retention policies)
- */
+/* -------------------------------------------------------
+ *  Delete Old Logs (Cleanup)
+ * ----------------------------------------------------- */
+
 export async function cleanupOldAuditLogs(
     olderThanDays: number
 ): Promise<AuditLogResult & { deletedCount?: number }> {
@@ -181,6 +209,9 @@ export async function cleanupOldAuditLogs(
         };
     } catch (error) {
         console.error('Failed to cleanup audit logs:', error);
-        return { success: false, error: 'Failed to cleanup audit logs' };
+        return {
+            success: false,
+            error: 'Failed to cleanup audit logs'
+        };
     }
 }

@@ -5,8 +5,12 @@ import { getCustomerPaymentInformation } from '@/actions/subscriptions';
 
 export type CompanyData = Awaited<ReturnType<typeof getCompany>>;
 
+export type CompanyDataData = NonNullable<
+    CompanyData extends { data: infer T } ? T : never
+>;
+
 export type Company = NonNullable<
-    CompanyData extends { company: infer T } ? T : never
+    CompanyDataData extends { company: infer T } ? T : never
 >;
 
 export type Details = Awaited<ReturnType<typeof getCustomerPaymentInformation>>;

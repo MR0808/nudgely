@@ -5,12 +5,16 @@ import { SessionType } from '@/types/session';
 
 export type CompanyData = Awaited<ReturnType<typeof getCompany>>;
 
+export type CompanyDataData = NonNullable<
+    CompanyData extends { data: infer T } ? T : never
+>;
+
 export type Company = NonNullable<
-    CompanyData extends { company: infer T } ? T : never
+    CompanyDataData extends { company: infer T } ? T : never
 >;
 
 export type Image = NonNullable<
-    CompanyData extends { image: infer T } ? T : never
+    CompanyDataData extends { image: infer T } ? T : never
 >;
 
 export interface CompanyOnboardingWizardProps {

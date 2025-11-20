@@ -51,7 +51,9 @@ const OnboardingPage = async () => {
     const country = await getCountryById(defaultCountry.id);
     const companySizes = await getAllCompanySizes();
     const industries = await getAllIndustries();
-    const { company, userCompany, image } = await getCompany();
+    const res = await getCompany();
+    if (!res.success || !res.data) return null;
+    const { company, image } = res.data;
 
     if (!company) return null;
 

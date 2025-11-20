@@ -5,13 +5,20 @@ import { LoadingBar } from '@/components/layout/LoadingBar';
 import ServerSidebar from '@/components/layout/ServerSidebar';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { CompanyStatus } from '@/generated/prisma';
 
 export default async function RootLayout({
     children
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const companyStatus = await checkCompanyStatus();
+    const res = await checkCompanyStatus();
+    if (!res.success) {
+        // not authorised
+        // e.g. redirect to login / show error
+        return;
+    }
+    const companyStatus = res.data!;
     const showBanner =
         companyStatus?.isCompanyAdmin &&
         !companyStatus.isComplete &&
