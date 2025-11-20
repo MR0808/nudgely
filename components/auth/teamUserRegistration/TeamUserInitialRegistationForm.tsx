@@ -28,7 +28,6 @@ import {
     PasswordInputAuthCompanyUser,
     SubmitButtonAuth
 } from '@/components/form/FormInputs';
-import { inviteCompanyAdmin } from '@/actions/companyMembers';
 
 const TeamUserInitialRegistationForm = ({
     invite,

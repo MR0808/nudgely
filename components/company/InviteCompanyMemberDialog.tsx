@@ -55,18 +55,19 @@ const InviteCompanyMemberDialog = ({
     const onSubmit = (values: z.infer<typeof InviteCompanyAdminSchema>) => {
         setError(null);
         startTransition(async () => {
-            const data = await inviteCompanyAdmin(values, companyId);
-            if (data.error) {
-                setError(data.error || 'Failed to send invitation');
-                toast.error(data.error);
+            const res = await inviteCompanyAdmin(values, companyId);
+            if (res.error) {
+                setError(res.error || 'Failed to send invitation');
+                toast.error(res.error);
             }
-            if (data.success) {
-                if (data.method === 'added') {
-                    if (data.members) setMembers(data.members);
+            if (res.success && res.data) {
+                if (res.data.method === 'added') {
+                    if (res.data.members) setMembers(res.data.members);
                     toast.success('User successfully added');
                 }
-                if (data.method === 'invited') {
-                    if (data.invitations) setPendingInvites(data.invitations);
+                if (res.data.method === 'invited') {
+                    if (res.data.invitations)
+                        setPendingInvites(res.data.invitations);
                     toast.success('User successfully invited');
                 }
                 setOpen(false);

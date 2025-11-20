@@ -31,8 +31,8 @@ const RemoveAdminMemberDialog = ({
             if (result.error) {
                 toast.error(result.error);
             }
-            if (result.members) {
-                setMembers(result.members);
+            if (result.data) {
+                setMembers(result.data.members);
                 onOpenChange(false);
                 toast.success('User removed as admin');
             }

@@ -32,7 +32,7 @@ const CancelInviteDialog = ({
                 toast.error(result.error);
             }
             if (result.data) {
-                setPendingInvites(result.data);
+                setPendingInvites(result.data.invitations);
                 onOpenChange(false);
                 toast.success('User invite cancelled');
             }

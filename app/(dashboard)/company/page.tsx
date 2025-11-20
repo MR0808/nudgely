@@ -91,12 +91,16 @@ const CompanyPage = async () => {
     const regions = await getRegionsByCountry(company.countryId!);
     const companySizes = await getAllCompanySizes();
     const industries = await getAllIndustries();
-    const members = await getCompanyAdminMembers();
-    const invitations = await getCompanyInvitations();
+    const resMembers = await getCompanyAdminMembers();
+    if (!resMembers.success || !resMembers.data) return null;
+    const { members } = resMembers.data;
+    const resInvitations = await getCompanyInvitations();
+    if (!resInvitations.success || !resInvitations.data) return null;
+    const { invitations } = resInvitations.data;
     const teams = await getCompanyTeams();
     const nudgeCount = await getCompanyNudgeCount();
 
-    if (!members.data) {
+    if (!members) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -154,8 +158,8 @@ const CompanyPage = async () => {
                 <div className="grid md:grid-cols-2 gap-6">
                     <CompanyMembersCard
                         company={company}
-                        membersData={members.data}
-                        invitesData={invitations.data || []}
+                        membersData={members}
+                        invitesData={invitations || []}
                         userSession={userSession}
                     />
                     <CompanyTeamsCard

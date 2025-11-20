@@ -135,12 +135,14 @@ const UsersList = ({
                 toast.error(result.error);
             }
             if (result.data) {
-                setMembers(result.data);
-                setFilteredUsers(result.data);
+                setMembers(result.data.members);
+                setFilteredUsers(result.data.members);
                 setCurrentPage(1); // Reset to page 1
-                setTotalPages(Math.ceil(result.data.length / usersPerPage));
+                setTotalPages(
+                    Math.ceil(result.data.members.length / usersPerPage)
+                );
                 setStartIndex(0); // (1 - 1) * usersPerPage
-                setPaginatedUsers(result.data.slice(0, usersPerPage));
+                setPaginatedUsers(result.data.members.slice(0, usersPerPage));
 
                 toast.success('Member deactivated');
             }
@@ -155,12 +157,14 @@ const UsersList = ({
                 toast.error(result.error);
             }
             if (result.data) {
-                setMembers(result.data);
-                setFilteredUsers(result.data);
+                setMembers(result.data.members);
+                setFilteredUsers(result.data.members);
                 setCurrentPage(1); // Reset to page 1
-                setTotalPages(Math.ceil(result.data.length / usersPerPage));
+                setTotalPages(
+                    Math.ceil(result.data.members.length / usersPerPage)
+                );
                 setStartIndex(0); // (1 - 1) * usersPerPage
-                setPaginatedUsers(result.data.slice(0, usersPerPage));
+                setPaginatedUsers(result.data.members.slice(0, usersPerPage));
 
                 toast.success('Member reactivated');
             }

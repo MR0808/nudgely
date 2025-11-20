@@ -5,7 +5,8 @@ import { randomBytes } from 'crypto';
 import { revalidatePath } from 'next/cache';
 
 import { prisma } from '@/lib/prisma';
-import { authCheckServer } from '@/lib/authCheck';
+import type { Prisma } from '@/generated/prisma';
+import { getCompanyContext } from '@/lib/companyContext';
 import {
     sendCompanyAddedAdminEmail,
     sendCompanyInviteAdminEmail
@@ -20,340 +21,473 @@ import {
 } from '@/actions/audit/audit-company';
 import { checkCompanyUserLimits } from '@/lib/team';
 
+/* ------------------------------------------------------------------
+ * 🧩 Types
+ * ------------------------------------------------------------------ */
+
+// Standard action result shape
+type ActionResult<T> = {
+    success: boolean;
+    data: T | null;
+    error: string | null;
+};
+
+// Prisma payload helpers
+
+// companyMember with user included
+type CompanyAdminMember = Prisma.CompanyMemberGetPayload<{
+    include: { user: true };
+}>;
+
+// companyMember with user + teamMembers + team
+type CompanyMemberWithTeams = Prisma.CompanyMemberGetPayload<{
+    include: {
+        user: {
+            include: {
+                teamMembers: { include: { team: true } };
+            };
+        };
+    };
+}>;
+
+// companyInvite row
+type CompanyInviteRow = Prisma.CompanyInviteGetPayload<{}>;
+
+/* ------------------------------------------------------------------
+ * 📨 Invite / Add Company Admin
+ * ------------------------------------------------------------------ */
+
 export const inviteCompanyAdmin = async (
     values: z.infer<typeof InviteCompanyAdminSchema>,
     companyId: string
-) => {
-    const userSession = await authCheckServer();
+): Promise<
+    ActionResult<
+        | { method: 'added'; members: CompanyAdminMember[] }
+        | { method: 'invited'; invitations: CompanyInviteRow[] }
+    >
+> => {
+    const ctx = await getCompanyContext();
 
-    if (!userSession) {
+    if (!ctx) {
         return {
             success: false,
+            data: null,
             error: 'Not authorised'
         };
     }
 
-    const { user, company, userCompany } = userSession;
+    const { user, company, userCompany, isAdmin } = ctx;
 
-    if (userCompany.role !== 'COMPANY_ADMIN') {
+    if (!isAdmin || !userCompany || userCompany.companyId !== companyId) {
         return {
             success: false,
+            data: null,
             error: 'Not authorised'
         };
     }
 
     try {
         // Validate input
-        const validatedFields = InviteCompanyAdminSchema.safeParse(values);
+        const validated = InviteCompanyAdminSchema.safeParse(values);
 
-        if (!validatedFields.success) {
+        if (!validated.success) {
             return {
                 success: false,
-                message: 'Invalid fields'
+                data: null,
+                error: 'Invalid fields'
             };
         }
 
-        const existingMember = await prisma.user.findUnique({
-            where: { email: values.email }
-        });
+        const data = validated.data;
 
-        const limits = await checkCompanyUserLimits(company.id);
+        // Run independent checks in parallel
+        const [existingMember, limits, admins] = await Promise.all([
+            prisma.user.findUnique({
+                where: { email: data.email }
+            }),
+            checkCompanyUserLimits(company.id),
+            prisma.companyMember.findMany({
+                where: { companyId, role: 'COMPANY_ADMIN' }
+            })
+        ]);
 
-        const admins = await prisma.companyMember.findMany({
-            where: { role: 'COMPANY_ADMIN' }
-        });
-
+        // Plan admin limit check
         if (
             limits.currentPlan.maxAdmin !== 0 &&
             admins.length >= limits.currentPlan.maxAdmin
         ) {
             return {
                 success: false,
+                data: null,
                 error: 'Admin limit reached for your current plan'
             };
         }
 
+        // --- Case 1: User already exists in system ---
         if (existingMember) {
             const companyMember = await prisma.companyMember.findFirst({
                 where: { userId: existingMember.id }
             });
 
-            if (!companyMember)
+            if (!companyMember) {
                 return {
                     success: false,
+                    data: null,
                     error: 'Error in adding user, please contact support - Error 1021'
                 };
+            }
 
-            if (companyMember.companyId !== companyId)
+            if (companyMember.companyId !== companyId) {
                 return {
                     success: false,
+                    data: null,
                     error: 'User belongs to a different company, unable to add them'
                 };
+            }
 
-            if (companyMember.role === 'COMPANY_ADMIN')
+            if (companyMember.role === 'COMPANY_ADMIN') {
                 return {
                     success: false,
+                    data: null,
                     error: 'This user is already a company admin'
                 };
+            }
 
             const updateAdmin = await prisma.companyMember.update({
                 where: { id: companyMember.id },
                 data: { role: 'COMPANY_ADMIN' }
             });
 
-            if (!updateAdmin)
+            if (!updateAdmin) {
                 return {
                     success: false,
+                    data: null,
                     error: 'Error in adding user, please contact support - Error 1022'
                 };
+            }
 
-            const teams = await prisma.team.findMany({ where: { companyId } });
+            const teams = await prisma.team.findMany({
+                where: { companyId }
+            });
 
-            for (const team of teams) {
-                const updateTeam = await prisma.teamMember.findFirst({
-                    where: { teamId: team.id, userId: user.id }
-                });
-
-                if (updateTeam) {
-                    await prisma.teamMember.update({
-                        where: { id: updateTeam.id },
-                        data: { role: 'TEAM_ADMIN' }
-                    });
-                } else {
-                    await prisma.teamMember.create({
-                        data: {
+            // Use existingMember.id consistently
+            await Promise.all(
+                teams.map((team) =>
+                    prisma.teamMember.upsert({
+                        where: {
+                            teamId_userId: {
+                                teamId: team.id,
+                                userId: existingMember.id
+                            }
+                        },
+                        update: {
+                            role: 'TEAM_ADMIN'
+                        },
+                        create: {
                             teamId: team.id,
                             userId: existingMember.id,
                             role: 'TEAM_ADMIN'
                         }
-                    });
-                }
-            }
+                    })
+                )
+            );
 
             revalidatePath('/company');
 
-            await sendCompanyAddedAdminEmail({
-                email: existingMember.email,
-                name: existingMember.name,
-                companyName: company.name
-            });
+            await Promise.all([
+                sendCompanyAddedAdminEmail({
+                    email: existingMember.email,
+                    name: existingMember.name,
+                    companyName: company.name
+                }),
+                logCompanyAdminAdded(user.id, {
+                    companyId: company.id,
+                    userId: existingMember.id
+                })
+            ]);
 
-            await logCompanyAdminAdded(userSession.user.id, {
+            const members: CompanyAdminMember[] =
+                await prisma.companyMember.findMany({
+                    where: { companyId: company.id, role: 'COMPANY_ADMIN' },
+                    include: { user: true },
+                    orderBy: { user: { name: 'asc' } }
+                });
+
+            return {
+                success: true,
+                data: {
+                    method: 'added',
+                    members
+                },
+                error: null
+            };
+        }
+
+        // --- Case 2: New user, needs invitation ---
+
+        const pendingInvite = await prisma.companyInvite.findFirst({
+            where: { companyId, email: data.email }
+        });
+
+        if (pendingInvite) {
+            return {
+                success: false,
+                data: null,
+                error: 'An invitation has already been sent to this email'
+            };
+        }
+
+        if (!limits.canCreateUser) {
+            return {
+                success: false,
+                data: null,
+                error: 'User limit reached for your current plan'
+            };
+        }
+
+        const token = randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+        await prisma.companyInvite.create({
+            data: {
+                email: data.email,
+                name: data.name,
+                role: 'COMPANY_ADMIN',
+                token,
+                expiresAt,
+                companyId,
+                invitedBy: user.id
+            }
+        });
+
+        const link = `${process.env.NEXT_PUBLIC_APP_URL}/auth/invite/company/${token}`;
+
+        await Promise.all([
+            sendCompanyInviteAdminEmail({
+                email: data.email,
+                companyName: company.name,
+                link,
+                name: data.name,
+                expiresAt
+            }),
+            logCompanyAdminInvited(user.id, {
                 companyId: company.id,
-                userId: existingMember.id
+                name: data.name,
+                email: data.email
+            })
+        ]);
+
+        const invitations: CompanyInviteRow[] =
+            await prisma.companyInvite.findMany({
+                where: { companyId: company.id, NOT: { status: 'ACCEPTED' } },
+                orderBy: { createdAt: 'asc' }
             });
 
-            const members = await prisma.companyMember.findMany({
+        revalidatePath('/company');
+
+        return {
+            success: true,
+            data: {
+                method: 'invited',
+                invitations
+            },
+            error: null
+        };
+    } catch (error) {
+        console.error('Failed to invite company member:', error);
+        return {
+            success: false,
+            data: null,
+            error: 'Failed to send invitation'
+        };
+    }
+};
+
+/* ------------------------------------------------------------------
+ * 👥 Get Company Admin Members
+ * ------------------------------------------------------------------ */
+
+export const getCompanyAdminMembers = async (): Promise<
+    ActionResult<{ members: CompanyAdminMember[] }>
+> => {
+    const ctx = await getCompanyContext();
+
+    if (!ctx) {
+        return {
+            success: false,
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    const { company, userCompany, isAdmin } = ctx;
+
+    if (!isAdmin || !userCompany) {
+        return {
+            success: false,
+            data: null,
+            error: 'Not authorised'
+        };
+    }
+
+    try {
+        const members: CompanyAdminMember[] =
+            await prisma.companyMember.findMany({
                 where: { companyId: company.id, role: 'COMPANY_ADMIN' },
                 include: { user: true },
                 orderBy: { user: { name: 'asc' } }
             });
 
-            return {
-                success: true,
-                method: 'added',
-                members,
-                error: null
-            };
-        } else {
-            const pendingInvites = await prisma.companyInvite.findFirst({
-                where: { companyId, email: values.email }
-            });
+        return {
+            success: true,
+            data: { members },
+            error: null
+        };
+    } catch (error) {
+        console.error('Failed to fetch company members:', error);
+        return {
+            success: false,
+            data: null,
+            error: 'Error fetching members'
+        };
+    }
+};
 
-            if (pendingInvites)
-                return {
-                    success: false,
-                    error: 'An invitation has already been sent to this email'
-                };
+/* ------------------------------------------------------------------
+ * ✉️ Get Pending Company Invitations
+ * ------------------------------------------------------------------ */
 
-            if (!limits.canCreateUser) {
-                return {
-                    success: false,
-                    error: 'User limit reached for your current plan'
-                };
-            }
+export const getCompanyInvitations = async (): Promise<
+    ActionResult<{ invitations: CompanyInviteRow[] }>
+> => {
+    const ctx = await getCompanyContext();
 
-            const token = randomBytes(32).toString('hex');
-            const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    if (!ctx) {
+        return {
+            success: false,
+            data: null,
+            error: 'Not authorised'
+        };
+    }
 
-            await prisma.companyInvite.create({
-                data: {
-                    email: values.email,
-                    name: values.name,
-                    role: 'COMPANY_ADMIN',
-                    token,
-                    expiresAt,
-                    companyId,
-                    invitedBy: user.id
-                }
-            });
+    const { company, userCompany, isAdmin } = ctx;
 
-            const link = `${process.env.NEXT_PUBLIC_APP_URL}/auth/invite/company/${token}`;
-            await sendCompanyInviteAdminEmail({
-                email: values.email,
-                companyName: company.name,
-                link,
-                name: values.name,
-                expiresAt
-            });
+    if (!isAdmin || !userCompany) {
+        return {
+            success: false,
+            data: null,
+            error: 'Not authorised'
+        };
+    }
 
-            await logCompanyAdminInvited(userSession.user.id, {
-                companyId: company.id,
-                name: values.name,
-                email: values.email
-            });
-
-            const invitations = await prisma.companyInvite.findMany({
+    try {
+        const invitations: CompanyInviteRow[] =
+            await prisma.companyInvite.findMany({
                 where: { companyId: company.id, NOT: { status: 'ACCEPTED' } },
                 orderBy: { createdAt: 'asc' }
             });
 
-            revalidatePath('/company');
-
-            return {
-                success: true,
-                method: 'invited',
-                invitations,
-                error: null
-            };
-        }
+        return {
+            success: true,
+            data: { invitations },
+            error: null
+        };
     } catch (error) {
-        console.error('Failed to invite company member:', error);
-        return { success: false, error: 'Failed to send invitation' };
-    }
-};
-
-export const getCompanyAdminMembers = async () => {
-    const userSession = await authCheckServer();
-
-    if (!userSession) {
+        console.error('Failed to fetch company invitations:', error);
         return {
+            success: false,
             data: null,
-            error: 'Not authorised'
-        };
-    }
-
-    const { company, userCompany } = userSession;
-
-    if (userCompany.role !== 'COMPANY_ADMIN') {
-        return {
-            data: null,
-            error: 'Not authorised'
-        };
-    }
-
-    try {
-        const members = await prisma.companyMember.findMany({
-            where: { companyId: company.id, role: 'COMPANY_ADMIN' },
-            include: { user: true },
-            orderBy: { user: { name: 'asc' } }
-        });
-
-        if (!members) {
-            return { data: null, error: 'Members not found' };
-        }
-        return { data: members, error: null };
-    } catch (error) {
-        console.error('Failed to fetch company members:', error);
-        return { data: null, error: 'Error fetching members' };
-    }
-};
-
-export const getCompanyInvitations = async () => {
-    const userSession = await authCheckServer();
-
-    if (!userSession) {
-        return {
-            data: null,
-            error: 'Not authorised'
-        };
-    }
-
-    const { company, userCompany } = userSession;
-
-    if (userCompany.role !== 'COMPANY_ADMIN') {
-        return {
-            data: null,
-            error: 'Not authorised'
-        };
-    }
-
-    try {
-        const invitations = await prisma.companyInvite.findMany({
-            where: { companyId: company.id, NOT: { status: 'ACCEPTED' } },
-            orderBy: { createdAt: 'asc' }
-        });
-
-        return { data: invitations, error: null };
-    } catch (error) {
-        return {
-            data: null,
-            error: `Failed to fetch company invitations: ${error}`
+            error: 'Failed to fetch company invitations'
         };
     }
 };
 
-export const cancelCompanyInvitation = async (id: string) => {
-    const userSession = await authCheckServer();
+/* ------------------------------------------------------------------
+ * ❌ Cancel Company Invitation
+ * ------------------------------------------------------------------ */
 
-    if (!userSession) {
+export const cancelCompanyInvitation = async (
+    id: string
+): Promise<ActionResult<{ invitations: CompanyInviteRow[] }>> => {
+    const ctx = await getCompanyContext();
+
+    if (!ctx) {
         return {
+            success: false,
             data: null,
             error: 'Not authorised'
         };
     }
 
-    const { company, userCompany } = userSession;
+    const { company, userCompany, isAdmin } = ctx;
 
-    if (userCompany.role !== 'COMPANY_ADMIN') {
+    if (!isAdmin || !userCompany) {
         return {
+            success: false,
             data: null,
             error: 'Not authorised'
         };
     }
+
     try {
         await prisma.companyInvite.delete({ where: { id } });
 
-        const data = await prisma.companyInvite.findMany({
-            where: { companyId: company.id, NOT: { status: 'ACCEPTED' } },
-            orderBy: { createdAt: 'asc' }
-        });
+        const invitations: CompanyInviteRow[] =
+            await prisma.companyInvite.findMany({
+                where: { companyId: company.id, NOT: { status: 'ACCEPTED' } },
+                orderBy: { createdAt: 'asc' }
+            });
 
         revalidatePath('/company');
 
-        return { data, error: null };
+        return {
+            success: true,
+            data: { invitations },
+            error: null
+        };
     } catch (error) {
         console.error('Failed to cancel invitation:', error);
-        return { data: null, error: 'Failed to cancel invitation' };
+        return {
+            success: false,
+            data: null,
+            error: 'Failed to cancel invitation'
+        };
     }
 };
 
-export const removeCompanyAdminMember = async (memberId: string) => {
-    const userSession = await authCheckServer();
+/* ------------------------------------------------------------------
+ * 🗑️ Remove Company Admin Member (demote to member)
+ * ------------------------------------------------------------------ */
 
-    if (!userSession) {
+export const removeCompanyAdminMember = async (
+    memberId: string
+): Promise<ActionResult<{ members: CompanyAdminMember[] }>> => {
+    const ctx = await getCompanyContext();
+
+    if (!ctx) {
         return {
             success: false,
-            members: null,
+            data: null,
             error: 'Not authorised'
         };
     }
 
-    const { company, userCompany, user } = userSession;
+    const { company, userCompany, user, isAdmin } = ctx;
 
-    if (userCompany.role !== 'COMPANY_ADMIN') {
+    if (!isAdmin || !userCompany) {
         return {
             success: false,
-            members: null,
+            data: null,
             error: 'Not authorised'
         };
     }
+
     try {
-        // Mock: Prevent removing yourself
+        // Prevent removing yourself
         if (memberId === user.id) {
             return {
                 success: false,
-                members: null,
+                data: null,
                 error: 'Cannot remove yourself from the company'
             };
         }
@@ -363,60 +497,72 @@ export const removeCompanyAdminMember = async (memberId: string) => {
             data: { role: 'COMPANY_MEMBER' }
         });
 
+        // Use companyMember.userId here
         await prisma.teamMember.updateMany({
-            where: { userId: companyMember.id },
+            where: { userId: companyMember.userId },
             data: { role: 'TEAM_MEMBER' }
         });
 
-        await logCompanyAdminRemoved(userSession.user.id, {
+        await logCompanyAdminRemoved(user.id, {
             companyId: company.id,
             adminRemoved: memberId
         });
 
-        const members = await prisma.companyMember.findMany({
-            where: { companyId: company.id, role: 'COMPANY_ADMIN' },
-            include: { user: true },
-            orderBy: { user: { name: 'asc' } }
-        });
+        const members: CompanyAdminMember[] =
+            await prisma.companyMember.findMany({
+                where: { companyId: company.id, role: 'COMPANY_ADMIN' },
+                include: { user: true },
+                orderBy: { user: { name: 'asc' } }
+            });
 
         return {
             success: true,
-            members,
+            data: { members },
             error: null
         };
     } catch (error) {
         console.error('Failed to remove company member:', error);
         return {
             success: false,
-            members: null,
+            data: null,
             error: 'Failed to remove company member'
         };
     }
 };
 
-export const resendCompanyInvitation = async (id: string) => {
-    const userSession = await authCheckServer();
+/* ------------------------------------------------------------------
+ * 🔁 Resend Company Invitation
+ * ------------------------------------------------------------------ */
 
-    if (!userSession) {
+export const resendCompanyInvitation = async (
+    id: string
+): Promise<ActionResult<{ resent: boolean }>> => {
+    const ctx = await getCompanyContext();
+
+    if (!ctx) {
         return {
+            success: false,
             data: null,
             error: 'Not authorised'
         };
     }
 
-    const { company, userCompany } = userSession;
+    const { company, userCompany, isAdmin } = ctx;
 
-    if (userCompany.role !== 'COMPANY_ADMIN') {
+    if (!isAdmin || !userCompany) {
         return {
+            success: false,
             data: null,
             error: 'Not authorised'
         };
     }
+
     try {
         const invite = await prisma.companyInvite.findUnique({ where: { id } });
 
         if (!invite) {
             return {
+                success: false,
                 data: null,
                 error: 'Invite not found'
             };
@@ -427,7 +573,9 @@ export const resendCompanyInvitation = async (id: string) => {
                 where: { id },
                 data: { status: 'EXPIRED' }
             });
+
             return {
+                success: false,
                 data: null,
                 error: 'Invite expired'
             };
@@ -443,63 +591,89 @@ export const resendCompanyInvitation = async (id: string) => {
             expiresAt: invite.expiresAt
         });
 
-        return { data: true, error: null };
+        return {
+            success: true,
+            data: { resent: true },
+            error: null
+        };
     } catch (error) {
-        return { data: null, error: `Failed to resend invitation - ${error}` };
+        console.error('Failed to resend invitation:', error);
+        return {
+            success: false,
+            data: null,
+            error: 'Failed to resend invitation'
+        };
     }
 };
 
-export const deactivateMember = async (memberId: string) => {
-    const userSession = await authCheckServer();
+/* ------------------------------------------------------------------
+ * 🚫 Deactivate Member
+ * ------------------------------------------------------------------ */
 
-    if (!userSession) {
+export const deactivateMember = async (
+    memberId: string
+): Promise<ActionResult<{ members: CompanyMemberWithTeams[] }>> => {
+    const ctx = await getCompanyContext();
+
+    if (!ctx) {
         return {
+            success: false,
             data: null,
             error: 'Not authorised'
         };
     }
 
-    const { user, company, userCompany } = userSession;
+    const { user, company, userCompany, isAdmin } = ctx;
 
-    if (userCompany.role !== 'COMPANY_ADMIN') {
+    if (!isAdmin || !userCompany) {
         return {
+            success: false,
             data: null,
-            message: 'Not authorised'
+            error: 'Not authorised'
         };
     }
 
     try {
-        const userCompany = await prisma.companyMember.findUnique({
+        const memberCompany = await prisma.companyMember.findUnique({
             where: {
                 companyId_userId: { companyId: company.id, userId: memberId }
             }
         });
 
-        if (!userCompany) {
-            return { data: null, error: 'Member not found' };
+        if (!memberCompany) {
+            return {
+                success: false,
+                data: null,
+                error: 'Member not found'
+            };
         }
 
-        if (userCompany.role === 'COMPANY_ADMIN') {
+        if (memberCompany.role === 'COMPANY_ADMIN') {
             return {
+                success: false,
                 data: null,
                 error: 'Unable to remove company admin. Please demote them first.'
             };
         }
 
-        // Prevent removing the team creator
+        // Prevent removing the company creator
         if (company.creatorId === memberId) {
-            return { data: null, error: 'Cannot remove the company creator' };
+            return {
+                success: false,
+                data: null,
+                error: 'Cannot remove the company creator'
+            };
         }
 
         // Prevent removing yourself
         if (memberId === user.id) {
             return {
+                success: false,
                 data: null,
                 error: 'Cannot remove yourself from the company'
             };
         }
 
-        // Remove the member
         await prisma.teamMember.deleteMany({
             where: { userId: memberId }
         });
@@ -509,61 +683,87 @@ export const deactivateMember = async (memberId: string) => {
             data: { status: 'DISABLED' }
         });
 
-        await logCompanyMemberDeactivated(userSession.user.id, {
+        await logCompanyMemberDeactivated(user.id, {
             companyId: company.id,
             memberId
         });
 
-        const members = await prisma.companyMember.findMany({
-            where: { companyId: company.id },
-            include: {
-                user: { include: { teamMembers: { include: { team: true } } } }
-            }
-        });
+        const members: CompanyMemberWithTeams[] =
+            await prisma.companyMember.findMany({
+                where: { companyId: company.id },
+                include: {
+                    user: {
+                        include: {
+                            teamMembers: { include: { team: true } }
+                        }
+                    }
+                }
+            });
 
         revalidatePath('/team');
 
-        return { data: members, error: null };
+        return {
+            success: true,
+            data: { members },
+            error: null
+        };
     } catch (error) {
         console.error('Failed to remove team member:', error);
-        return { data: null, error: 'Failed to remove team member' };
+        return {
+            success: false,
+            data: null,
+            error: 'Failed to remove team member'
+        };
     }
 };
 
-export const reactivateMember = async (memberId: string) => {
-    const userSession = await authCheckServer();
+/* ------------------------------------------------------------------
+ * ✅ Reactivate Member
+ * ------------------------------------------------------------------ */
 
-    if (!userSession) {
+export const reactivateMember = async (
+    memberId: string
+): Promise<ActionResult<{ members: CompanyMemberWithTeams[] }>> => {
+    const ctx = await getCompanyContext();
+
+    if (!ctx) {
         return {
+            success: false,
             data: null,
             error: 'Not authorised'
         };
     }
 
-    const { user, company, userCompany } = userSession;
+    const { user, company, userCompany, isAdmin } = ctx;
 
-    if (userCompany.role !== 'COMPANY_ADMIN') {
+    if (!isAdmin || !userCompany) {
         return {
+            success: false,
             data: null,
-            message: 'Not authorised'
+            error: 'Not authorised'
         };
     }
 
     try {
-        const userCompany = await prisma.companyMember.findUnique({
+        const memberCompany = await prisma.companyMember.findUnique({
             where: {
                 companyId_userId: { companyId: company.id, userId: memberId }
             }
         });
 
-        if (!userCompany) {
-            return { data: null, error: 'Member not found' };
+        if (!memberCompany) {
+            return {
+                success: false,
+                data: null,
+                error: 'Member not found'
+            };
         }
 
         const limits = await checkCompanyUserLimits(company.id);
 
         if (!limits.canCreateUser) {
             return {
+                success: false,
                 data: null,
                 error: 'User limit reached for your current plan'
             };
@@ -574,42 +774,75 @@ export const reactivateMember = async (memberId: string) => {
             data: { status: 'ACTIVE' }
         });
 
-        await logCompanyMemberReactivated(userSession.user.id, {
+        await logCompanyMemberReactivated(user.id, {
             companyId: company.id,
             memberId
         });
 
-        const members = await prisma.companyMember.findMany({
-            where: { companyId: company.id },
-            include: {
-                user: { include: { teamMembers: { include: { team: true } } } }
-            }
-        });
+        const members: CompanyMemberWithTeams[] =
+            await prisma.companyMember.findMany({
+                where: { companyId: company.id },
+                include: {
+                    user: {
+                        include: {
+                            teamMembers: { include: { team: true } }
+                        }
+                    }
+                }
+            });
 
         revalidatePath('/team');
 
-        return { data: members, error: null };
+        return {
+            success: true,
+            data: { members },
+            error: null
+        };
     } catch (error) {
-        console.error('Failed to remove team member:', error);
-        return { data: null, error: 'Failed to remove team member' };
+        console.error('Failed to reactivate team member:', error);
+        return {
+            success: false,
+            data: null,
+            error: 'Failed to reactivate team member'
+        };
     }
 };
 
-export const getTotalActiveCompanyMembers = async () => {
-    const userSession = await authCheckServer();
+/* ------------------------------------------------------------------
+ * 📊 Get Total Active Company Members
+ * ------------------------------------------------------------------ */
 
-    if (!userSession) {
-        throw new Error('Not authorised');
+export const getTotalActiveCompanyMembers = async (): Promise<
+    ActionResult<{ total: number }>
+> => {
+    const ctx = await getCompanyContext();
+
+    if (!ctx) {
+        return {
+            success: false,
+            data: null,
+            error: 'Not authorised'
+        };
     }
 
-    const { user, company, userCompany } = userSession;
+    const { company } = ctx;
+
     try {
-        const members = await prisma.companyMember.findMany({
+        const total = await prisma.companyMember.count({
             where: { companyId: company.id, user: { status: 'ACTIVE' } }
         });
 
-        return members.length;
+        return {
+            success: true,
+            data: { total },
+            error: null
+        };
     } catch (error) {
-        throw new Error(`Error fetching nudge count: ${error}`);
+        console.error('Error fetching active company members:', error);
+        return {
+            success: false,
+            data: null,
+            error: 'Error fetching active company members'
+        };
     }
 };

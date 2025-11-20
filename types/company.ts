@@ -13,27 +13,24 @@ import {
     getCompanyAdminMembers,
     getCompanyInvitations
 } from '@/actions/companyMembers';
+import { InferActionField } from '@/types/actions';
 import { getCompanyTeams } from '@/actions/team';
 import { SessionType } from '@/types/session';
 import { getCustomerPaymentInformation } from '@/actions/subscriptions';
 
 export type CompanyData = Awaited<ReturnType<typeof getCompany>>;
 
-export type MembersData = Awaited<ReturnType<typeof getCompanyAdminMembers>>;
+export type Members = InferActionField<
+    typeof getCompanyAdminMembers,
+    'members'
+>;
 
-export type CompanyInvitesData = Awaited<
-    ReturnType<typeof getCompanyInvitations>
+export type CompanyInvites = InferActionField<
+    typeof getCompanyInvitations,
+    'invitations'
 >;
 
 export type TeamsData = Awaited<ReturnType<typeof getCompanyTeams>>;
-
-export type Members = NonNullable<
-    MembersData extends { data: infer T } ? T : never
->;
-
-export type CompanyInvites = NonNullable<
-    CompanyInvitesData extends { data: infer T } ? T : never
->;
 
 export type CompanyDataData = NonNullable<
     CompanyData extends { data: infer T } ? T : never

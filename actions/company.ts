@@ -254,76 +254,10 @@ export const getCompany = async () => {
             error: null
         };
     } catch (error) {
-        console.error('getCompany error:', error);
         return {
             success: false,
             data: null,
             error: 'Failed to get company'
-        };
-    }
-};
-
-/* ------------------------------------------------------------------
- * 🔽 Get Company for Selector (lightweight)
- * ------------------------------------------------------------------ */
-
-export const getCompanyForSelector = async () => {
-    try {
-        const ctx = await getCompanyContext();
-
-        if (!ctx) {
-            return {
-                success: false,
-                data: null,
-                error: 'Not authorised'
-            };
-        }
-
-        const { userCompany } = ctx;
-
-        if (!userCompany) {
-            return {
-                success: false,
-                data: null,
-                error: 'No company found'
-            };
-        }
-
-        const company = await prisma.company.findUnique({
-            where: { id: userCompany.companyId },
-            include: {
-                plan: true
-            }
-        });
-
-        if (!company) {
-            return {
-                success: false,
-                data: null,
-                error: 'No company found'
-            };
-        }
-
-        const isCompanyTrialing = company.trialEndsAt
-            ? new Date() < company.trialEndsAt
-            : false;
-
-        return {
-            success: true,
-            data: {
-                companyName: company.name,
-                companyPlan: company.plan,
-                isCompanyTrialing,
-                trialEndsAt: company.trialEndsAt
-            },
-            error: null
-        };
-    } catch (error) {
-        console.error('getCompanyForSelector error:', error);
-        return {
-            success: false,
-            data: null,
-            error: 'Failed to get company for selector'
         };
     }
 };
@@ -450,7 +384,6 @@ export const updateCompany = async (
             error: null
         };
     } catch (error) {
-        console.error('updateCompany error:', error);
         return {
             success: false,
             data: null,
@@ -537,7 +470,6 @@ export const updateCompanyLogo = async (imageId: string) => {
             error: null
         };
     } catch (error) {
-        console.error('updateCompanyLogo error:', error);
         return {
             success: false,
             data: null,

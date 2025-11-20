@@ -80,14 +80,14 @@ const EditCompanyDialog = ({
 
     const onSubmit = (values: z.infer<typeof EditCompanySchema>) => {
         startTransition(async () => {
-            const data = await updateCompany(values);
-            if (data.error) {
-                toast.error(data.error);
+            const res = await updateCompany(values);
+            if (!res.success) {
+                toast.error(res.error);
             }
-            if (data.data) {
+            if (res.data) {
                 if (userSession) {
                     await logCompanyUpdated(userSession.user.id, {
-                        companyId: data.data.id,
+                        companyId: res.data.company.id,
                         values
                     });
                 }

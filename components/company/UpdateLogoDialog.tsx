@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Upload, X, Camera, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { deleteImage, uploadImage } from '@/actions/supabase';
+import { uploadImage } from '@/actions/supabase';
 import { updateCompanyLogo } from '@/actions/company';
 import { logCompanyLogoUpdated } from '@/actions/audit/audit-company';
 import { UpdateLogoDialogProps } from '@/types/company';
@@ -159,14 +159,14 @@ export function UpdateLogoDialog({
 
     const handleSave = async () => {
         startTransition(async () => {
-            const data = await updateCompanyLogo(imageId);
-            if (data.error) {
-                toast.error(data.error);
+            const res = await updateCompanyLogo(imageId);
+            if (!res.success) {
+                toast.error(res.error);
             }
-            if (data.data) {
+            if (res.data) {
                 if (userSession) {
                     await logCompanyLogoUpdated(userSession.user.id, {
-                        companyId: data.data.id,
+                        companyId: res.data.companyId,
                         imageId
                     });
                 }
