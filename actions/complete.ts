@@ -3,12 +3,83 @@
 import { headers } from 'next/headers';
 
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@/generated/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { CompleteNudgeResult } from '@/types/complete';
 import { sendCompletionNotificationEmail } from '@/lib/mail';
 import { logNudgeCompleted } from '@/actions/audit/audit-complete';
 
-export const getRecipientEvent = async (token: string) => {
+/* ------------------------------------------------------------------
+ * 🧩 Typed Prisma Payloads
+ * ------------------------------------------------------------------ */
+
+type RecipientEventWithInstance = Prisma.NudgeRecipientEventGetPayload<{
+    include: {
+        nudgeInstance: {
+            include: {
+                nudge: {
+                    select: {
+                        id: true;
+                        name: true;
+                        description: true;
+                        frequency: true;
+                        interval: true;
+                        dayOfWeek: true;
+                        monthlyType: true;
+                        dayOfMonth: true;
+                        dayOfWeekForMonthly: true;
+                        nthOccurrence: true;
+                        timeOfDay: true;
+                    };
+                };
+                completion: true;
+            };
+        };
+    };
+}>;
+
+type RecipientEventCompletionPayload = Prisma.NudgeRecipientEventGetPayload<{
+    include: {
+        nudgeInstance: {
+            include: {
+                nudge: {
+                    select: {
+                        id: true;
+                        name: true;
+                        description: true;
+                        frequency: true;
+                        interval: true;
+                        timezone: true;
+                    };
+                };
+                completion: true;
+            };
+        };
+    };
+}>;
+
+type NudgeWithRecipients = Prisma.NudgeGetPayload<{
+    include: {
+        recipients: true;
+        creator: {
+            select: {
+                email: true;
+                name: true;
+            };
+        };
+    };
+}>;
+
+/* ------------------------------------------------------------------
+ * 📥 Get Recipient Event
+ * ------------------------------------------------------------------ */
+
+export const getRecipientEvent = async (
+    token: string
+): Promise<{
+    data: RecipientEventWithInstance | null;
+    error: string | null;
+}> => {
     try {
         const recipientEvent = await prisma.nudgeRecipientEvent.findUnique({
             where: { token },
@@ -38,9 +109,16 @@ export const getRecipientEvent = async (token: string) => {
 
         return { data: recipientEvent, error: null };
     } catch (error) {
-        return { data: null, error: `Error retrieving event: ${error}` };
+        return {
+            data: null,
+            error: `Error retrieving event: ${error}`
+        };
     }
 };
+
+/* ------------------------------------------------------------------
+ * 🎯 Complete Nudge
+ * ------------------------------------------------------------------ */
 
 export const completeNudge = async ({
     token,
@@ -51,7 +129,6 @@ export const completeNudge = async ({
 }): Promise<CompleteNudgeResult> => {
     try {
         const userSession = await authCheckServer();
-
         const userId = userSession ? userSession.user.id : null;
 
         const headersList = await headers();
@@ -61,27 +138,30 @@ export const completeNudge = async ({
             'unknown';
         const userAgent = headersList.get('user-agent') || 'unknown';
 
-        // Find the nudge recipient event by token
-        const recipientEvent = await prisma.nudgeRecipientEvent.findUnique({
-            where: { token },
-            include: {
-                nudgeInstance: {
-                    include: {
-                        nudge: {
-                            select: {
-                                id: true,
-                                name: true,
-                                description: true,
-                                frequency: true,
-                                interval: true,
-                                timezone: true
-                            }
-                        },
-                        completion: true
+        /* ----------------------------------------------------------
+         * 1. Fetch recipient event + instance + completion
+         * ---------------------------------------------------------- */
+        const recipientEvent: RecipientEventCompletionPayload | null =
+            await prisma.nudgeRecipientEvent.findUnique({
+                where: { token },
+                include: {
+                    nudgeInstance: {
+                        include: {
+                            nudge: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    description: true,
+                                    frequency: true,
+                                    interval: true,
+                                    timezone: true
+                                }
+                            },
+                            completion: true
+                        }
                     }
                 }
-            }
-        });
+            });
 
         if (!recipientEvent) {
             return {
@@ -91,7 +171,6 @@ export const completeNudge = async ({
             };
         }
 
-        // Check if token has expired
         if (new Date() > recipientEvent.expiresAt) {
             return {
                 success: false,
@@ -100,7 +179,6 @@ export const completeNudge = async ({
             };
         }
 
-        // Check if already completed
         if (recipientEvent.nudgeInstance.completion) {
             return {
                 success: false,
@@ -115,7 +193,10 @@ export const completeNudge = async ({
             };
         }
 
-        // Create completion record and update related records
+        /* ----------------------------------------------------------
+         * 2. Create completion record
+         * ---------------------------------------------------------- */
+
         const completion = await prisma.nudgeCompletion.create({
             data: {
                 nudgeId: recipientEvent.nudgeInstance.nudge.id,
@@ -130,7 +211,9 @@ export const completeNudge = async ({
             }
         });
 
-        // Update the recipient event
+        /* ----------------------------------------------------------
+         * 3. Update recipient event
+         * ---------------------------------------------------------- */
         await prisma.nudgeRecipientEvent.update({
             where: { id: recipientEvent.id },
             data: {
@@ -143,7 +226,9 @@ export const completeNudge = async ({
             }
         });
 
-        // Update the nudge instance status
+        /* ----------------------------------------------------------
+         * 4. Update Nudge Instance status
+         * ---------------------------------------------------------- */
         await prisma.nudgeInstance.update({
             where: { id: recipientEvent.nudgeInstanceId },
             data: {
@@ -152,9 +237,12 @@ export const completeNudge = async ({
             }
         });
 
-        // Calculate next scheduled date (if applicable)
+        /* ----------------------------------------------------------
+         * 5. Calculate next scheduled time
+         * ---------------------------------------------------------- */
         let nextScheduled: string | undefined;
         const nudge = recipientEvent.nudgeInstance.nudge;
+
         if (nudge.frequency === 'DAILY') {
             const next = new Date(recipientEvent.nudgeInstance.scheduledFor);
             next.setDate(next.getDate() + nudge.interval);
@@ -169,30 +257,31 @@ export const completeNudge = async ({
             nextScheduled = next.toISOString();
         }
 
+        /* ----------------------------------------------------------
+         * 6. Fetch all recipients & creator for notification
+         * ---------------------------------------------------------- */
         try {
-            // Get all recipients and creator for this nudge
-            const nudgeWithDetails = await prisma.nudge.findUnique({
-                where: { id: recipientEvent.nudgeInstance.nudge.id },
-                include: {
-                    recipients: true,
-                    creator: {
-                        select: {
-                            email: true,
-                            name: true
+            const nudgeWithRecipients: NudgeWithRecipients | null =
+                await prisma.nudge.findUnique({
+                    where: { id: recipientEvent.nudgeInstance.nudge.id },
+                    include: {
+                        recipients: true,
+                        creator: {
+                            select: {
+                                email: true,
+                                name: true
+                            }
                         }
                     }
-                }
-            });
+                });
 
-            if (nudgeWithDetails) {
-                // Create a map to deduplicate by email
+            if (nudgeWithRecipients) {
                 const emailMap = new Map<
                     string,
                     { email: string; name: string; isCreator: boolean }
                 >();
 
-                // Add all recipients
-                nudgeWithDetails.recipients.forEach((recipient) => {
+                nudgeWithRecipients.recipients.forEach((recipient) => {
                     emailMap.set(recipient.email, {
                         email: recipient.email,
                         name: recipient.name,
@@ -200,23 +289,20 @@ export const completeNudge = async ({
                     });
                 });
 
-                // Add creator (will overwrite if they're also a recipient, marking them as creator)
-                emailMap.set(nudgeWithDetails.creator.email, {
-                    email: nudgeWithDetails.creator.email,
-                    name: nudgeWithDetails.creator.name,
+                emailMap.set(nudgeWithRecipients.creator.email, {
+                    email: nudgeWithRecipients.creator.email,
+                    name: nudgeWithRecipients.creator.name,
                     isCreator: true
                 });
 
-                // Format completion date
                 const completedAtFormatted = new Intl.DateTimeFormat('en-US', {
                     dateStyle: 'medium',
                     timeStyle: 'short',
-                    timeZone: nudgeWithDetails.timezone
+                    timeZone: nudgeWithRecipients.timezone
                 }).format(completion.createdAt);
 
-                // Send emails to all unique recipients
-                const emailPromises = Array.from(emailMap.values()).map(
-                    (recipient) =>
+                await Promise.all(
+                    Array.from(emailMap.values()).map((recipient) =>
                         sendCompletionNotificationEmail({
                             email: 'kram@grebnesor.com',
                             name: recipient.name,
@@ -227,23 +313,28 @@ export const completeNudge = async ({
                             comments,
                             isCreator: recipient.isCreator
                         })
+                    )
                 );
-
-                // Send all emails in parallel
-                await Promise.all(emailPromises);
             }
         } catch (emailError) {
-            // Log error but don't fail the completion
-            console.error(
-                '[v0] Error sending completion notification emails:',
-                emailError
-            );
+            return {
+                success: false,
+                message: 'This reminder link is not valid.',
+                error: 'DATABASE_ERROR'
+            };
         }
+
+        /* ----------------------------------------------------------
+         * 7. Audit log
+         * ---------------------------------------------------------- */
         await logNudgeCompleted(userId || '', {
             nudgeId: recipientEvent.nudgeInstance.nudgeId,
             comments
         });
 
+        /* ----------------------------------------------------------
+         * 8. Final response (typed)
+         * ---------------------------------------------------------- */
         return {
             success: true,
             message: 'Reminder completed successfully!',
@@ -254,7 +345,6 @@ export const completeNudge = async ({
             nextScheduled
         };
     } catch (error) {
-        console.error('[v0] Error completing nudge:', error);
         return {
             success: false,
             message:
