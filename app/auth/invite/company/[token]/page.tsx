@@ -31,7 +31,9 @@ export function generateMetadata(): Metadata {
     };
 }
 
-const RegisterCompanyAdminPage = async (props: { params: Promise<ParamsToken> }) => {
+const RegisterCompanyAdminPage = async (props: {
+    params: Promise<ParamsToken>;
+}) => {
     await isLoggedIn();
 
     const { token } = await props.params;
@@ -63,7 +65,7 @@ const RegisterCompanyAdminPage = async (props: { params: Promise<ParamsToken> })
                         </Card>
                     </div>
                 ))}
-            {invitation && invitation.invitation && (
+            {invitation && invitation.invitation && invitation.inviter && (
                 <CompanyInvitationForm
                     invite={invitation.invitation}
                     inviter={invitation.inviter}

@@ -17,6 +17,10 @@ import { logEmailVerifyRequested } from '@/actions/audit/audit-auth';
 const RATE_LIMIT_MAX_ATTEMPTS = 3;
 const OTP_EXPIRY = 10 * 60 * 1000; // 10 minutes
 
+/* ------------------------------------------------------------------
+ * Send OTP for email change
+ * ------------------------------------------------------------------ */
+
 export const sendEmailChangeOTP = async (
     values: z.infer<typeof ChangeEmailSchema>
 ): Promise<ActionResult> => {
@@ -29,17 +33,27 @@ export const sendEmailChangeOTP = async (
         };
     }
 
-    try {
-        const validatedFields = ChangeEmailSchema.safeParse(values);
+    const { user } = userSession;
 
-        if (!validatedFields.success) {
+    try {
+        const validated = ChangeEmailSchema.safeParse(values);
+
+        if (!validated.success) {
             return {
                 success: false,
                 message: 'Invalid fields'
             };
         }
 
-        const { currentEmail, newEmail } = validatedFields.data;
+        const { currentEmail, newEmail } = validated.data;
+
+        // Extra safety: ensure the current email matches the logged-in user
+        if (currentEmail !== user.email) {
+            return {
+                success: false,
+                message: 'Current email does not match your account'
+            };
+        }
 
         if (currentEmail === newEmail) {
             return {
@@ -48,21 +62,15 @@ export const sendEmailChangeOTP = async (
             };
         }
 
-        // Find user by current email
-        const user = await prisma.user.findUnique({
-            where: { email: currentEmail }
-        });
-        if (!user) {
-            return {
-                success: false,
-                message: 'User not found'
-            };
-        }
-
         // Check if new email is already taken
-        const existingUser = await prisma.user.findUnique({
-            where: { email: newEmail }
-        });
+        const [existingUser, rateLimit] = await Promise.all([
+            prisma.user.findUnique({
+                where: { email: newEmail },
+                select: { id: true }
+            }),
+            getRateLimits(`email_change:${user.id}`)
+        ]);
+
         if (existingUser) {
             return {
                 success: false,
@@ -71,9 +79,6 @@ export const sendEmailChangeOTP = async (
         }
 
         // Rate limiting
-        const rateLimitKey = `email_change:${user.id}`;
-        const rateLimit = await getRateLimits(rateLimitKey);
-
         if (rateLimit && rateLimit.count >= RATE_LIMIT_MAX_ATTEMPTS) {
             const cooldownTime = calculateCooldownSeconds(rateLimit.resetTime);
             return {
@@ -83,7 +88,8 @@ export const sendEmailChangeOTP = async (
             };
         }
 
-        // Increment rate limit
+        // Increment / create rate limit record
+        const rateLimitKey = `email_change:${user.id}`;
         await prisma.rateLimit.upsert({
             where: { key: rateLimitKey },
             update: {
@@ -102,16 +108,18 @@ export const sendEmailChangeOTP = async (
         const otp = generateOTP();
         const expiresAt = new Date(Date.now() + OTP_EXPIRY);
 
-        // Clean up old OTP records
+        // Clean up old / stale records for this user
         await prisma.emailChangeRecord.deleteMany({
             where: {
-                expiresAt: {
-                    lte: new Date()
-                }
+                OR: [
+                    { userId: user.id },
+                    {
+                        expiresAt: {
+                            lte: new Date()
+                        }
+                    }
+                ]
             }
-        });
-        await prisma.emailChangeRecord.deleteMany({
-            where: { userId: user.id }
         });
 
         // Create new OTP record
@@ -146,10 +154,12 @@ export const sendEmailChangeOTP = async (
             message: 'Verification code sent successfully! Check your email.',
             data: {
                 expiresIn: OTP_EXPIRY / 1000,
-                maskedEmail: newEmail // Will be masked in the component
+                // You can visually mask this in the UI; here we just return it
+                maskedEmail: newEmail
             }
         };
     } catch (error) {
+        console.error('[sendEmailChangeOTP] Error:', error);
         return {
             success: false,
             message: 'Internal server error'
@@ -157,9 +167,13 @@ export const sendEmailChangeOTP = async (
     }
 };
 
-export async function verifyEmailChangeOTP(
+/* ------------------------------------------------------------------
+ * Verify OTP and complete email change
+ * ------------------------------------------------------------------ */
+
+export const verifyEmailChangeOTP = async (
     values: z.infer<typeof VerifyEmailChangeOTPSchema>
-): Promise<ActionResult> {
+): Promise<ActionResult> => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
@@ -169,30 +183,29 @@ export async function verifyEmailChangeOTP(
         };
     }
 
-    try {
-        const validatedFields = VerifyEmailChangeOTPSchema.safeParse(values);
+    const { user } = userSession;
 
-        if (!validatedFields.success) {
+    try {
+        const validated = VerifyEmailChangeOTPSchema.safeParse(values);
+
+        if (!validated.success) {
             return {
                 success: false,
                 message: 'Invalid fields'
             };
         }
 
-        const { currentEmail, newEmail, otp } = validatedFields.data;
+        const { currentEmail, newEmail, otp } = validated.data;
 
-        // Find user
-        const user = await prisma.user.findUnique({
-            where: { email: currentEmail }
-        });
-        if (!user) {
+        // Double-check the current email matches the logged in user
+        if (currentEmail !== user.email) {
             return {
                 success: false,
-                message: 'User not found'
+                message: 'Current email does not match your account'
             };
         }
 
-        // Find valid OTP record
+        // Find valid OTP record for this user + new email
         const emailChangeRecord = await prisma.emailChangeRecord.findFirst({
             where: {
                 userId: user.id,
@@ -201,7 +214,7 @@ export async function verifyEmailChangeOTP(
                     gt: new Date()
                 },
                 attempts: {
-                    lt: 3
+                    lt: RATE_LIMIT_MAX_ATTEMPTS
                 }
             }
         });
@@ -216,7 +229,7 @@ export async function verifyEmailChangeOTP(
         // Verify OTP
         if (emailChangeRecord.otp !== otp) {
             // Increment attempts
-            await prisma.emailChangeRecord.update({
+            const updatedRecord = await prisma.emailChangeRecord.update({
                 where: { id: emailChangeRecord.id },
                 data: {
                     attempts: {
@@ -225,14 +238,14 @@ export async function verifyEmailChangeOTP(
                 }
             });
 
-            const remainingAttempts = 3 - (emailChangeRecord.attempts + 1);
-
-            // Audit log for failed attempt
+            const remainingAttempts =
+                RATE_LIMIT_MAX_ATTEMPTS - updatedRecord.attempts;
 
             if (remainingAttempts <= 0) {
                 await prisma.emailChangeRecord.deleteMany({
                     where: { userId: user.id }
                 });
+
                 return {
                     success: false,
                     message:
@@ -246,10 +259,12 @@ export async function verifyEmailChangeOTP(
             };
         }
 
-        // Check if new email is still available
+        // Check if new email is still available (race-condition safe)
         const existingUser = await prisma.user.findUnique({
-            where: { email: newEmail }
+            where: { email: newEmail },
+            select: { id: true }
         });
+
         if (existingUser && existingUser.id !== user.id) {
             return {
                 success: false,
@@ -258,24 +273,18 @@ export async function verifyEmailChangeOTP(
         }
 
         // Update user email
-        const updatedUser = await prisma.user.update({
+        await prisma.user.update({
             where: { id: user.id },
             data: { email: newEmail }
         });
 
-        if (!updatedUser) {
-            return {
-                success: false,
-                message: 'Failed to update email'
-            };
-        }
-
-        // Clean up OTP record
+        // Clean up OTP records for this user
         await prisma.emailChangeRecord.deleteMany({
             where: { userId: user.id }
         });
 
-        // Audit log for successful change
+        // (Optional) You could add an audit log here:
+        // await logEmailChanged(user.id, { oldEmail: currentEmail, newEmail });
 
         return {
             success: true,
@@ -285,9 +294,10 @@ export async function verifyEmailChangeOTP(
             }
         };
     } catch (error) {
+        console.error('[verifyEmailChangeOTP] Error:', error);
         return {
             success: false,
             message: 'Internal server error'
         };
     }
-}
+};

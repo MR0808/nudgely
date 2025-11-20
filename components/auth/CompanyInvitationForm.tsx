@@ -138,7 +138,7 @@ const CompanyInvitationForm = ({
                                     alt={`${inviter.name} ${inviter.lastName}`}
                                 />
                                 <AvatarFallback>
-                                    {`${inviter.name[0]} ${inviter.lastName[0]}`}
+                                    {`${inviter.name![0]} ${inviter.lastName![0]}`}
                                 </AvatarFallback>
                             </Avatar>
                             <div>

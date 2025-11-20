@@ -6,48 +6,102 @@ import {
     logTeamAcceptInvite,
     logTeamDeclineInvite
 } from '@/actions/audit/audit-invite';
-import { prisma } from '@/lib/prisma';
 
-export const getCompanyInvitationByToken = async (token: string) => {
+import { prisma } from '@/lib/prisma';
+import { Prisma } from '@/generated/prisma';
+
+/* --------------------------------------------------------------------------
+ *  TYPES — COMPLETE & ACCURATE (NO "any")
+ * -------------------------------------------------------------------------- */
+
+export type CompanyInviteFull = Prisma.CompanyInviteGetPayload<{
+    include: {
+        company: {
+            include: {
+                plan: true;
+                members: true;
+            };
+        };
+    };
+}>;
+
+export type TeamInviteFull = Prisma.TeamInviteGetPayload<{
+    include: {
+        team: {
+            include: {
+                company: { include: { plan: true; members: true } };
+                members: true;
+            };
+        };
+    };
+}>;
+
+export type Inviter = {
+    name: string | null;
+    lastName: string | null;
+    email: string;
+    image: string | null;
+};
+
+export type InvitationResult<T> = {
+    success: boolean;
+    error: string | null;
+    invitation: T | null;
+    inviter: Inviter | null;
+};
+
+/* ========================================================================== */
+/*                    COMPANY — GET INVITATION BY TOKEN                       */
+/* ========================================================================== */
+
+export const getCompanyInvitationByToken = async (
+    token: string
+): Promise<InvitationResult<CompanyInviteFull>> => {
     try {
         const invitation = await prisma.companyInvite.findUnique({
             where: { token },
-            include: { company: { include: { plan: true, members: true } } }
+            include: {
+                company: {
+                    include: {
+                        plan: true,
+                        members: true
+                    }
+                }
+            }
         });
 
         if (!invitation) {
             return {
                 success: false,
+                error: 'notfound',
                 invitation: null,
-                inviter: null,
-                error: 'notfound'
+                inviter: null
             };
         }
 
         if (invitation.status !== 'PENDING') {
             return {
                 success: false,
+                error: 'processed',
                 invitation: null,
-                inviter: null,
-                error: 'processed'
+                inviter: null
             };
         }
 
         if (new Date() > invitation.expiresAt) {
-            // Mark as expired
-            await prisma.teamInvite.update({
+            await prisma.companyInvite.update({
                 where: { id: invitation.id },
                 data: { status: 'EXPIRED' }
             });
+
             return {
                 success: false,
+                error: 'expired',
                 invitation: null,
-                inviter: null,
-                error: 'expired'
+                inviter: null
             };
         }
 
-        // Get inviter information
         const inviter = await prisma.user.findUnique({
             where: { id: invitation.invitedBy },
             select: {
@@ -61,36 +115,40 @@ export const getCompanyInvitationByToken = async (token: string) => {
         if (!inviter) {
             return {
                 success: false,
+                error: 'inviter',
                 invitation: null,
-                inviter: null,
-                error: 'inviter'
+                inviter: null
             };
         }
 
         return {
             success: true,
+            error: null,
             invitation,
-            inviter,
-            error: null
+            inviter
         };
     } catch (error) {
-        console.error('Failed to get invitation:', error);
+        console.error('Failed to get company invitation:', error);
         return {
             success: false,
+            error: 'Failed to load invitation',
             invitation: null,
-            inviter: null,
-            error: 'Failed to load invitation'
+            inviter: null
         };
     }
 };
 
-export const acceptCompanyInvitation = async (token: string) => {
+/* ========================================================================== */
+/*                          COMPANY — ACCEPT INVITE                           */
+/* ========================================================================== */
+
+export const acceptCompanyInvitation = async (
+    token: string
+): Promise<{ success: boolean; error: string | null }> => {
     try {
         const invitation = await prisma.companyInvite.findUnique({
             where: { token },
-            include: {
-                company: true
-            }
+            include: { company: true }
         });
 
         if (!invitation) {
@@ -98,24 +156,18 @@ export const acceptCompanyInvitation = async (token: string) => {
         }
 
         if (invitation.status !== 'PENDING') {
-            return {
-                success: false,
-                error: 'Invitation has already been processed'
-            };
+            return { success: false, error: 'Invitation already processed' };
         }
 
         if (new Date() > invitation.expiresAt) {
-            return { success: false, error: 'Invitation has expired' };
+            return { success: false, error: 'Invitation expired' };
         }
 
-        // Check if user is already a team member
-        const existingMember = await prisma.user.findUnique({
-            where: {
-                email: invitation.email
-            }
+        const existingUser = await prisma.user.findUnique({
+            where: { email: invitation.email }
         });
 
-        if (existingMember) {
+        if (existingUser) {
             return { success: false, error: 'User already exists' };
         }
 
@@ -126,23 +178,24 @@ export const acceptCompanyInvitation = async (token: string) => {
             companyName: invitation.company.name
         });
 
-        return {
-            success: true,
-            error: null
-        };
+        return { success: true, error: null };
     } catch (error) {
-        console.error('Failed to accept invitation:', error);
+        console.error('Failed to accept company invite:', error);
         return { success: false, error: 'Failed to accept invitation' };
     }
 };
 
-export const declineCompanyInvitation = async (token: string) => {
+/* ========================================================================== */
+/*                          COMPANY — DECLINE INVITE                          */
+/* ========================================================================== */
+
+export const declineCompanyInvitation = async (
+    token: string
+): Promise<{ success: boolean; error: string | null }> => {
     try {
         const invitation = await prisma.companyInvite.findUnique({
             where: { token },
-            include: {
-                company: true
-            }
+            include: { company: true }
         });
 
         if (!invitation) {
@@ -150,13 +203,9 @@ export const declineCompanyInvitation = async (token: string) => {
         }
 
         if (invitation.status !== 'PENDING') {
-            return {
-                success: false,
-                error: 'Invitation has already been processed'
-            };
+            return { success: false, error: 'Invitation already processed' };
         }
 
-        // Mark invitation as declined
         await prisma.companyInvite.update({
             where: { id: invitation.id },
             data: { status: 'DECLINED' }
@@ -169,17 +218,20 @@ export const declineCompanyInvitation = async (token: string) => {
             companyName: invitation.company.name
         });
 
-        return {
-            success: true,
-            erro: null
-        };
+        return { success: true, error: null };
     } catch (error) {
-        console.error('Failed to decline invitation:', error);
+        console.error('Failed to decline company invitation:', error);
         return { success: false, error: 'Failed to decline invitation' };
     }
 };
 
-export const getTeamInvitationByToken = async (token: string) => {
+/* ========================================================================== */
+/*                     TEAM — GET INVITATION BY TOKEN                         */
+/* ========================================================================== */
+
+export const getTeamInvitationByToken = async (
+    token: string
+): Promise<InvitationResult<TeamInviteFull>> => {
     try {
         const invitation = await prisma.teamInvite.findUnique({
             where: { token },
@@ -196,36 +248,35 @@ export const getTeamInvitationByToken = async (token: string) => {
         if (!invitation) {
             return {
                 success: false,
+                error: 'notfound',
                 invitation: null,
-                inviter: null,
-                error: 'notfound'
+                inviter: null
             };
         }
 
         if (invitation.status !== 'PENDING') {
             return {
                 success: false,
+                error: 'processed',
                 invitation: null,
-                inviter: null,
-                error: 'processed'
+                inviter: null
             };
         }
 
         if (new Date() > invitation.expiresAt) {
-            // Mark as expired
             await prisma.teamInvite.update({
                 where: { id: invitation.id },
                 data: { status: 'EXPIRED' }
             });
+
             return {
                 success: false,
+                error: 'expired',
                 invitation: null,
-                inviter: null,
-                error: 'expired'
+                inviter: null
             };
         }
 
-        // Get inviter information
         const inviter = await prisma.user.findUnique({
             where: { id: invitation.invitedBy },
             select: {
@@ -239,30 +290,36 @@ export const getTeamInvitationByToken = async (token: string) => {
         if (!inviter) {
             return {
                 success: false,
+                error: 'inviter',
                 invitation: null,
-                inviter: null,
-                error: 'inviter'
+                inviter: null
             };
         }
 
         return {
             success: true,
+            error: null,
             invitation,
-            inviter,
-            error: null
+            inviter
         };
     } catch (error) {
-        console.error('Failed to get invitation:', error);
+        console.error('Failed to get team invitation:', error);
         return {
             success: false,
+            error: 'Failed to load invitation',
             invitation: null,
-            inviter: null,
-            error: 'Failed to load invitation'
+            inviter: null
         };
     }
 };
 
-export const acceptTeamInvitation = async (token: string) => {
+/* ========================================================================== */
+/*                           TEAM — ACCEPT INVITE                             */
+/* ========================================================================== */
+
+export const acceptTeamInvitation = async (
+    token: string
+): Promise<{ success: boolean; error: string | null }> => {
     try {
         const invitation = await prisma.teamInvite.findUnique({
             where: { token },
@@ -280,10 +337,7 @@ export const acceptTeamInvitation = async (token: string) => {
         }
 
         if (invitation.status !== 'PENDING') {
-            return {
-                success: false,
-                error: 'Invitation has already been processed'
-            };
+            return { success: false, error: 'Invitation already processed' };
         }
 
         if (new Date() > invitation.expiresAt) {
@@ -291,17 +345,15 @@ export const acceptTeamInvitation = async (token: string) => {
                 where: { id: invitation.id },
                 data: { status: 'EXPIRED' }
             });
-            return { success: false, error: 'Invitation has expired' };
+
+            return { success: false, error: 'Invitation expired' };
         }
 
-        // Check if user is already a team member
-        const existingMember = await prisma.user.findUnique({
-            where: {
-                email: invitation.email
-            }
+        const existingUser = await prisma.user.findUnique({
+            where: { email: invitation.email }
         });
 
-        if (existingMember) {
+        if (existingUser) {
             return { success: false, error: 'User already exists' };
         }
 
@@ -312,17 +364,20 @@ export const acceptTeamInvitation = async (token: string) => {
             teamName: invitation.team.name
         });
 
-        return {
-            success: true,
-            error: null
-        };
+        return { success: true, error: null };
     } catch (error) {
-        console.error('Failed to accept invitation:', error);
+        console.error('Failed to accept team invitation:', error);
         return { success: false, error: 'Failed to accept invitation' };
     }
 };
 
-export const declineTeamInvitation = async (token: string) => {
+/* ========================================================================== */
+/*                           TEAM — DECLINE INVITE                            */
+/* ========================================================================== */
+
+export const declineTeamInvitation = async (
+    token: string
+): Promise<{ success: boolean; error: string | null }> => {
     try {
         const invitation = await prisma.teamInvite.findUnique({
             where: { token },
@@ -340,13 +395,9 @@ export const declineTeamInvitation = async (token: string) => {
         }
 
         if (invitation.status !== 'PENDING') {
-            return {
-                success: false,
-                error: 'Invitation has already been processed'
-            };
+            return { success: false, error: 'Invitation already processed' };
         }
 
-        // Mark invitation as declined
         await prisma.teamInvite.update({
             where: { id: invitation.id },
             data: { status: 'DECLINED' }
@@ -359,12 +410,9 @@ export const declineTeamInvitation = async (token: string) => {
             teamName: invitation.team.name
         });
 
-        return {
-            success: true,
-            erro: null
-        };
+        return { success: true, error: null };
     } catch (error) {
-        console.error('Failed to decline invitation:', error);
+        console.error('Failed to decline team invitation:', error);
         return { success: false, error: 'Failed to decline invitation' };
     }
 };

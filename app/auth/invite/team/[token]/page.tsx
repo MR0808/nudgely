@@ -63,7 +63,7 @@ const RegisterTeamPage = async (props: { params: Promise<ParamsToken> }) => {
                         </Card>
                     </div>
                 ))}
-            {invitation && invitation.invitation && (
+            {invitation && invitation.invitation && invitation.inviter && (
                 <TeamInvitationForm
                     invite={invitation.invitation}
                     inviter={invitation.inviter}
