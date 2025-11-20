@@ -1,82 +1,88 @@
 'use server';
 
 import * as z from 'zod';
-import { User } from '@/generated/prisma';
-
-import { ActionResult } from '@/types/global';
 import {
     ChangePhoneSchema,
     VerifyPhoneChangeOTPSchema
 } from '@/schemas/security';
+
+import { ActionResult } from '@/types/global';
 import { authCheckServer } from '@/lib/authCheck';
+import { prisma } from '@/lib/prisma';
+
 import { calculateCooldownSeconds, getRateLimits } from '@/utils/ratelimit';
 import { generateOTP } from '@/lib/otp';
-import { sendSingleSMSAction } from '@/actions/smsglobal';
 import { SMSMessage } from '@/types/smsglobal';
-import { prisma } from '@/lib/prisma';
+// import { sendSingleSMSAction } from '@/actions/smsglobal';
 
 const RATE_LIMIT_MAX_ATTEMPTS = 3;
 const OTP_EXPIRY = 10 * 60 * 1000; // 10 minutes
 
+/**
+ * Fully typed helper to resolve the target user for phone change
+ */
+const resolveTargetUser = async (
+    currentPhoneNumber: string | null,
+    sessionUserId: string
+) => {
+    if (currentPhoneNumber) {
+        const user = await prisma.user.findUnique({
+            where: { phoneNumber: currentPhoneNumber }
+        });
+        return user;
+    }
+
+    // Fallback: use session user
+    const user = await prisma.user.findUnique({
+        where: { id: sessionUserId }
+    });
+    return user;
+};
+
+//
+// ---------------------------------------------------------
+// SEND PHONE CHANGE OTP
+// ---------------------------------------------------------
+//
 export const sendPhoneChangeOTP = async (
     values: z.infer<typeof ChangePhoneSchema>
 ): Promise<ActionResult> => {
     const userSession = await authCheckServer();
-
     if (!userSession) {
-        return {
-            success: false,
-            message: 'Not authorised'
-        };
+        return { success: false, message: 'Not authorised' };
     }
 
     try {
-        const validatedFields = ChangePhoneSchema.safeParse(values);
-
-        if (!validatedFields.success) {
-            return {
-                success: false,
-                message: 'Invalid fields'
-            };
+        const parsed = ChangePhoneSchema.safeParse(values);
+        if (!parsed.success) {
+            return { success: false, message: 'Invalid fields' };
         }
 
-        const { currentPhoneNumber, newPhoneNumber } = validatedFields.data;
+        const { currentPhoneNumber, newPhoneNumber } = parsed.data;
 
         if (currentPhoneNumber === newPhoneNumber) {
             return {
                 success: false,
                 message:
-                    'New phone number must be different from current phone number'
+                    'New phone number must be different from current number'
             };
         }
 
-        let user: User | null;
-        if (currentPhoneNumber) {
-            user = await prisma.user.findUnique({
-                where: { phoneNumber: currentPhoneNumber }
-            });
-            if (!user) {
-                return {
-                    success: false,
-                    message: 'User not found'
-                };
-            }
-        } else {
-            user = await prisma.user.findUnique({
-                where: { id: userSession.user.id }
-            });
-            if (!user) {
-                return {
-                    success: false,
-                    message: 'User not found'
-                };
-            }
+        // Resolve the correct user
+        const user = await resolveTargetUser(
+            currentPhoneNumber ?? null,
+            userSession.user.id
+        );
+
+        if (!user) {
+            return { success: false, message: 'User not found' };
         }
 
-        // Check if new phone number is already taken
+        // Check if new phone number is already used
         const existingUser = await prisma.user.findUnique({
             where: { phoneNumber: newPhoneNumber }
         });
+
         if (existingUser) {
             return {
                 success: false,
@@ -84,7 +90,9 @@ export const sendPhoneChangeOTP = async (
             };
         }
 
-        // Rate limiting
+        // -----------------------------------
+        // RATE LIMITING
+        // -----------------------------------
         const rateLimitKey = `phone_change:${user.id}`;
         const rateLimit = await getRateLimits(rateLimitKey);
 
@@ -97,57 +105,52 @@ export const sendPhoneChangeOTP = async (
             };
         }
 
-        // Increment rate limit
+        // increment rate limit
         await prisma.rateLimit.upsert({
             where: { key: rateLimitKey },
-            update: {
-                count: {
-                    increment: 1
-                }
-            },
+            update: { count: { increment: 1 } },
             create: {
                 key: rateLimitKey,
                 count: 1,
-                resetTime: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+                resetTime: new Date(Date.now() + 15 * 60 * 1000)
             }
         });
 
-        // Generate OTP
+        // -----------------------------------
+        // OTP CREATION
+        // -----------------------------------
         const otp = generateOTP();
         const expiresAt = new Date(Date.now() + OTP_EXPIRY);
 
-        // Clean up old OTP records
+        // cleanup expired & existing OTPs
         await prisma.phoneChangeRecord.deleteMany({
             where: {
-                expiresAt: {
-                    lte: new Date()
-                }
+                OR: [{ expiresAt: { lte: new Date() } }, { userId: user.id }]
             }
         });
-        await prisma.phoneChangeRecord.deleteMany({
-            where: { userId: user.id }
-        });
 
-        // Create new OTP record
+        // create new record
         await prisma.phoneChangeRecord.create({
             data: {
                 userId: user.id,
-                phoneNumber: currentPhoneNumber || 'New number',
+                phoneNumber: currentPhoneNumber ?? 'New number',
                 newPhoneNumber,
                 otp,
                 expiresAt
             }
         });
 
-        const smsMessage: SMSMessage = {
+        // -----------------------------------
+        // SEND SMS
+        // -----------------------------------
+        const sms: SMSMessage = {
             destination: newPhoneNumber,
-            message: `Your verification code for Nudgely is: ${otp}. This code will expire in 10 minutes.`
+            message: `Your Nudgely verification code is: ${otp}. This code expires in 10 minutes.`
         };
 
-        console.log(smsMessage.message);
+        console.log('SMS to send:', sms);
 
-        // const response = await sendSingleSMSAction(smsMessage);
-
+        // const response = await sendSingleSMSAction(sms);
         // if (!response.messages) {
         //     return {
         //         success: false,
@@ -157,124 +160,100 @@ export const sendPhoneChangeOTP = async (
 
         return {
             success: true,
-            message: 'Verification code sent successfully! Check your phone.',
-            data: {
-                expiresIn: OTP_EXPIRY / 1000
-            }
+            message: 'Verification code sent successfully!',
+            data: { expiresIn: OTP_EXPIRY / 1000 }
         };
     } catch (error) {
-        console.error('Error sending OTP:', error);
+        console.error('Error sending phone OTP:', error);
         return {
             success: false,
-            message: 'An error occurred while sending the verification code'
+            message: 'An error occurred while sending verification code'
         };
     }
 };
 
-export async function verifyPhoneChangeOTP(
+//
+// ---------------------------------------------------------
+// VERIFY PHONE CHANGE OTP
+// ---------------------------------------------------------
+//
+export const verifyPhoneChangeOTP = async (
     values: z.infer<typeof VerifyPhoneChangeOTPSchema>
-): Promise<ActionResult> {
+): Promise<ActionResult> => {
     const userSession = await authCheckServer();
-
     if (!userSession) {
-        return {
-            success: false,
-            message: 'Not authorised'
-        };
+        return { success: false, message: 'Not authorised' };
     }
 
     try {
-        const validatedFields = VerifyPhoneChangeOTPSchema.safeParse(values);
-
-        if (!validatedFields.success) {
-            return {
-                success: false,
-                message: 'Invalid fields'
-            };
+        const parsed = VerifyPhoneChangeOTPSchema.safeParse(values);
+        if (!parsed.success) {
+            return { success: false, message: 'Invalid fields' };
         }
 
-        const { currentPhoneNumber, newPhoneNumber, otp } =
-            validatedFields.data;
+        const { currentPhoneNumber, newPhoneNumber, otp } = parsed.data;
 
-        let user: User | null;
-        if (currentPhoneNumber && currentPhoneNumber !== 'New number') {
-            user = await prisma.user.findUnique({
-                where: { phoneNumber: currentPhoneNumber }
-            });
-            if (!user) {
-                return {
-                    success: false,
-                    message: 'User not found'
-                };
-            }
-        } else {
-            user = await prisma.user.findUnique({
-                where: { id: userSession.user.id }
-            });
-            if (!user) {
-                return {
-                    success: false,
-                    message: 'User not found'
-                };
-            }
+        // Resolve correct user
+        const user = await resolveTargetUser(
+            currentPhoneNumber ?? null,
+            userSession.user.id
+        );
+        if (!user) {
+            return { success: false, message: 'User not found' };
         }
 
-        // Find valid OTP record
-        const phoneChangeRecord = await prisma.phoneChangeRecord.findFirst({
+        // -----------------------------------
+        // GET OTP RECORD
+        // -----------------------------------
+        const record = await prisma.phoneChangeRecord.findFirst({
             where: {
                 userId: user.id,
                 newPhoneNumber,
-                expiresAt: {
-                    gt: new Date()
-                },
-                attempts: {
-                    lt: 3
-                }
+                expiresAt: { gt: new Date() },
+                attempts: { lt: 3 }
             }
         });
-        if (!phoneChangeRecord) {
+
+        if (!record) {
             return {
                 success: false,
                 message: 'Invalid or expired verification code'
             };
         }
 
-        // Verify OTP
-        if (phoneChangeRecord.otp !== otp) {
-            // Increment attempts
+        // -----------------------------------
+        // WRONG OTP
+        // -----------------------------------
+        if (record.otp !== otp) {
             await prisma.phoneChangeRecord.update({
-                where: { id: phoneChangeRecord.id },
-                data: {
-                    attempts: {
-                        increment: 1
-                    }
-                }
+                where: { id: record.id },
+                data: { attempts: { increment: 1 } }
             });
-            const remainingAttempts = 3 - (phoneChangeRecord.attempts + 1);
 
-            // Audit log for failed attempt
-
-            if (remainingAttempts <= 0) {
+            const remaining = 3 - (record.attempts + 1);
+            if (remaining <= 0) {
                 await prisma.phoneChangeRecord.deleteMany({
                     where: { userId: user.id }
                 });
                 return {
                     success: false,
-                    message:
-                        'Too many failed attempts. Please request a new code.'
+                    message: 'Too many failed attempts. Request a new code.'
                 };
             }
 
             return {
                 success: false,
-                message: `Invalid code. ${remainingAttempts} attempts remaining.`
+                message: `Invalid code. ${remaining} attempts remaining.`
             };
         }
 
-        // Check if new email is still available
+        // -----------------------------------
+        // ENSURE NEW NUMBER IS STILL FREE
+        // -----------------------------------
         const existingUser = await prisma.user.findUnique({
             where: { phoneNumber: newPhoneNumber }
         });
+
         if (existingUser && existingUser.id !== user.id) {
             return {
                 success: false,
@@ -282,36 +261,29 @@ export async function verifyPhoneChangeOTP(
             };
         }
 
-        // Update user email
-        const updatedUser = await prisma.user.update({
+        // -----------------------------------
+        // UPDATE PHONE NUMBER
+        // -----------------------------------
+        await prisma.user.update({
             where: { id: user.id },
             data: { phoneNumber: newPhoneNumber }
         });
-        if (!updatedUser) {
-            return {
-                success: false,
-                message: 'Failed to update phone number'
-            };
-        }
 
-        // Clean up OTP record
+        // cleanup OTP
         await prisma.phoneChangeRecord.deleteMany({
             where: { userId: user.id }
         });
 
-        // Audit log for successful change
-
         return {
             success: true,
             message: 'Phone number updated successfully!',
-            data: {
-                newPhoneNumber
-            }
+            data: { newPhoneNumber }
         };
     } catch (error) {
+        console.error('Verify Phone OTP Error:', error);
         return {
             success: false,
             message: 'Internal server error'
         };
     }
-}
+};
