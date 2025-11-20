@@ -82,7 +82,7 @@ const BillingInvoices = ({ invoices, customerId }: BillingInvoicesProps) => {
                         Download your invoices and receipts
                     </CardDescription>
                 </div>
-                {invoices.length > 0 && (
+                {invoices.data.length > 0 && (
                     <Button
                         variant="outline"
                         size="sm"
@@ -96,7 +96,7 @@ const BillingInvoices = ({ invoices, customerId }: BillingInvoicesProps) => {
                 )}
             </CardHeader>
             <CardContent>
-                {invoices.length === 0 ? (
+                {invoices.data.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                         <Download className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p>No billing history</p>
@@ -106,7 +106,7 @@ const BillingInvoices = ({ invoices, customerId }: BillingInvoicesProps) => {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {invoices.map((invoice) => {
+                        {invoices.data.map((invoice) => {
                             return (
                                 <div
                                     key={invoice.id}
