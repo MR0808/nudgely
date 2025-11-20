@@ -8,9 +8,19 @@ import { NudgeStatus, Plan } from '@/generated/prisma';
 // export type UserTeams = Awaited<ReturnType<typeof getUserTeams>>;
 export type UserTeams = NonNullable<Awaited<ReturnType<typeof getUserTeams>>>;
 
-export type Nudges = Awaited<ReturnType<typeof getTeamNudges>>;
+export type GetNudgeBySlugReturn = Awaited<ReturnType<typeof getNudgeBySlug>>;
 
-export type Nudge = NonNullable<Awaited<ReturnType<typeof getNudgeBySlug>>>;
+export type Nudge = Extract<
+    GetNudgeBySlugReturn,
+    { success: true }
+>['data']['nudge'];
+
+export type GetTeamNudgesReturn = Awaited<ReturnType<typeof getTeamNudges>>;
+
+export type Nudges = Extract<
+    GetTeamNudgesReturn,
+    { success: true }
+>['data']['nudges'];
 
 export type UserTeam = NonNullable<UserTeams>[number];
 

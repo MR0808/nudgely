@@ -45,7 +45,10 @@ const NudgeMain = ({
                 setIsLoading(true);
 
                 const newNudges = await getTeamNudges(selectedTeam.id);
-                setNudges(newNudges);
+                if (!newNudges.success) {
+                    throw new Error('No nudges found');
+                }
+                setNudges(newNudges.data.nudges);
             } catch (error) {
                 console.error('Failed to fetch team data:', error);
             } finally {

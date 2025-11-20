@@ -1,16 +1,36 @@
 'use server';
 
 import * as z from 'zod';
-import { auth, ErrorCode } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { APIError } from 'better-auth/api';
 import { redirect } from 'next/navigation';
+import { APIError } from 'better-auth/api';
 
+import { auth, ErrorCode } from '@/lib/auth';
 import { LoginSchema } from '@/schemas/auth';
 import { logUserLogin } from '@/actions/audit/audit-auth';
 import { prisma } from '@/lib/prisma';
 
-export const login = async (values: z.infer<typeof LoginSchema>) => {
+/* ------------------------------------------------------------------
+ * Types
+ * ------------------------------------------------------------------ */
+
+type LoginResult = {
+    error: string | null;
+    emailVerified?: Date | string | boolean | null;
+};
+
+type TokenLookupResult = {
+    data: string | null;
+    error: boolean;
+};
+
+/* ------------------------------------------------------------------
+ * Login
+ * ------------------------------------------------------------------ */
+
+export const login = async (
+    values: z.infer<typeof LoginSchema>
+): Promise<LoginResult> => {
     const validatedFields = LoginSchema.safeParse(values);
 
     if (!validatedFields.success) {
@@ -18,6 +38,7 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     }
 
     const { email, password, rememberMe } = validatedFields.data;
+
     try {
         const data = await auth.api.signInEmail({
             headers: await headers(),
@@ -37,9 +58,10 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
             error: null,
             emailVerified: data.user.emailVerified
         };
-    } catch (err: any) {
+    } catch (err: unknown) {
         if (err instanceof APIError) {
-            const errCode = err.body ? (err.body.code as ErrorCode) : 'UNKNOWN';
+            const body = err.body as { code?: ErrorCode } | undefined;
+            const errCode: ErrorCode | 'UNKNOWN' = body?.code ?? 'UNKNOWN';
 
             switch (errCode) {
                 case 'EMAIL_NOT_VERIFIED':
@@ -48,22 +70,32 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
                     return { error: err.message };
             }
         }
+
+        console.error('[login] Unexpected error:', err);
         return { error: 'Internal Server Error' };
     }
 };
 
-export const getUserIdfromToken = async (token: string) => {
+/* ------------------------------------------------------------------
+ * Get user id from reset-password token
+ * ------------------------------------------------------------------ */
+
+export const getUserIdfromToken = async (
+    token: string
+): Promise<TokenLookupResult> => {
     try {
-        const data = await prisma.verification.findFirst({
-            where: { identifier: `reset-password:${token}` }
+        const record = await prisma.verification.findFirst({
+            where: { identifier: `reset-password:${token}` },
+            select: { value: true }
         });
 
-        if (!data) {
+        if (!record) {
             return { data: null, error: true };
         }
 
-        return { data: data.value, error: false };
+        return { data: record.value, error: false };
     } catch (error) {
+        console.error('[getUserIdfromToken] Error:', error);
         return { data: null, error: true };
     }
 };

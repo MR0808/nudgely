@@ -12,10 +12,60 @@ import {
     logNudgeResumed,
     logNudgeUpdated
 } from '@/actions/audit/audit-nudge';
+import type { Prisma } from '@/generated/prisma';
+
+/* ------------------------------------------------------------------
+ * 🧩 Types
+ * ------------------------------------------------------------------ */
 
 const slugger = new GithubSlugger();
 
-export const getCompanyNudgeCount = async () => {
+type FieldErrors = Record<string, string[]>;
+
+type ActionSuccess<T> = {
+    success: true;
+    data: T;
+};
+
+type ActionFailure = {
+    success: false;
+    error: string;
+    fieldErrors?: FieldErrors;
+};
+
+export type ActionResult<T> = ActionSuccess<T> | ActionFailure;
+
+// Prisma payload helpers
+type NudgeWithTeam = Prisma.NudgeGetPayload<{
+    include: { team: true };
+}>;
+
+type NudgeWithTeamAndRecipients = Prisma.NudgeGetPayload<{
+    include: { team: true; recipients: true };
+}>;
+
+type NudgeWithInstances = Prisma.NudgeGetPayload<{
+    include: {
+        recipients: true;
+        team: true;
+        instances: {
+            include: {
+                events: true;
+                completion: {
+                    include: {
+                        user: true;
+                    };
+                };
+            };
+        };
+    };
+}>;
+
+/* ------------------------------------------------------------------
+ * 🔢 Simple count helpers (internal-style)
+ * ------------------------------------------------------------------ */
+
+export const getCompanyNudgeCount = async (): Promise<number> => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
@@ -27,6 +77,7 @@ export const getCompanyNudgeCount = async () => {
     if (userCompany.role !== 'COMPANY_ADMIN') {
         throw new Error('Not authorised');
     }
+
     try {
         const companyWithNudges = await prisma.company.findUnique({
             where: {
@@ -46,9 +97,10 @@ export const getCompanyNudgeCount = async () => {
         }
 
         // Sum the number of nudges across all teams
-        const nudgeCount = companyWithNudges.teams.reduce((total, team) => {
-            return total + team.nudges.length;
-        }, 0);
+        const nudgeCount = companyWithNudges.teams.reduce(
+            (total, team) => total + team.nudges.length,
+            0
+        );
 
         return nudgeCount;
     } catch (error) {
@@ -57,7 +109,7 @@ export const getCompanyNudgeCount = async () => {
     }
 };
 
-export const getTotalCompanyNudges = async () => {
+export const getTotalCompanyNudges = async (): Promise<number> => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
@@ -65,6 +117,7 @@ export const getTotalCompanyNudges = async () => {
     }
 
     const { company } = userSession;
+
     try {
         const nudges = await prisma.nudge.findMany({
             where: { team: { companyId: company.id } }
@@ -72,47 +125,80 @@ export const getTotalCompanyNudges = async () => {
 
         return nudges.length;
     } catch (error) {
+        console.error('Error fetching total company nudges:', error);
         throw new Error(`Error fetching nudge count: ${error}`);
     }
 };
 
-export const getTeamNudges = async (teamId: string) => {
+/* ------------------------------------------------------------------
+ * 📋 Get Team Nudges
+ * ------------------------------------------------------------------ */
+
+type GetTeamNudgesData = {
+    nudges: NudgeWithTeamAndRecipients[];
+};
+
+export const getTeamNudges = async (
+    teamId: string
+): Promise<ActionResult<GetTeamNudgesData>> => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
-        throw new Error('Not authorised');
+        return {
+            success: false,
+            error: 'Not authorised'
+        };
     }
 
     const { company } = userSession;
+
     try {
-        if (teamId === 'all') {
-            const nudges = await prisma.nudge.findMany({
-                where: { team: { companyId: company.id } },
-                include: { recipients: true, team: true }
-            });
-            return nudges;
-        } else {
-            const nudges = await prisma.nudge.findMany({
-                where: { teamId },
-                include: { recipients: true, team: true }
-            });
-            return nudges;
-        }
+        const where =
+            teamId === 'all' ? { team: { companyId: company.id } } : { teamId };
+
+        const nudges = await prisma.nudge.findMany({
+            where,
+            include: {
+                recipients: true,
+                team: true
+            }
+        });
+
+        return {
+            success: true,
+            data: { nudges }
+        };
     } catch (error) {
-        console.error('Error fetching nudge count:', error);
+        console.error('Error fetching nudges:', error);
+        return {
+            success: false,
+            error: 'Error fetching nudges'
+        };
     }
+};
+
+/* ------------------------------------------------------------------
+ * ➕ Create Nudge
+ * ------------------------------------------------------------------ */
+
+type CreateNudgeData = {
+    nudge: NudgeWithTeam;
 };
 
 export const createNudge = async (
     values: z.infer<typeof CreateNudgeSchema>
-) => {
+): Promise<ActionResult<CreateNudgeData>> => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
-        throw new Error('Not authorised');
+        return {
+            success: false,
+            error: 'Not authorised'
+        };
     }
 
     const { user, company } = userSession;
+
     try {
         const plan = await prisma.plan.findUnique({
             where: { id: company.planId }
@@ -121,18 +207,18 @@ export const createNudge = async (
         if (!plan) {
             return {
                 success: false,
-                error: 'No plan found ',
+                error: 'No plan found',
                 fieldErrors: {
                     plan: ['Not found']
                 }
             };
         }
 
-        const nudges = await prisma.nudge.findMany({
+        const nudgesForCompany = await prisma.nudge.findMany({
             where: { team: { companyId: company.id } }
         });
 
-        if (plan.maxNudges > 0 && nudges.length >= plan.maxNudges) {
+        if (plan.maxNudges > 0 && nudgesForCompany.length >= plan.maxNudges) {
             return {
                 success: false,
                 error: 'Nudges limit reached',
@@ -147,13 +233,12 @@ export const createNudge = async (
         const validatedFields = CreateNudgeSchema.safeParse(values);
 
         if (!validatedFields.success) {
-            // const errors = validatedFields.error.flatten().fieldErrors;
-            const errors = z.flattenError(validatedFields.error);
+            const { fieldErrors } = validatedFields.error.flatten();
 
             return {
                 success: false,
                 error: 'Validation failed',
-                fieldErrors: errors.fieldErrors
+                fieldErrors
             };
         }
 
@@ -161,7 +246,10 @@ export const createNudge = async (
 
         const teamMember = await prisma.teamMember.findUnique({
             where: {
-                teamId_userId: { teamId: validatedData.teamId, userId: user.id }
+                teamId_userId: {
+                    teamId: validatedData.teamId,
+                    userId: user.id
+                }
             }
         });
 
@@ -169,7 +257,9 @@ export const createNudge = async (
             return {
                 success: false,
                 error: 'Not part of the team',
-                fieldErrors: { teamId: ['User is not part of this team'] }
+                fieldErrors: {
+                    teamId: ['User is not part of this team']
+                }
             };
         }
 
@@ -183,12 +273,14 @@ export const createNudge = async (
                 return {
                     success: false,
                     error: 'End date must be in the future',
-                    fieldErrors: { endDate: ['End date must be in the future'] }
+                    fieldErrors: {
+                        endDate: ['End date must be in the future']
+                    }
                 };
             }
         }
 
-        // Check for duplicate recipient emails
+        // Deduplicate recipient emails
         const emailSet = new Set<string>();
         const recipients: { email: string; firstName: string }[] = [];
 
@@ -196,11 +288,11 @@ export const createNudge = async (
             const email = recipient.email.toLowerCase();
             if (!emailSet.has(email)) {
                 recipients.push({
-                    email: recipient.email.toLowerCase(),
+                    email,
                     firstName: recipient.name
                 });
+                emailSet.add(email);
             }
-            emailSet.add(email);
         }
 
         if (recipients.length === 0) {
@@ -225,25 +317,27 @@ export const createNudge = async (
             };
         }
 
-        // Validate interval is reasonable (prevent extremely large intervals)
+        // Reasonable interval guard
         if (validatedData.interval > 365) {
             return {
                 success: false,
                 error: 'Interval cannot exceed 365',
-                fieldErrors: { interval: ['Interval is too large'] }
+                fieldErrors: {
+                    interval: ['Interval is too large']
+                }
             };
         }
 
+        // Generate unique slug
         let slug = slugger.slug(validatedData.name);
         let slugExists = true;
 
         while (slugExists) {
-            const checkSlug = await prisma.nudge.findUnique({
+            const existing = await prisma.nudge.findUnique({
                 where: { slug }
             });
-            if (!checkSlug) {
+            if (!existing) {
                 slugExists = false;
-                break;
             } else {
                 slug = slugger.slug(validatedData.name);
             }
@@ -298,12 +392,16 @@ export const createNudge = async (
             }
         });
 
+        // Create recipients
         for (const recipient of recipients) {
             let userId: string | null = null;
             const recipientUser = await prisma.user.findUnique({
                 where: { email: recipient.email }
             });
-            if (recipientUser) userId = recipientUser.id;
+            if (recipientUser) {
+                userId = recipientUser.id;
+            }
+
             await prisma.nudgeRecipient.create({
                 data: {
                     name: recipient.firstName,
@@ -314,9 +412,13 @@ export const createNudge = async (
             });
         }
 
-        return { success: true, nudge };
+        return {
+            success: true,
+            data: { nudge }
+        };
     } catch (error) {
         console.error('Error creating nudge:', error);
+
         if (error instanceof Error) {
             return {
                 success: false,
@@ -331,17 +433,29 @@ export const createNudge = async (
     }
 };
 
+/* ------------------------------------------------------------------
+ * ✏️ Update Nudge
+ * ------------------------------------------------------------------ */
+
+type UpdateNudgeData = {
+    nudge: NudgeWithTeamAndRecipients;
+};
+
 export const updateNudge = async (
     values: z.infer<typeof CreateNudgeSchema>,
     nudgeId: string
-) => {
+): Promise<ActionResult<UpdateNudgeData>> => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
-        throw new Error('Not authorised');
+        return {
+            success: false,
+            error: 'Not authorised'
+        };
     }
 
     const { user, company } = userSession;
+
     try {
         const plan = await prisma.plan.findUnique({
             where: { id: company.planId }
@@ -350,7 +464,7 @@ export const updateNudge = async (
         if (!plan) {
             return {
                 success: false,
-                error: 'No plan found ',
+                error: 'No plan found',
                 fieldErrors: {
                     plan: ['Not found']
                 }
@@ -360,13 +474,12 @@ export const updateNudge = async (
         const validatedFields = CreateNudgeSchema.safeParse(values);
 
         if (!validatedFields.success) {
-            // const errors = validatedFields.error.flatten().fieldErrors;
-            const errors = z.flattenError(validatedFields.error);
+            const { fieldErrors } = validatedFields.error.flatten();
 
             return {
                 success: false,
                 error: 'Validation failed',
-                fieldErrors: errors.fieldErrors
+                fieldErrors
             };
         }
 
@@ -374,7 +487,10 @@ export const updateNudge = async (
 
         const teamMember = await prisma.teamMember.findUnique({
             where: {
-                teamId_userId: { teamId: validatedData.teamId, userId: user.id }
+                teamId_userId: {
+                    teamId: validatedData.teamId,
+                    userId: user.id
+                }
             }
         });
 
@@ -382,7 +498,9 @@ export const updateNudge = async (
             return {
                 success: false,
                 error: 'Not part of the team',
-                fieldErrors: { teamId: ['User is not part of this team'] }
+                fieldErrors: {
+                    teamId: ['User is not part of this team']
+                }
             };
         }
 
@@ -395,11 +513,13 @@ export const updateNudge = async (
             return {
                 success: false,
                 error: 'Nudge not found',
-                fieldErrors: { nudgeId: ['Nudge not found'] }
+                fieldErrors: {
+                    nudgeId: ['Nudge not found']
+                }
             };
         }
 
-        // Check if end date is in the future (if provided)
+        // End date validation
         if (validatedData.endType === 'ON_DATE' && validatedData.endDate) {
             const endDate = new Date(validatedData.endDate);
             const today = new Date();
@@ -409,12 +529,14 @@ export const updateNudge = async (
                 return {
                     success: false,
                     error: 'End date must be in the future',
-                    fieldErrors: { endDate: ['End date must be in the future'] }
+                    fieldErrors: {
+                        endDate: ['End date must be in the future']
+                    }
                 };
             }
         }
 
-        // Check for duplicate recipient emails
+        // Deduplicate recipients
         const emailSet = new Set<string>();
         const recipients: { email: string; firstName: string }[] = [];
 
@@ -422,11 +544,11 @@ export const updateNudge = async (
             const email = recipient.email.toLowerCase();
             if (!emailSet.has(email)) {
                 recipients.push({
-                    email: recipient.email.toLowerCase(),
+                    email,
                     firstName: recipient.name
                 });
+                emailSet.add(email);
             }
-            emailSet.add(email);
         }
 
         if (recipients.length === 0) {
@@ -451,15 +573,18 @@ export const updateNudge = async (
             };
         }
 
-        // Validate interval is reasonable (prevent extremely large intervals)
+        // Reasonable interval guard
         if (validatedData.interval > 365) {
             return {
                 success: false,
                 error: 'Interval cannot exceed 365',
-                fieldErrors: { interval: ['Interval is too large'] }
+                fieldErrors: {
+                    interval: ['Interval is too large']
+                }
             };
         }
 
+        // Slug handling
         let slug = oldNudge.slug;
 
         if (validatedData.name !== oldNudge.name) {
@@ -467,12 +592,11 @@ export const updateNudge = async (
             let slugExists = true;
 
             while (slugExists) {
-                const checkSlug = await prisma.nudge.findUnique({
+                const existing = await prisma.nudge.findUnique({
                     where: { slug }
                 });
-                if (!checkSlug) {
+                if (!existing) {
                     slugExists = false;
-                    break;
                 } else {
                     slug = slugger.slug(validatedData.name);
                 }
@@ -530,55 +654,58 @@ export const updateNudge = async (
             }
         });
 
-        // Get current recipients from the database
+        // Sync recipients
         const currentRecipients = nudge.recipients;
         const submittedRecipients = validatedData.recipients;
 
-        // Identify emails in the submitted form and current database
         const submittedEmails = new Set(
             submittedRecipients.map((r) => r.email)
         );
         const currentEmails = new Set(currentRecipients.map((r) => r.email));
 
-        // Determine recipients to delete (in DB but not in form)
+        // Recipients to delete (in DB but not in submitted)
         const recipientsToDelete = currentRecipients.filter(
             (r) => !submittedEmails.has(r.email)
         );
 
-        // Determine recipients to add (in form but not in DB)
-        const recipientsToAdd = submittedRecipients.filter(
-            (r) => !currentEmails.has(r.email)
-        );
-
-        // Delete removed recipients
         if (recipientsToDelete.length > 0) {
             await prisma.nudgeRecipient.deleteMany({
                 where: {
                     nudgeId,
-                    email: { in: recipientsToDelete.map((r) => r.email) }
+                    email: {
+                        in: recipientsToDelete.map((r) => r.email)
+                    }
                 }
             });
         }
 
-        // Add new recipients
+        // Recipients to add (in submitted but not in DB)
+        const recipientsToAdd = submittedRecipients.filter(
+            (r) => !currentEmails.has(r.email)
+        );
+
         if (recipientsToAdd.length > 0) {
-            let newRecipients: {
+            const newRecipients: {
                 name: string;
                 email: string;
                 userId: string | null;
             }[] = [];
+
             for (const recipient of recipientsToAdd) {
                 let userId: string | null = null;
                 const recipientUser = await prisma.user.findUnique({
                     where: { email: recipient.email }
                 });
-                if (recipientUser) userId = recipientUser.id;
+                if (recipientUser) {
+                    userId = recipientUser.id;
+                }
                 newRecipients.push({
                     name: recipient.name,
                     email: recipient.email,
                     userId
                 });
             }
+
             await prisma.nudgeRecipient.createMany({
                 data: newRecipients.map((recipient) => ({
                     nudgeId,
@@ -638,9 +765,13 @@ export const updateNudge = async (
 
         revalidatePath(`/nudges/${slug}`);
 
-        return { success: true, nudge };
+        return {
+            success: true,
+            data: { nudge }
+        };
     } catch (error) {
-        console.error('Error creating nudge:', error);
+        console.error('Error updating nudge:', error);
+
         if (error instanceof Error) {
             return {
                 success: false,
@@ -650,16 +781,29 @@ export const updateNudge = async (
 
         return {
             success: false,
-            error: 'An unexpected error occurred while creating the reminder'
+            error: 'An unexpected error occurred while updating the reminder'
         };
     }
 };
 
-export const pauseNudge = async (id: string) => {
+/* ------------------------------------------------------------------
+ * ⏸️ Pause Nudge
+ * ------------------------------------------------------------------ */
+
+type PauseResumeData = {
+    nudges: NudgeWithTeamAndRecipients[];
+};
+
+export const pauseNudge = async (
+    id: string
+): Promise<ActionResult<PauseResumeData>> => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
-        throw new Error('Not authorised');
+        return {
+            success: false,
+            error: 'Not authorised'
+        };
     }
 
     try {
@@ -672,34 +816,48 @@ export const pauseNudge = async (id: string) => {
             nudgeId: nudge.id
         });
 
-        const nudges = await getTeamNudges(nudge.teamId);
+        const nudges = await prisma.nudge.findMany({
+            where: { teamId: nudge.teamId },
+            include: { recipients: true, team: true }
+        });
 
         revalidatePath(`/nudges/${nudge.slug}`);
 
         return {
-            data: nudges,
-            error: null
+            success: true,
+            data: { nudges }
         };
     } catch (error) {
+        console.error('Error pausing nudge:', error);
+
         if (error instanceof Error) {
             return {
-                data: null,
+                success: false,
                 error: error.message
             };
         }
 
         return {
-            data: null,
-            error: 'An unexpected error occurred while creating the reminder'
+            success: false,
+            error: 'An unexpected error occurred while pausing the reminder'
         };
     }
 };
 
-export const resumeNudge = async (id: string) => {
+/* ------------------------------------------------------------------
+ * ▶️ Resume Nudge
+ * ------------------------------------------------------------------ */
+
+export const resumeNudge = async (
+    id: string
+): Promise<ActionResult<PauseResumeData>> => {
     const userSession = await authCheckServer();
 
     if (!userSession) {
-        throw new Error('Not authorised');
+        return {
+            success: false,
+            error: 'Not authorised'
+        };
     }
 
     try {
@@ -712,37 +870,55 @@ export const resumeNudge = async (id: string) => {
             nudgeId: nudge.id
         });
 
-        const nudges = await getTeamNudges(nudge.teamId);
+        const nudges = await prisma.nudge.findMany({
+            where: { teamId: nudge.teamId },
+            include: { recipients: true, team: true }
+        });
 
         revalidatePath(`/nudges/${nudge.slug}`);
 
         return {
-            data: nudges,
-            error: null
+            success: true,
+            data: { nudges }
         };
     } catch (error) {
+        console.error('Error resuming nudge:', error);
+
         if (error instanceof Error) {
             return {
-                data: null,
+                success: false,
                 error: error.message
             };
         }
 
         return {
-            data: null,
-            error: 'An unexpected error occurred while creating the reminder'
+            success: false,
+            error: 'An unexpected error occurred while resuming the reminder'
         };
     }
 };
 
-export const getNudgeBySlug = async (slug: string) => {
+/* ------------------------------------------------------------------
+ * 🔍 Get Nudge by Slug (detail page)
+ * ------------------------------------------------------------------ */
+
+type GetNudgeBySlugData = {
+    nudge: NudgeWithInstances;
+};
+
+export const getNudgeBySlug = async (
+    slug: string
+): Promise<ActionResult<GetNudgeBySlugData>> => {
+    const userSession = await authCheckServer();
+
+    if (!userSession) {
+        return {
+            success: false,
+            error: 'Not authorised'
+        };
+    }
+
     try {
-        const userSession = await authCheckServer();
-
-        if (!userSession) {
-            throw new Error('Not authorised');
-        }
-
         const nudge = await prisma.nudge.findUnique({
             where: {
                 slug
@@ -753,20 +929,33 @@ export const getNudgeBySlug = async (slug: string) => {
                 instances: {
                     include: {
                         events: true,
-                        completion: { include: { user: true } }
+                        completion: {
+                            include: {
+                                user: true
+                            }
+                        }
                     }
                 }
             }
         });
 
-        if (!nudge) return null;
-
-        return nudge;
-    } catch (error) {
-        if (error instanceof Error) {
-            return null;
+        if (!nudge) {
+            return {
+                success: false,
+                error: 'Nudge not found'
+            };
         }
 
-        return null;
+        return {
+            success: true,
+            data: { nudge }
+        };
+    } catch (error) {
+        console.error('Error fetching nudge by slug:', error);
+
+        return {
+            success: false,
+            error: 'Failed to load nudge'
+        };
     }
 };

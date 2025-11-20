@@ -68,14 +68,14 @@ const NudgesPage = async () => {
     const totalNudges = await getTotalCompanyNudges();
     const res = await getTotalActiveCompanyMembers();
 
-    if (!res.success || !res.data) return null;
+    if (!res.success || !res.data || !nudges.success) return null;
 
     const { total } = res.data;
 
     return (
         <NudgeMain
             returnTeams={teams}
-            returnNudges={nudges}
+            returnNudges={nudges.data.nudges}
             plan={plan.plan}
             totalNudges={totalNudges}
             totalMembers={total}

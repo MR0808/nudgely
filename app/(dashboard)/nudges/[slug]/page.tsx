@@ -19,10 +19,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
     const { slug } = await params;
     const nudge = await getNudgeBySlug(slug);
-    if (!nudge) {
+    if (!nudge.success) {
         return { title: 'Nudge not found' };
     }
-    const title = `Nudge - ${nudge.name}`;
+    const title = `Nudge - ${nudge.data.nudge.name}`;
     const description = 'Nudge view';
     const images = [siteMetadata.siteLogo];
     return {
@@ -53,13 +53,12 @@ const NudgeDetailPage = async (props: { params: Promise<ParamsSlug> }) => {
     const { slug } = await props.params;
     const userSession = await authCheck(`/nudges/${slug}`);
 
-    const nudge = await getNudgeBySlug(slug);
-
+    const res = await getNudgeBySlug(slug);
     const formatDate = (date: Date, timeZone: string) => {
         return formatInTimeZone(date, timeZone, 'hh:mm a dd/MM/yyyy');
     };
 
-    if (!nudge) {
+    if (!res.success) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -79,6 +78,8 @@ const NudgeDetailPage = async (props: { params: Promise<ParamsSlug> }) => {
             </div>
         );
     }
+
+    const { nudge } = res.data;
 
     return (
         <div className="container mx-auto max-w-4xl py-10 space-y-6">

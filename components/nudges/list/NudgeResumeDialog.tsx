@@ -27,11 +27,11 @@ const NudgeResumeDialog = ({
     const onPause = () => {
         startTransition(async () => {
             const result = await resumeNudge(nudgeId);
-            if (result.error) {
+            if (!result.success) {
                 toast.error(result.error);
             }
-            if (result.data) {
-                if (setNudges) setNudges(result.data);
+            if (result.success) {
+                if (setNudges) setNudges(result.data.nudges);
                 setOpen(false);
                 toast.success('Nudge resumed');
             }

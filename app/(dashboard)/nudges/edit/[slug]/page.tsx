@@ -17,10 +17,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
     const { slug } = await params;
     const nudge = await getNudgeBySlug(slug);
-    if (!nudge) {
+    if (!nudge.success) {
         return { title: 'Nudge not found' };
     }
-    const title = `${nudge.name} | Edit`;
+    const title = `${nudge.data.nudge.name} | Edit`;
     const description = 'Nudge edit';
     const images = [siteMetadata.siteLogo];
     return {
@@ -52,7 +52,7 @@ const EditNudgePage = async (props: { params: Promise<ParamsSlug> }) => {
     const userSession = await authCheck(`/nudges/edit/${slug}`);
     const nudge = await getNudgeBySlug(slug);
 
-    if (!nudge) {
+    if (!nudge.success) {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-4xl mx-auto p-6">
@@ -103,7 +103,7 @@ const EditNudgePage = async (props: { params: Promise<ParamsSlug> }) => {
                 returnTeams={teams}
                 userSession={userSession}
                 plan={plan.plan}
-                nudge={nudge}
+                nudge={nudge.data.nudge}
             />
         </div>
     );

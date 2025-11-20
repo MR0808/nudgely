@@ -57,15 +57,15 @@ const NudgeCreateForm = ({
         setSubmitMessage(null);
         startTransition(async () => {
             const result = await createNudge(data);
-            if (result.nudge) {
+            if (result.success) {
                 if (userSession) {
                     await logNudgeCreated(userSession.user.id, {
-                        nudgeId: result.nudge.id,
-                        teamName: result.nudge.name
+                        nudgeId: result.data.nudge.id,
+                        teamName: result.data.nudge.name
                     });
                 }
                 toast.success('Nudge successfully created');
-                router.push(`/nudges/${result.nudge.slug}`);
+                router.push(`/nudges/${result.data.nudge.slug}`);
             } else {
                 setSubmitMessage({
                     type: 'error',
