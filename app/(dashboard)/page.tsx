@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
@@ -41,7 +43,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const DashboardPage = async () => {
     const { userCompany } = await authCheck();
-
     const teams = await getUserTeams();
 
     if (!teams || teams.length === 0) {

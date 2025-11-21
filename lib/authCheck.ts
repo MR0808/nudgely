@@ -1,103 +1,75 @@
+'use server';
+
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 
 import { auth } from '@/lib/auth';
 
-export const isLoggedIn = async () => {
+async function getSessionFromHeaders() {
     const headerList = await headers();
+    return auth.api.getSession({ headers: headerList });
+}
 
-    const session = await auth.api.getSession({
-        headers: headerList
-    });
+export const isLoggedIn = async () => {
+    const session = await getSessionFromHeaders();
 
     if (session) {
-        if (!session.user.emailVerified) return redirect('/auth/verify-email');
+        if (!session.user.emailVerified) throw redirect('/auth/verify-email');
 
         // if (!session.user.phoneVerified) return redirect('/auth/verify-phone');
 
-        return redirect('/');
+        throw redirect('/');
     }
+
+    return null;
 };
 
 export const authCheck = async (callbackUrl?: string) => {
-    const headerList = await headers();
-
-    const session = await auth.api.getSession({
-        headers: headerList
-    });
+    const session = await getSessionFromHeaders();
+    console.log('SESSION RAW:', JSON.stringify(session, null, 2));
 
     if (!session) {
-        if (callbackUrl) {
-            return redirect(
-                `/auth/login?callbackURL=${encodeURIComponent(callbackUrl)}`
-            );
-        } else {
-            return redirect('/auth/login');
-        }
+        const url = callbackUrl
+            ? `/auth/login?callbackURL=${encodeURIComponent(callbackUrl)}`
+            : `/auth/login`;
+
+        throw redirect(url);
     }
 
-    if (!session.user.emailVerified) return redirect('/auth/verify-email');
-
-    // if (
-    //     session.company.creatorId === session.user.id &&
-    //     !session.company.profileCompleted
-    // )
-    //     return redirect('/onboarding');
-
-    // if (!session.user.phoneVerified) return redirect('/auth/verify-phone');
+    if (!session.user.emailVerified) throw redirect('/auth/verify-email');
 
     return session;
 };
 
 export const authCheckServer = async () => {
-    const headerList = await headers();
-
-    const session = await auth.api.getSession({
-        headers: headerList
-    });
-
-    if (!session) return false;
-
-    return session;
+    const session = await getSessionFromHeaders();
+    return session ?? false;
 };
 
 export const authCheckOnboarding = async () => {
-    const headerList = await headers();
+    const session = await getSessionFromHeaders();
 
-    const session = await auth.api.getSession({
-        headers: headerList
-    });
+    if (!session) throw redirect('/auth/login');
 
-    if (!session) return redirect('/auth/login');
+    if (session.company.profileCompleted) throw redirect('/');
 
-    if (session.company.profileCompleted) return redirect('/');
-
-    if (session.userCompany.role !== 'COMPANY_ADMIN') return redirect('/');
+    if (session.userCompany.role !== 'COMPANY_ADMIN') throw redirect('/');
 
     return session;
 };
 
 export const authCheckAdmin = async (callbackUrl?: string) => {
-    const headerList = await headers();
-
-    const session = await auth.api.getSession({
-        headers: headerList
-    });
-
+    const session = await getSessionFromHeaders();
     if (!session) {
-        if (callbackUrl) {
-            return redirect(
-                `/auth/login?callbackURL=${encodeURIComponent(callbackUrl)}`
-            );
-        } else {
-            return redirect('/auth/login');
-        }
+        const url = callbackUrl
+            ? `/auth/login?callbackURL=${encodeURIComponent(callbackUrl)}`
+            : `/auth/login`;
+
+        throw redirect(url);
     }
 
-    console.log(session.user.role);
-
     if (session.user.role !== 'SITE_ADMIN') {
-        return redirect('/');
+        throw redirect('/');
     }
 
     return session;

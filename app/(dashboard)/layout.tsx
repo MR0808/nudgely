@@ -1,4 +1,6 @@
 import { checkCompanyStatus } from '@/actions/company';
+import { redirect } from 'next/navigation';
+
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { CompanySetupBanner } from '@/components/layout/CompanySetupBanner';
 import { LoadingBar } from '@/components/layout/LoadingBar';
@@ -23,7 +25,7 @@ export default async function RootLayout({
     if (!res.success) {
         // not authorised
         // e.g. redirect to login / show error
-        return;
+        throw redirect('/auth/login');
     }
     const companyStatus = res.data!;
     const showBanner =
