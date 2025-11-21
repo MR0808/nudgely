@@ -6,6 +6,13 @@ import ServerSidebar from '@/components/layout/ServerSidebar';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { CompanyStatus } from '@/generated/prisma';
+import { PageTitleProvider } from '@/providers/page-title-provider';
+import {
+    getStaticRouteTitle,
+    getDynamicRouteTitle,
+    cleanTitle
+} from '@/lib/page-title';
+import { headers } from 'next/headers';
 
 export default async function RootLayout({
     children
@@ -23,8 +30,21 @@ export default async function RootLayout({
         companyStatus?.isCompanyAdmin &&
         !companyStatus.isComplete &&
         companyStatus.missingFields.length > 0;
+
+    // Read pathname from middleware (Next 16 + Proxy friendly)
+    const hdrs = await headers();
+    const pathname = hdrs.get('x-pathname') ?? '/';
+
+    // 1. Try static title first
+    const staticTitle = getStaticRouteTitle(pathname);
+
+    // 2. Try dynamic DB-backed title
+    const dynamicTitle = await getDynamicRouteTitle(pathname);
+
+    // 3. Decide final title, clean up any global prefix if needed
+    const pageTitle = cleanTitle(dynamicTitle ?? staticTitle ?? 'Nudgely');
     return (
-        <>
+        <PageTitleProvider value={pageTitle}>
             <SidebarProvider
                 style={
                     {
@@ -53,6 +73,6 @@ export default async function RootLayout({
                     </div>
                 </SidebarInset>
             </SidebarProvider>
-        </>
+        </PageTitleProvider>
     );
 }
