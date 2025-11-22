@@ -6,8 +6,9 @@ import { ThemeSwitch } from '@/components/layout/ThemeSwitch';
 import { ProfileDropdown } from '@/components/layout/ProfileDropdown';
 import NotificationsDropdown from '@/components/layout/NotificationsDropdown';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { SessionType } from '@/types/session';
 
-export function SiteHeader() {
+export function SiteHeader({ session }: { session: SessionType }) {
     const pageTitle = usePageTitle();
 
     return (
@@ -24,7 +25,7 @@ export function SiteHeader() {
                 <div className="flex items-center gap-3 ">
                     <ThemeSwitch />
                     {/* <NotificationsDropdown /> */}
-                    <ProfileDropdown />
+                    <ProfileDropdown initialSession={session} />
                 </div>
             </div>
         </header>

@@ -1,20 +1,19 @@
-import { checkCompanyStatus } from '@/actions/company';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { AppSidebar } from '@/components/layout/AppSidebar';
+import { auth } from '@/lib/auth';
+import { checkCompanyStatus } from '@/actions/company';
 import { CompanySetupBanner } from '@/components/layout/CompanySetupBanner';
 import { LoadingBar } from '@/components/layout/LoadingBar';
 import ServerSidebar from '@/components/layout/ServerSidebar';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { CompanyStatus } from '@/generated/prisma';
 import { PageTitleProvider } from '@/providers/page-title-provider';
 import {
     getStaticRouteTitle,
     getDynamicRouteTitle,
     cleanTitle
 } from '@/lib/page-title';
-import { headers } from 'next/headers';
 
 export default async function RootLayout({
     children
@@ -36,6 +35,7 @@ export default async function RootLayout({
     // Read pathname from middleware (Next 16 + Proxy friendly)
     const hdrs = await headers();
     const pathname = hdrs.get('x-pathname') ?? '/';
+    const session = await auth.api.getSession({ headers: hdrs });
 
     // 1. Try static title first
     const staticTitle = getStaticRouteTitle(pathname);
@@ -65,7 +65,7 @@ export default async function RootLayout({
                         />
                     )}
                     <LoadingBar />
-                    <SiteHeader />
+                    <SiteHeader session={session} />
                     <div className="flex flex-1 flex-col">
                         <div className="@container/main flex flex-1 flex-col gap-2">
                             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

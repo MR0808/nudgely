@@ -17,25 +17,30 @@ import {
 import { useSession } from '@/lib/auth-client';
 import { CircleDollarSign, LogOut, Settings, User } from 'lucide-react';
 import LogoutDialog from '@/components/layout/LogoutDialog';
+import { SessionType } from '@/types/session';
 
-export function ProfileDropdown() {
-    const { data: userSession } = useSession();
+export function ProfileDropdown({
+    initialSession
+}: {
+    initialSession: SessionType;
+}) {
+    const { data: liveSession } = useSession();
+    const session = liveSession ?? initialSession;
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [initials, setInitials] = useState('');
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
 
     useEffect(() => {
-        if (userSession && userSession.user) {
-            setInitials(
-                `${userSession.user.name[0]}${userSession.user.lastName[0]}`
-            );
-            setFullName(
-                `${userSession.user.name} ${userSession.user.lastName}`
-            );
-            setEmail(userSession.user.email);
+        if (session?.user) {
+            const name = session.user.name ?? '';
+            const last = session.user.lastName ?? '';
+
+            setInitials(`${name[0] ?? ''}${last[0] ?? ''}`);
+            setFullName(`${name} ${last}`);
+            setEmail(session.user.email);
         }
-    }, [userSession]);
+    }, [session]);
 
     return (
         <>
@@ -47,7 +52,7 @@ export function ProfileDropdown() {
                     >
                         <Avatar className="h-8 w-8">
                             <AvatarImage
-                                src={userSession?.user.image || undefined}
+                                src={session?.user.image || undefined}
                                 alt={fullName}
                             />
                             <AvatarFallback>{initials}</AvatarFallback>
@@ -72,7 +77,7 @@ export function ProfileDropdown() {
                                 <User /> Profile
                             </Link>
                         </DropdownMenuItem>
-                        {userSession?.userCompany.role === 'COMPANY_ADMIN' && (
+                        {session?.userCompany.role === 'COMPANY_ADMIN' && (
                             <DropdownMenuItem asChild>
                                 <Link
                                     href="/billing"
