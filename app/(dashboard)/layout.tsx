@@ -5,7 +5,7 @@ import { auth } from '@/lib/auth';
 import { checkCompanyStatus } from '@/actions/company';
 import { CompanySetupBanner } from '@/components/layout/CompanySetupBanner';
 import { LoadingBar } from '@/components/layout/LoadingBar';
-import ServerSidebar from '@/components/layout/ServerSidebar';
+// import ServerSidebar from '@/components/layout/ServerSidebar';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { PageTitleProvider } from '@/providers/page-title-provider';
@@ -14,6 +14,7 @@ import {
     getDynamicRouteTitle,
     cleanTitle
 } from '@/lib/page-title';
+import { AppSidebar } from '@/components/layout/AppSidebar';
 
 export default async function RootLayout({
     children
@@ -56,7 +57,7 @@ export default async function RootLayout({
                 }
                 className="group/layout"
             >
-                <ServerSidebar />
+                <AppSidebar variant="inset" userSession={session} />
                 <SidebarInset>
                     {showBanner && (
                         <CompanySetupBanner

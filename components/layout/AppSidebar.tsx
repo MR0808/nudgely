@@ -99,7 +99,7 @@ export function AppSidebar({ userSession, ...props }: AppSidebarProps) {
                 <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>
             <SidebarFooter>
-                <NavUser />
+                <NavUser initialSession={userSession} />
             </SidebarFooter>
         </Sidebar>
     );

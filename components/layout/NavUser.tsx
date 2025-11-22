@@ -29,26 +29,27 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import LogoutDialog from '@/components/layout/LogoutDialog';
+import { SessionType } from '@/types/session';
 
-export function NavUser() {
+export function NavUser({ initialSession }: { initialSession: SessionType }) {
     const { isMobile } = useSidebar();
-    const { data: userSession } = useSession();
+    const { data: liveSession } = useSession();
+    const session = liveSession ?? initialSession;
     const [initials, setInitials] = useState('');
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     useEffect(() => {
-        if (userSession && userSession.user) {
-            setInitials(
-                `${userSession.user.name[0]}${userSession.user.lastName[0]}`
-            );
-            setFullName(
-                `${userSession.user.name} ${userSession.user.lastName}`
-            );
-            setEmail(userSession.user.email);
+        if (session?.user) {
+            const name = session.user.name ?? '';
+            const last = session.user.lastName ?? '';
+
+            setInitials(`${name[0] ?? ''}${last[0] ?? ''}`);
+            setFullName(`${name} ${last}`);
+            setEmail(session.user.email);
         }
-    }, [userSession]);
+    }, [session]);
 
     return (
         <SidebarMenu>
@@ -61,8 +62,8 @@ export function NavUser() {
                         >
                             <Avatar className="h-8 w-8 rounded-lg">
                                 <AvatarImage
-                                    src={userSession?.user.image || undefined}
-                                    alt={`${userSession?.user.name} ${userSession?.user.lastName}`}
+                                    src={session?.user.image || undefined}
+                                    alt={`${session?.user.name} ${session?.user.lastName}`}
                                 />
                                 <AvatarFallback>{initials}</AvatarFallback>
                             </Avatar>
@@ -87,19 +88,17 @@ export function NavUser() {
                             <div className="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
                                 <Avatar className="h-8 w-8 rounded-lg grayscale">
                                     <AvatarImage
-                                        src={
-                                            userSession?.user.image || undefined
-                                        }
-                                        alt={`${userSession?.user.name} ${userSession?.user.lastName}`}
+                                        src={session?.user.image || undefined}
+                                        alt={`${session?.user.name} ${session?.user.lastName}`}
                                     />
                                     <AvatarFallback>{initials}</AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-start text-sm leading-tight">
                                     <span className="truncate font-semibold">
-                                        {`${userSession?.user.name} ${userSession?.user.lastName}`}
+                                        {`${session?.user.name} ${session?.user.lastName}`}
                                     </span>
                                     <span className="truncate text-xs">
-                                        {userSession?.user.email}
+                                        {session?.user.email}
                                     </span>
                                 </div>
                             </div>
