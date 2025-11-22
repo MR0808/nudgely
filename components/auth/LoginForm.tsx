@@ -183,7 +183,7 @@ const LoginForm = () => {
                         By proceeding, you acknowledge and accept our&nbsp;
                         <a
                             className="font-medium text-indigo-600 underline"
-                            href="/terms"
+                            href="https://www.nudgelyapp.com/terms"
                             target="_blank"
                         >
                             Terms and Conditions
@@ -191,7 +191,7 @@ const LoginForm = () => {
                         &nbsp;and&nbsp;
                         <Link
                             className="font-medium text-indigo-600 underline"
-                            href="/privacy-policy"
+                            href="https://www.nudgelyapp.com/privacy"
                             target="_blank"
                         >
                             Privacy Policy
