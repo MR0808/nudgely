@@ -30,8 +30,6 @@ export async function cleanupOrphanedImages(
     const { dryRun = false, olderThanDays } = options;
 
     try {
-        console.log(`Starting image cleanup (dry run: ${dryRun})...`);
-
         // Build the where clause
         const whereClause: any = {
             OR: [{ relatedEntity: null }, { relatedEntity: '' }]
@@ -56,8 +54,6 @@ export async function cleanupOrphanedImages(
                 createdAt: true
             }
         });
-
-        console.log(`Found ${orphanedImages.length} orphaned images`);
 
         if (orphanedImages.length === 0 || dryRun) {
             return {
@@ -95,7 +91,6 @@ export async function cleanupOrphanedImages(
                 });
 
                 deletedCount++;
-                console.log(`Successfully deleted image: ${image.imageName}`);
             } catch (error) {
                 console.error(
                     `Error processing image ${image.imageName}:`,
@@ -108,10 +103,6 @@ export async function cleanupOrphanedImages(
                 );
             }
         }
-
-        console.log(
-            `Image cleanup completed. Deleted: ${deletedCount}, Errors: ${errors.length}`
-        );
 
         return {
             deletedCount,

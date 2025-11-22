@@ -26,7 +26,6 @@ export const isLoggedIn = async () => {
 
 export const authCheck = async (callbackUrl?: string) => {
     const session = await getSessionFromHeaders();
-    console.log('SESSION RAW:', JSON.stringify(session, null, 2));
 
     if (!session) {
         const url = callbackUrl
