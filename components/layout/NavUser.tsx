@@ -105,9 +105,14 @@ export function NavUser({ initialSession }: { initialSession: SessionType }) {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
-                            <DropdownMenuItem className="cursor-pointer">
-                                <Sparkles />
-                                Upgrade to Pro
+                            <DropdownMenuItem asChild>
+                                <Link
+                                    href="/subscription"
+                                    className="cursor-pointer"
+                                >
+                                    <Sparkles />
+                                    Upgrade to Pro
+                                </Link>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
