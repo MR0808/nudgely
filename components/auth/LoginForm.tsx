@@ -181,13 +181,13 @@ const LoginForm = () => {
                     />
                     <div className="text-gray-600 dark:text-gray-400">
                         By proceeding, you acknowledge and accept our&nbsp;
-                        <a
+                        <Link
                             className="font-medium text-indigo-600 underline"
                             href="https://www.nudgelyapp.com/terms"
                             target="_blank"
                         >
                             Terms and Conditions
-                        </a>
+                        </Link>
                         &nbsp;and&nbsp;
                         <Link
                             className="font-medium text-indigo-600 underline"

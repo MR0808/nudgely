@@ -219,11 +219,17 @@ const InitialRegistrationForm = ({
                                             </FormControl>
                                             <FormLabel
                                                 className={cn(
-                                                    'flex cursor-pointer items-center gap-2 text-xs font-medium leading-none text-gray-700 dark:text-gray-200'
+                                                    'gap-1 flex cursor-pointer items-center text-xs font-medium leading-none text-gray-700 dark:text-gray-200'
                                                 )}
                                             >
-                                                I accept the terms and
-                                                conditions
+                                                I accept the
+                                                <Link
+                                                    className="font-medium text-indigo-600 underline"
+                                                    href="https://www.nudgelyapp.com/terms"
+                                                    target="_blank"
+                                                >
+                                                    Terms and Conditions
+                                                </Link>
                                             </FormLabel>
                                         </FormItem>
                                     )}
