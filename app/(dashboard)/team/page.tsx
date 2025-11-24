@@ -105,7 +105,7 @@ const TeamPage = async () => {
                     </div>
                     {canManageCompany && (
                         <div className="flex gap-2">
-                            <Link href="/company/settings">
+                            <Link href="/company">
                                 <Button
                                     variant="outline"
                                     className="gap-2 bg-transparent cursor-pointer"
