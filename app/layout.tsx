@@ -68,6 +68,11 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <head>
                 <meta name="apple-mobile-web-app-title" content="Nudgely" />
+                <script
+                    defer
+                    src="https://cloud.umami.is/script.js"
+                    data-website-id="a5cedf56-8715-424b-b81d-07acfa6801c2"
+                ></script>
             </head>
             <body
                 // className={`${inter.className} antialiased overscroll-none`}
