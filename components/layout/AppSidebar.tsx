@@ -6,7 +6,6 @@ import {
     CircleQuestionMark,
     Settings,
     SquareCheckBig,
-    ChartColumn,
     UsersRound
 } from 'lucide-react';
 
@@ -87,6 +86,14 @@ export function AppSidebar({ userSession, ...props }: AppSidebarProps) {
                                     alt="Nudgely"
                                     width={100}
                                     height={100}
+                                    className="block dark:hidden"
+                                />
+                                <Image
+                                    src="/images/logo/logowhite.png"
+                                    alt="Nudgely"
+                                    width={100}
+                                    height={100}
+                                    className="hidden dark:block"
                                 />
                             </Link>
                         </SidebarMenuButton>

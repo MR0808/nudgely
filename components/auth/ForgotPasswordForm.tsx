@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { InputAuth, SubmitButtonAuth } from '@/components/form/FormInputs';
 import { EmailSchema } from '@/schemas/auth';
-import { forgetPassword } from '@/lib/auth-client';
+import { requestPasswordReset } from '@/lib/auth-client';
 import Link from 'next/link';
 
 const ForgotPasswordForm = () => {
@@ -33,7 +33,7 @@ const ForgotPasswordForm = () => {
     const onSubmit = (values: z.infer<typeof EmailSchema>) => {
         setSuccess(false);
         startTransition(async () => {
-            await forgetPassword({
+            await requestPasswordReset({
                 email: values.email,
                 redirectTo: '/auth/reset-password',
                 fetchOptions: {

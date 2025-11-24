@@ -23,7 +23,7 @@ export const {
     useSession,
     admin,
     sendVerificationEmail,
-    forgetPassword,
+    requestPasswordReset,
     resetPassword,
     updateUser,
     changeEmail,
