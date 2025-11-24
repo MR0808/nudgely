@@ -44,7 +44,7 @@ const NudgeCreateFormBasicInformation = () => {
                                 <Input
                                     {...field}
                                     placeholder="e.g., Weekly Team Update"
-                                    className="border-border text-foreground bg-white"
+                                    className="border-border text-foreground bg-white  dark:bg-transparent dark:text-inherit"
                                 />
                             </FormControl>
                             <FormMessage />
@@ -65,7 +65,7 @@ const NudgeCreateFormBasicInformation = () => {
                                     {...field}
                                     placeholder="What is this reminder for?"
                                     rows={3}
-                                    className="border-border text-foreground resize-none bg-white"
+                                    className="border-border text-foreground resize-none bg-white dark:bg-transparent dark:text-inherit"
                                 />
                             </FormControl>
                             <FormMessage />

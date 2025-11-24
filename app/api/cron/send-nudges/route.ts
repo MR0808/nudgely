@@ -196,8 +196,8 @@ export async function GET(request: NextRequest) {
 
                         // Send the email
                         const emailResult = await sendNudgeEmail({
-                            // email: recipient.email,
-                            email: 'kram@grebnesor.com',
+                            email: recipient.email,
+                            // email: 'kram@grebnesor.com',
                             name: recipient.name,
                             nudgeName: nudge.name,
                             nudgeDescription: nudge.description,
