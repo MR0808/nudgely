@@ -304,7 +304,8 @@ export const completeNudge = async ({
                 await Promise.all(
                     Array.from(emailMap.values()).map((recipient) =>
                         sendCompletionNotificationEmail({
-                            email: 'kram@grebnesor.com',
+                            // email: 'kram@grebnesor.com',
+                            email: recipient.email,
                             name: recipient.name,
                             nudgeName: nudge.name,
                             nudgeDescription: nudge.description,
