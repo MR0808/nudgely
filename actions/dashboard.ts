@@ -267,7 +267,17 @@ export async function getDashboardStats(teamId?: string) {
     /* ---------------------------------------------------------
      * PENDING/OVERDUE NUDGES (not completed)
      * --------------------------------------------------------- */
-    const pendingNudgesRaw = await prisma.nudgeInstance.findMany({
+    type PendingNudgeInstance = Prisma.NudgeInstanceGetPayload<{
+        include: {
+            nudge: {
+                include: {
+                    team: true;
+                };
+            };
+        };
+    }>;
+
+    const pendingNudgesRaw = (await prisma.nudgeInstance.findMany({
         where: {
             nudge: teamFilter,
             status: {
@@ -276,22 +286,14 @@ export async function getDashboardStats(teamId?: string) {
         },
         include: {
             nudge: {
-                select: {
-                    id: true,
-                    name: true,
-                    team: {
-                        select: {
-                            id: true,
-                            name: true,
-                            companyId: true
-                        }
-                    }
+                include: {
+                    team: true
                 }
             }
         },
         orderBy: { scheduledFor: 'desc' },
         take: 50
-    });
+    })) as PendingNudgeInstance[];
 
     /* ---------------------------------------------------------
      * NUDGES NEEDING ATTENTION
