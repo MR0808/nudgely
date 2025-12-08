@@ -37,15 +37,27 @@ const DashboardContent = ({
     const [selectedTeam, setSelectedTeam] = useState(initialTeam);
     const [stats, setStats] = useState<DashboardStats>(dashboardStats);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadStats() {
             setLoading(true);
-            const data = await getDashboardStats(
-                selectedTeam === 'all' ? undefined : selectedTeam
-            );
-            setStats(data);
-            setLoading(false);
+            setError(null);
+            try {
+                const data = await getDashboardStats(
+                    selectedTeam === 'all' ? undefined : selectedTeam
+                );
+                setStats(data);
+            } catch (err) {
+                const message =
+                    err instanceof Error
+                        ? err.message
+                        : 'Unable to load dashboard data';
+                setError(message);
+                setStats(dashboardStats);
+            } finally {
+                setLoading(false);
+            }
         }
         loadStats();
     }, [selectedTeam]);
@@ -83,7 +95,19 @@ const DashboardContent = ({
                     </Select>
                 </CardContent>
             </Card>
-            {loading || !stats ? (
+            {error ? (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Unable to load data</CardTitle>
+                        <CardDescription>{error}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                            Please select another team or try again later.
+                        </p>
+                    </CardContent>
+                </Card>
+            ) : loading || !stats ? (
                 <div className="space-y-6">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         {Array.from({ length: 4 }).map((_, i) => (
@@ -136,6 +160,50 @@ const DashboardContent = ({
                     <NudgesNeedingAttention
                         data={stats.nudgesNeedingAttention}
                     />
+
+                    {/* Pending / Overdue Nudges */}
+                    {stats.pendingNudges && stats.pendingNudges.length > 0 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Nudges Not Yet Completed</CardTitle>
+                                <CardDescription>
+                                    Instances that are still pending or overdue
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {stats.pendingNudges.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        className="flex flex-col gap-1 rounded-lg border p-3"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="font-semibold">
+                                                {item.nudgeName}
+                                            </div>
+                                            <div className="text-xs uppercase text-muted-foreground">
+                                                {item.status.toLowerCase()}
+                                            </div>
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                            Team: {item.teamName}
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                            Scheduled:{' '}
+                                            {new Date(
+                                                item.scheduledFor
+                                            ).toLocaleString()}
+                                        </div>
+                                        {item.overdueCount > 0 && (
+                                            <div className="text-sm text-destructive">
+                                                Overdue count:{' '}
+                                                {item.overdueCount}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    )}
                 </>
             )}
         </div>

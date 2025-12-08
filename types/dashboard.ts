@@ -77,3 +77,15 @@ export interface NudgesNeedingAttentionProps {
         lastInstanceDate: Date | null;
     }>;
 }
+
+export interface PendingNudgesTableProps {
+    data: Array<{
+        id: string;
+        nudgeId: string;
+        nudgeName: string;
+        teamName: string;
+        scheduledFor: Date;
+        status: string;
+        overdueCount: number;
+    }>;
+}

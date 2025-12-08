@@ -3,6 +3,7 @@ import 'server-only';
 
 import { Prisma } from '@/generated/prisma';
 import { prisma } from '@/lib/prisma';
+import { authCheckServer } from '@/lib/authCheck';
 
 /* -------------------------------------------------------------
  * Raw SQL result types (NOT exported to prevent client imports)
@@ -46,7 +47,24 @@ type AttentionRow = {
  * ------------------------------------------------------------- */
 
 export async function getDashboardStats(teamId?: string) {
-    const teamFilter = teamId ? { teamId } : {};
+    const session = await authCheckServer();
+    if (!session) {
+        throw new Error('Not authorised');
+    }
+
+    const companyId = session.company.id;
+
+    // Validate team belongs to the current company (and exists) if provided
+    if (teamId) {
+        const team = await prisma.team.findFirst({
+            where: { id: teamId, companyId }
+        });
+        if (!team) {
+            throw new Error('Invalid team for this company');
+        }
+    }
+
+    const teamFilter = teamId ? { teamId } : { team: { companyId } };
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -68,34 +86,34 @@ export async function getDashboardStats(teamId?: string) {
         }),
 
         prisma.nudgeCompletion.count({
-            where: teamId ? { nudge: { teamId } } : {}
+            where: { nudge: teamFilter }
         }),
 
         prisma.nudgeInstance.count({
-            where: teamId ? { nudge: { teamId } } : {}
+            where: { nudge: teamFilter }
         }),
 
         prisma.nudgeInstance.count({
             where: {
-                ...(teamId ? { nudge: teamFilter } : {}),
+                nudge: teamFilter,
                 status: 'PENDING'
             }
         }),
 
         prisma.nudgeInstance.count({
             where: {
-                ...(teamId ? { nudge: teamFilter } : {}),
+                nudge: teamFilter,
                 status: 'FAILED'
             }
         }),
 
         prisma.nudgeRecipient.count({
-            where: teamId ? { nudge: { teamId } } : {}
+            where: { nudge: teamFilter }
         }),
 
         prisma.nudgeCompletion.count({
             where: {
-                ...(teamId ? { nudge: { teamId } } : {}),
+                nudge: teamFilter,
                 comments: { not: null }
             }
         })
@@ -115,9 +133,12 @@ export async function getDashboardStats(teamId?: string) {
                 DATE(nc."createdAt") AS date,
                 COUNT(*)::int AS count
             FROM "nudge_completions" nc
-            ${teamId ? Prisma.sql`JOIN "nudges" n ON nc."nudgeId" = n.id` : Prisma.empty}
+            JOIN "nudge_instances" ni ON nc."nudgeInstanceId" = ni.id
+            JOIN "nudges" n ON ni."nudgeId" = n.id
+            JOIN "teams" t ON n."teamId" = t.id
             WHERE nc."createdAt" >= ${thirtyDaysAgo}
-            ${teamId ? Prisma.sql`AND n."teamId" = ${teamId}` : Prisma.empty}
+            AND t."companyId" = ${companyId}
+            ${teamId ? Prisma.sql`AND t.id = ${teamId}` : Prisma.empty}
             GROUP BY DATE(nc."createdAt")
             ORDER BY date ASC
         `
@@ -165,6 +186,7 @@ export async function getDashboardStats(teamId?: string) {
             LEFT JOIN "nudge_instances" ni ON n.id = ni."nudgeId"
             LEFT JOIN "nudge_completions" nc ON ni.id = nc."nudgeInstanceId"
             WHERE t.status = 'ACTIVE'
+            AND t."companyId" = ${companyId}
             ${teamId ? Prisma.sql`AND t.id = ${teamId}` : Prisma.empty}
             GROUP BY t.id, t.name
             ORDER BY "completionRate" DESC
@@ -190,7 +212,9 @@ export async function getDashboardStats(teamId?: string) {
             FROM "nudges" n
             LEFT JOIN "nudge_instances" ni ON n.id = ni."nudgeId"
             LEFT JOIN "nudge_completions" nc ON ni.id = nc."nudgeInstanceId"
+            JOIN "teams" t ON n."teamId" = t.id
             WHERE n.status = 'ACTIVE'
+            AND t."companyId" = ${companyId}
             ${teamId ? Prisma.sql`AND n."teamId" = ${teamId}` : Prisma.empty}
             GROUP BY n.id, n.name
             HAVING COUNT(DISTINCT ni.id) > 0
@@ -203,7 +227,7 @@ export async function getDashboardStats(teamId?: string) {
      * RECENT COMPLETIONS (native Prisma)
      * --------------------------------------------------------- */
     const recentCompletionsRaw = await prisma.nudgeCompletion.findMany({
-        where: teamId ? { nudge: { teamId } } : {},
+        where: { nudge: teamFilter },
         include: {
             nudge: { select: { name: true } },
             nudgeInstance: { select: { scheduledFor: true } }
@@ -230,13 +254,44 @@ export async function getDashboardStats(teamId?: string) {
             FROM "nudge_recipient_events" nre
             JOIN "nudge_instances" ni ON nre."nudgeInstanceId" = ni.id
             JOIN "nudges" n ON ni."nudgeId" = n.id
-            ${teamId ? Prisma.sql`WHERE n."teamId" = ${teamId}` : Prisma.empty}
+            JOIN "teams" t ON n."teamId" = t.id
+            WHERE t."companyId" = ${companyId}
+            ${teamId ? Prisma.sql`AND n."teamId" = ${teamId}` : Prisma.empty}
             GROUP BY nre."recipientEmail", nre."recipientName"
             HAVING COUNT(DISTINCT nre.id) > 0
             ORDER BY completions DESC, "completionRate" DESC
             LIMIT 10
         `
     );
+
+    /* ---------------------------------------------------------
+     * PENDING/OVERDUE NUDGES (not completed)
+     * --------------------------------------------------------- */
+    const pendingNudgesRaw = await prisma.nudgeInstance.findMany({
+        where: {
+            nudge: teamFilter,
+            status: {
+                in: ['PENDING', 'OVERDUE']
+            }
+        },
+        include: {
+            nudge: {
+                select: {
+                    id: true,
+                    name: true,
+                    team: {
+                        select: {
+                            id: true,
+                            name: true,
+                            companyId: true
+                        }
+                    }
+                }
+            }
+        },
+        orderBy: { scheduledFor: 'desc' },
+        take: 50
+    });
 
     /* ---------------------------------------------------------
      * NUDGES NEEDING ATTENTION
@@ -257,7 +312,9 @@ export async function getDashboardStats(teamId?: string) {
             FROM "nudges" n
             LEFT JOIN "nudge_instances" ni ON n.id = ni."nudgeId"
             LEFT JOIN "nudge_completions" nc ON ni.id = nc."nudgeInstanceId"
+            JOIN "teams" t ON n."teamId" = t.id
             WHERE n.status = 'ACTIVE'
+            AND t."companyId" = ${companyId}
             ${teamId ? Prisma.sql`AND n."teamId" = ${teamId}` : Prisma.empty}
             GROUP BY n.id, n.name, n.status
             HAVING 
@@ -337,6 +394,16 @@ export async function getDashboardStats(teamId?: string) {
             completionRate: Math.round(item.completionRate * 10) / 10,
             overdueCount: item.overdueCount,
             lastInstanceDate: item.lastInstanceDate
+        })),
+
+        pendingNudges: pendingNudgesRaw.map((item) => ({
+            id: item.id,
+            nudgeId: item.nudgeId,
+            nudgeName: item.nudge.name,
+            teamName: item.nudge.team.name,
+            scheduledFor: item.scheduledFor,
+            status: item.status,
+            overdueCount: item.overdueCount
         }))
     };
 }
