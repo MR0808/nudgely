@@ -1,4 +1,31 @@
 {
+  "name": "hyrelog-api",
+  "private": true,
+  "packageManager": "npm@10",
+  "workspaces": [
+    "services/api",
+    "services/worker",
+    "infra"
+  ],
+  "scripts": {
+    "dev": "npm --workspace services/api run dev",
+    "typecheck": "npm run -ws typecheck",
+    "lint": "npm run -ws lint",
+    "format": "prettier . --write",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3"
+  }
+}
+
+{
     "name": "nudgely",
     "version": "0.1.0",
     "private": true,

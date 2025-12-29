@@ -4,13 +4,13 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
 import { SiteRole, Gender } from '@/generated/prisma';
 import { admin, customSession, openAPI } from 'better-auth/plugins';
+import { error } from 'console';
 
 import { prisma } from '@/lib/prisma';
 import { hashPassword, verifyPassword } from '@/lib/argon2';
 import { sendVerificationEmail, sendResetEmail } from '@/lib/mail';
 import { ac, roles } from '@/lib/permissions';
 import { logPasswordResetRequested } from '@/actions/audit/audit-auth';
-import { error } from 'console';
 
 const options = {
     database: prismaAdapter(prisma, {
