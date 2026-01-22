@@ -1,4 +1,4 @@
-import { Frequency, MonthlyType, EndType } from '@/generated/prisma';
+import { Frequency, MonthlyType, EndType } from '@/generated/prisma/client';
 
 /**
  * Calculate the next occurrence date for a nudge based on its frequency settings
@@ -666,3 +666,4 @@ export function formatScheduleInfo(nudge: {
 
     return scheduleText;
 }
+

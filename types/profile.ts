@@ -1,4 +1,4 @@
-import { Gender } from '@/generated/prisma';
+import { Gender } from '@/generated/prisma/client';
 
 import { SessionType } from '@/types/session';
 
@@ -11,3 +11,4 @@ export interface DateOfBirthProps {
     dateOfBirthProp?: Date;
     userSession: SessionType | null;
 }
+

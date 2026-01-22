@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@/generated/prisma';
+import { Prisma } from '@/generated/prisma/client';
 
 export async function getPlans(searchParams?: {
     [key: string]: string | string[] | undefined;
@@ -80,3 +80,4 @@ export async function getPlans(searchParams?: {
     //   },
     // ]
 }
+

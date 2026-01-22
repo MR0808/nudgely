@@ -1,4 +1,4 @@
-// import { PrismaClient } from '@/generated/prisma';
+// import { PrismaClient } from '@/generated/prisma/client';
 // import { withAccelerate } from '@prisma/extension-accelerate';
 
 // // Use `any` on the global cache to avoid type-narrowing conflicts with the extended client
@@ -21,7 +21,7 @@
 
 import 'dotenv/config';
 // import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../generated/prisma/client';
+import { PrismaClient } from '@/generated/prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate'
 
 const connectionString = `${process.env.DATABASE_URL}`;
@@ -34,3 +34,4 @@ const prisma = new PrismaClient({
 }).$extends(withAccelerate())
 
 export { prisma };
+

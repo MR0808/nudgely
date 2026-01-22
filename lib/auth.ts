@@ -2,7 +2,7 @@ import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { createAuthMiddleware } from 'better-auth/api';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
-import { SiteRole, Gender } from '@/generated/prisma';
+import { SiteRole, Gender } from '@/generated/prisma/client';
 import { admin, customSession, openAPI } from 'better-auth/plugins';
 import { error } from 'console';
 
@@ -170,3 +170,4 @@ export const auth = betterAuth({
 });
 
 export type ErrorCode = keyof typeof auth.$ERROR_CODES | 'UNKNOWN';
+

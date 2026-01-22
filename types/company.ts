@@ -6,7 +6,7 @@ import {
     Region,
     CompanyRole,
     Plan
-} from '@/generated/prisma';
+} from '@/generated/prisma/client';
 
 import { getCompany } from '@/actions/company';
 import {
@@ -148,3 +148,4 @@ export interface CompanyCheckResult {
     isComplete: boolean;
     missingFields: string[];
 }
+

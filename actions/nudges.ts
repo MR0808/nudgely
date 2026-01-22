@@ -12,7 +12,7 @@ import {
     logNudgeResumed,
     logNudgeUpdated
 } from '@/actions/audit/audit-nudge';
-import type { Prisma } from '@/generated/prisma';
+import type { Prisma } from '@/generated/prisma/client';
 
 /* ------------------------------------------------------------------
  * 🧩 Types
@@ -959,3 +959,4 @@ export const getNudgeBySlug = async (
         };
     }
 };
+

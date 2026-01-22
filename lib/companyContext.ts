@@ -3,7 +3,7 @@
 'use server';
 
 import { authCheckServer } from '@/lib/authCheck';
-import { CompanyRole } from '@/generated/prisma';
+import { CompanyRole } from '@/generated/prisma/client';
 
 export type CompanyContext = {
     user: any;
@@ -25,3 +25,4 @@ export async function getCompanyContext(): Promise<CompanyContext | null> {
         isAdmin: userCompany?.role === CompanyRole.COMPANY_ADMIN
     };
 }
+

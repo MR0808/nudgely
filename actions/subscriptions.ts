@@ -3,7 +3,7 @@
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
-import { Plan, PendingCompanySubscription, Company, CompanySubscription } from '@/generated/prisma';
+import { Plan, PendingCompanySubscription, Company, CompanySubscription } from '@/generated/prisma/client';
 
 type ActionResult<T> =
   | { success: true; message: string; data: T }
@@ -339,3 +339,4 @@ export async function checkDowngradedPlan(companyId: string): Promise<ActionResu
     };
   }
 }
+

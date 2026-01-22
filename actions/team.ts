@@ -7,7 +7,7 @@ import { TeamSchema } from '@/schemas/team';
 import { checkCompanyTeamLimits } from '@/lib/team';
 import { revalidatePath } from 'next/cache';
 import { logTeamDeleted, logTeamEnabled } from '@/actions/audit/audit-team';
-import { TeamRole, TeamStatus, Prisma } from '@/generated/prisma';
+import { TeamRole, TeamStatus, Prisma } from '@/generated/prisma/client';
 import GithubSlugger from 'github-slugger';
 
 const slugger = new GithubSlugger();

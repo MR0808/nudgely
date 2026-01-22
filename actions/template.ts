@@ -1,7 +1,7 @@
 'use server';
 
 import GithubSlugger from 'github-slugger';
-import { Plan, TemplateCategory } from '@/generated/prisma';
+import { Plan, TemplateCategory } from '@/generated/prisma/client';
 
 import { authCheckServer } from '@/lib/authCheck';
 import { prisma } from '@/lib/prisma';
@@ -269,3 +269,4 @@ export const deleteTeamTemplate = async (
         return { success: false, error: 'Failed to delete template' };
     }
 };
+

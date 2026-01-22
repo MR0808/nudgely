@@ -1,4 +1,4 @@
-import { Plan } from '@/generated/prisma';
+import { Plan } from '@/generated/prisma/client';
 
 import { getCompany } from '@/actions/company';
 import { getCustomerPaymentInformation } from '@/actions/subscriptions';
@@ -49,3 +49,4 @@ export interface BillingInvoicesProps {
     invoices: Invoices | undefined;
     customerId: string | null;
 }
+

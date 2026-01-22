@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
-import { TemplateCategory } from '@/generated/prisma';
+import { TemplateCategory } from '@/generated/prisma/client';
 
 import {
     Dialog,
@@ -222,3 +222,4 @@ const TemplateFormDialog = ({
 };
 
 export default TemplateFormDialog;
+

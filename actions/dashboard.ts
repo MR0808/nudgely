@@ -1,7 +1,7 @@
 'use server';
 import 'server-only';
 
-import { Prisma } from '@/generated/prisma';
+import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 
@@ -416,3 +416,4 @@ export async function getDashboardStats(teamId?: string) {
         }))
     };
 }
+

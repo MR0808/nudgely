@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TeamRole } from '@/generated/prisma';
+import { TeamRole } from '@/generated/prisma/client';
 
 export const InviteTeamMemberSchema = z.object({
     email: z.email({
@@ -11,3 +11,4 @@ export const InviteTeamMemberSchema = z.object({
         .max(100, 'Name must be less than 100 characters'),
     role: z.enum(Object.values(TeamRole) as [string, ...string[]])
 });
+

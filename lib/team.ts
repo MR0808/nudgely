@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@/generated/prisma';
+import type { Prisma } from '@/generated/prisma/client';
 
 type CompanyWithTeams = Prisma.CompanyGetPayload<{
     include: { teams: true };
@@ -163,3 +163,4 @@ export async function getUserTeamRole(userId: string, teamId: string) {
 
     return membership?.role || null;
 }
+

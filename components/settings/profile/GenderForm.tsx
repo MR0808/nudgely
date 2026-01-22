@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTransition, useState } from 'react';
 import { toast } from 'sonner';
-import { Gender } from '@/generated/prisma';
+import { Gender } from '@/generated/prisma/client';
 
 import {
     Form,
@@ -196,3 +196,4 @@ const GenderForm = ({ genderProp, userSession }: GenderProps) => {
     );
 };
 export default GenderForm;
+

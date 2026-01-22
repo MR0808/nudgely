@@ -1,6 +1,6 @@
 'use server';
 
-import { SiteRole, UserStatus } from '@/generated/prisma';
+import { SiteRole, UserStatus } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export async function getUsers(searchParams: {
@@ -166,3 +166,4 @@ export async function getUserAuditLogs(userId: string) {
 
     return logs;
 }
+

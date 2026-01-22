@@ -2,7 +2,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@/generated/prisma';
+import type { Prisma } from '@/generated/prisma/client';
 import {
     shouldSendNudge,
     hasNudgeEnded,
@@ -308,3 +308,4 @@ export async function GET(request: NextRequest) {
         );
     }
 }
+

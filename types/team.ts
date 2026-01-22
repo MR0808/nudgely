@@ -1,4 +1,4 @@
-import { Plan, TeamRole, TeamStatus, User } from '@/generated/prisma';
+import { Plan, TeamRole, TeamStatus, User } from '@/generated/prisma/client';
 
 import { getCompanyTeams, getCurrentTeamBySlug } from '@/actions/team';
 import { SessionType } from '@/types/session';
@@ -163,3 +163,4 @@ export interface AddToTeamDialogProps {
     setOpen: (open: boolean) => void;
     setMembers: (returnMembers: ReturnMembers) => void;
 }
+

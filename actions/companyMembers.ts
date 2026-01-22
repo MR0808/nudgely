@@ -5,7 +5,7 @@ import { randomBytes } from 'crypto';
 import { revalidatePath } from 'next/cache';
 
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@/generated/prisma';
+import type { Prisma } from '@/generated/prisma/client';
 import { getCompanyContext } from '@/lib/companyContext';
 import {
     sendCompanyAddedAdminEmail,
@@ -843,3 +843,4 @@ export const getTotalActiveCompanyMembers = async (): Promise<
         };
     }
 };
+

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import type { RateLimit } from '@/generated/prisma';
+import type { RateLimit } from '@/generated/prisma/client';
 
 export const calculateCooldownSeconds = (resetTime: Date): number => {
     return Math.max(0, Math.ceil((resetTime.getTime() - Date.now()) / 1000));
@@ -23,3 +23,4 @@ export const getRateLimits = async (key: string): Promise<RateLimit | null> => {
 
     return record;
 };
+

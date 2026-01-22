@@ -1,4 +1,4 @@
-import { Country, Region } from '@/generated/prisma';
+import { Country, Region } from '@/generated/prisma/client';
 
 import { SessionType } from '@/types/session';
 
@@ -19,3 +19,4 @@ export interface LocationData {
     region: Region | null;
     initialValueProp: boolean;
 }
+

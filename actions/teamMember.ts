@@ -15,7 +15,7 @@ import {
     logTeamMemberRoleUpdated,
     logTeamUpdateMemberTeams
 } from '@/actions/audit/audit-team';
-import { TeamRole } from '@/generated/prisma';
+import { TeamRole } from '@/generated/prisma/client';
 import { sendTeamAddedEmail, sendTeamInviteEmail } from '@/lib/mail';
 import { checkCompanyUserLimits } from '@/lib/team';
 
@@ -539,3 +539,4 @@ export const enableTeamMember = async (memberId: string, teamId: string) => {
         return { data: null, error: 'Failed to enable member' };
     }
 };
+

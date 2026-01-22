@@ -2,7 +2,7 @@
 
 import { useFormContext } from 'react-hook-form';
 import { Country } from 'react-phone-number-input';
-import { Country as CountryDb } from '@/generated/prisma';
+import { Country as CountryDb } from '@/generated/prisma/client';
 
 import {
     FormField,
@@ -83,3 +83,4 @@ const ContactStep = ({ defaultCountry }: { defaultCountry: CountryDb }) => {
 };
 
 export default ContactStep;
+

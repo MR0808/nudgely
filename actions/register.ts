@@ -15,7 +15,7 @@ import { generateOTP } from '@/lib/otp';
 import { sendVerificationEmail } from '@/lib/mail';
 import { EmailCheckResult } from '@/types/register';
 import { logCompanyCreated } from '@/actions/audit/audit-company';
-import { TeamRole } from '@/generated/prisma';
+import { TeamRole } from '@/generated/prisma/client';
 import { ActionResult } from '@/types/global';
 
 let cachedDomains: string[] | null = null;
@@ -615,3 +615,4 @@ export const teamUserRegisterInitial = async (
         };
     }
 };
+

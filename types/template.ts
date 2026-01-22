@@ -1,5 +1,5 @@
 import { getUserTeams } from '@/actions/team';
-import { Plan, TemplateCategory } from '@/generated/prisma';
+import { Plan, TemplateCategory } from '@/generated/prisma/client';
 
 export type UserTeams = NonNullable<Awaited<ReturnType<typeof getUserTeams>>>;
 
@@ -80,3 +80,4 @@ export interface TemplateDeleteDialogProps {
     onConfirm: () => void;
     isPending: boolean;
 }
+

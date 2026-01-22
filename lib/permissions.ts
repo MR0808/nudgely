@@ -1,4 +1,4 @@
-import { SiteRole } from '@/generated/prisma';
+import { SiteRole } from '@/generated/prisma/client';
 import { createAccessControl } from 'better-auth/plugins/access';
 import { defaultStatements, adminAc } from 'better-auth/plugins/admin/access';
 
@@ -25,3 +25,4 @@ export const roles = {
         ]
     })
 };
+

@@ -1,8 +1,8 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { CompanyStatus } from '@/generated/prisma';
-import type { Prisma } from '@/generated/prisma';
+import { CompanyStatus } from '@/generated/prisma/client';
+import type { Prisma } from '@/generated/prisma/client';
 
 type CompanyWithRelations = Prisma.CompanyGetPayload<{
     include: {
@@ -171,3 +171,4 @@ export async function changePlan(companyId: string, planId: string) {
 
     return { success: true };
 }
+

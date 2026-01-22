@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
 import { ActionResult } from '@/types/global';
-import { Plan } from '@/generated/prisma';
+import { Plan } from '@/generated/prisma/client';
 
 //
 // ---------------------------------------------------------
@@ -70,3 +70,4 @@ export const getPlans = async (): Promise<ActionResult<{ plans: Plan[] }>> => {
         };
     }
 };
+

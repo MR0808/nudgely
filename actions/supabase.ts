@@ -1,6 +1,6 @@
 'use server';
 
-import { ImageType } from '@/generated/prisma';
+import { ImageType } from '@/generated/prisma/client';
 
 import { supabaseServer } from '@/lib/supabase';
 import { prisma } from '@/lib/prisma';
@@ -324,3 +324,4 @@ export const manualImageCleanup = async ({
         };
     }
 };
+

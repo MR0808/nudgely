@@ -1,5 +1,5 @@
 import { getCompany } from '@/actions/company';
-import { CompanySize, Country, Industry, Region } from '@/generated/prisma';
+import { CompanySize, Country, Industry, Region } from '@/generated/prisma/client';
 
 import { SessionType } from '@/types/session';
 
@@ -36,3 +36,4 @@ export interface LocationProps {
     countries: Country[];
     regions: Region[];
 }
+

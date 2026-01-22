@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
-import type { Country, Region } from '@/generated/prisma';
+import type { Country, Region } from '@/generated/prisma/client';
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
 
 import { getRegionsByCountry } from '@/lib/location';
@@ -242,3 +242,4 @@ const LocationField = ({ countries, regions }: LocationProps) => {
     );
 };
 export default LocationField;
+

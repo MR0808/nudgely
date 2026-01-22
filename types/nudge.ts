@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { getNudgeBySlug, getTeamNudges } from '@/actions/nudges';
 import { getUserTeams } from '@/actions/team';
 import { SessionType } from '@/types/session';
-import { NudgeStatus, Plan } from '@/generated/prisma';
+import { NudgeStatus, Plan } from '@/generated/prisma/client';
 
 // export type UserTeams = Awaited<ReturnType<typeof getUserTeams>>;
 export type UserTeams = NonNullable<Awaited<ReturnType<typeof getUserTeams>>>;
@@ -93,3 +93,4 @@ export const allTeamOption: UserTeam = {
     memberCount: 0,
     nudgesCount: 0
 };
+

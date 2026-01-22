@@ -3,7 +3,7 @@
 import { headers } from 'next/headers';
 
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@/generated/prisma';
+import type { Prisma } from '@/generated/prisma/client';
 import { authCheckServer } from '@/lib/authCheck';
 import { CompleteNudgeResult } from '@/types/complete';
 import { sendCompletionNotificationEmail } from '@/lib/mail';
@@ -354,3 +354,4 @@ export const completeNudge = async ({
         };
     }
 };
+

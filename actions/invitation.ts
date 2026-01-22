@@ -8,7 +8,7 @@ import {
 } from '@/actions/audit/audit-invite';
 
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@/generated/prisma';
+import { Prisma } from '@/generated/prisma/client';
 
 /* --------------------------------------------------------------------------
  *  TYPES — COMPLETE & ACCURATE (NO "any")
@@ -416,3 +416,4 @@ export const declineTeamInvitation = async (
         return { success: false, error: 'Failed to decline invitation' };
     }
 };
+
