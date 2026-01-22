@@ -6,6 +6,8 @@
     "dev": "npx prisma generate && next dev",
     "email": "email dev",
     "build": "npx prisma generate && next build",
+    "vercel-build": "npx prisma generate && next build",
+    "postinstall": "npx prisma generate",
     "start": "next start",
     "lint": "next lint"
   },
