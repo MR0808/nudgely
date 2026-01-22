@@ -1,4 +1,5 @@
-import { Plan, TeamRole, TeamStatus, User } from '@/generated/prisma/client';
+import type { Plan, TeamStatus, User } from '@/generated/prisma/client';
+import type { TeamRole } from '@/lib/prisma-enums';
 
 import { getCompanyTeams, getCurrentTeamBySlug } from '@/actions/team';
 import { SessionType } from '@/types/session';

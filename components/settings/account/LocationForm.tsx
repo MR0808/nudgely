@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTransition, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Country, Region } from '@/generated/prisma/client';
+import type { Country, Region } from '@/generated/prisma/client';
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
 
 import {

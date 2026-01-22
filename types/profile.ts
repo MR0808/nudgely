@@ -1,4 +1,4 @@
-import { Gender } from '@/generated/prisma/client';
+import type { Gender } from '@/lib/prisma-enums';
 
 import { SessionType } from '@/types/session';
 

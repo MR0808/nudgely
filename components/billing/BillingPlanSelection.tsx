@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { ArrowRight, Calendar, Check, Star } from 'lucide-react';
-import { Plan } from '@/generated/prisma/client';
+import type { Plan } from '@/generated/prisma/client';
 import { loadStripe } from '@stripe/stripe-js';
 
 import {

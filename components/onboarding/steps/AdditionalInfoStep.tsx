@@ -18,7 +18,7 @@ import {
     SelectValue
 } from '@/components/ui/select';
 import type { CompanyOnboardingData } from '@/schemas/onboarding';
-import { CompanySize, Industry } from '@/generated/prisma/client';
+import type { CompanySize, Industry } from '@/generated/prisma/client';
 
 const AdditionalInfoStep = ({
     companySizes,

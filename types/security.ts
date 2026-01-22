@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction } from 'react';
-import { Country } from '@/generated/prisma/client';
+import type { Country } from '@/generated/prisma/client';
 
 import { LocationData } from '@/types/account';
 import { SessionType } from '@/types/session';

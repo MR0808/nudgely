@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Plan } from '@/generated/prisma/client';
+import type { Plan } from '@/generated/prisma/client';
 import { Check, CreditCard, Calendar, Star, ArrowRight } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';

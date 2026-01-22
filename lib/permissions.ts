@@ -1,4 +1,3 @@
-import { SiteRole } from '@/generated/prisma/client';
 import { createAccessControl } from 'better-auth/plugins/access';
 import { defaultStatements, adminAc } from 'better-auth/plugins/admin/access';
 
@@ -8,6 +7,11 @@ const statements = {
 } as const;
 
 export const ac = createAccessControl(statements);
+
+const SiteRole = {
+    USER: 'USER',
+    SITE_ADMIN: 'SITE_ADMIN'
+} as const;
 
 export const roles = {
     [SiteRole.USER]: ac.newRole({

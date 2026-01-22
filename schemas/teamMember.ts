@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TeamRole } from '@/generated/prisma/client';
+import { TeamRole } from '@/lib/prisma-enums';
 
 export const InviteTeamMemberSchema = z.object({
     email: z.email({

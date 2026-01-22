@@ -1,5 +1,6 @@
 import { getUserTeams } from '@/actions/team';
-import { Plan, TemplateCategory } from '@/generated/prisma/client';
+import type { Plan } from '@/generated/prisma/client';
+import { TemplateCategory } from '@/lib/prisma-enums';
 
 export type UserTeams = NonNullable<Awaited<ReturnType<typeof getUserTeams>>>;
 

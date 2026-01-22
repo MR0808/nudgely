@@ -6,7 +6,7 @@ import { useForm, SubmitErrorHandler } from 'react-hook-form';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { UserPlus, Loader2, Crown, Users } from 'lucide-react';
-import { TeamRole } from '@/generated/prisma/client';
+import { TeamRole } from '@/lib/prisma-enums';
 
 import { Button } from '@/components/ui/button';
 import {

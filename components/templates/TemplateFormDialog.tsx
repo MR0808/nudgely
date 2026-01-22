@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
-import { TemplateCategory } from '@/generated/prisma/client';
+import { TemplateCategory } from '@/lib/prisma-enums';
 
 import {
     Dialog,
@@ -40,7 +40,7 @@ import { TemplateFormDialogProps, TeamTemplate } from '@/types/template';
 const templateFormSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     description: z.string().min(1, 'Description is required'),
-    category: z.enum(TemplateCategory),
+    category: z.enum(Object.values(TemplateCategory) as [string, ...string[]]),
     isActive: z.boolean()
 });
 

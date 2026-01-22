@@ -1,4 +1,4 @@
-import { Country, Region } from '@/generated/prisma/client';
+import type { Country, Region } from '@/generated/prisma/client';
 
 import { SessionType } from '@/types/session';
 

@@ -1,5 +1,10 @@
 import { getCompany } from '@/actions/company';
-import { CompanySize, Country, Industry, Region } from '@/generated/prisma/client';
+import type {
+    CompanySize,
+    Country,
+    Industry,
+    Region
+} from '@/generated/prisma/client';
 
 import { SessionType } from '@/types/session';
 
