@@ -68,9 +68,13 @@ const TemplateFormDialog = ({
     const onSubmit = async (data: TemplateFormData) => {
         startTransition(async () => {
             const result = template
-                ? await updateTeamTemplate(template.id, data)
+                ? await updateTeamTemplate(template.id, {
+                      ...data,
+                      category: data.category as TemplateCategory
+                  })
                 : await createTeamTemplate({
                       ...data,
+                      category: data.category as TemplateCategory,
                       teamId
                   });
             if (result.success) {
