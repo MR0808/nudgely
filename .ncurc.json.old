@@ -1,0 +1,4 @@
+{
+  // "reject": ["prisma", "@prisma/client", "@prisma/extension-accelerate"]
+  "reject": []
+}

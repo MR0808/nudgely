@@ -30,6 +30,42 @@ export type TeamWithAdminCount = TeamWithRelations & {
     admins: number;
 };
 
+type TeamMemberWithTeam = Prisma.TeamMemberGetPayload<{
+    include: {
+        team: {
+            include: {
+                company: true;
+                members: true;
+                nudges: true;
+            };
+        };
+    };
+}>;
+
+type TeamMemberWithTeamAndPlan = Prisma.TeamMemberGetPayload<{
+    include: {
+        team: {
+            include: {
+                company: { include: { plan: true } };
+                members: true;
+                nudges: true;
+            };
+        };
+    };
+}>;
+
+type TeamWithMembers = Prisma.TeamGetPayload<{
+    include: { members: true };
+}>;
+
+type TeamWithMembersAndNudges = Prisma.TeamGetPayload<{
+    include: { members: true; nudges: true };
+}>;
+
+type CompanyAdminMember = Prisma.CompanyMemberGetPayload<{
+    include: { user: true };
+}>;
+
 /* -------------------------------------------------------------
    Helpers
 ------------------------------------------------------------- */
@@ -107,7 +143,7 @@ export const getUserTeams = async () => {
     if (!session) return null;
 
     try {
-        const memberships = await prisma.teamMember.findMany({
+        const memberships = (await prisma.teamMember.findMany({
             where: { userId: session.user.id },
             include: {
                 team: {
@@ -119,7 +155,7 @@ export const getUserTeams = async () => {
                 }
             },
             orderBy: { team: { name: 'asc' } }
-        });
+        })) as TeamMemberWithTeam[];
 
         return memberships.map((m) => ({
             id: m.team.id,
@@ -143,9 +179,9 @@ export const getCurrentTeam = async (teamId?: string) => {
 
     const { user } = session;
 
-    const fetchMembership = async () => {
+    const fetchMembership = async (): Promise<TeamMemberWithTeamAndPlan | null> => {
         if (!teamId) {
-            return prisma.teamMember.findFirst({
+            return (await prisma.teamMember.findFirst({
                 where: { userId: user.id },
                 include: {
                     team: {
@@ -156,10 +192,10 @@ export const getCurrentTeam = async (teamId?: string) => {
                         }
                     }
                 }
-            });
+            })) as TeamMemberWithTeamAndPlan | null;
         }
 
-        return prisma.teamMember.findFirst({
+        return (await prisma.teamMember.findFirst({
             where: { userId: user.id, teamId },
             include: {
                 team: {
@@ -170,7 +206,7 @@ export const getCurrentTeam = async (teamId?: string) => {
                     }
                 }
             }
-        });
+        })) as TeamMemberWithTeamAndPlan | null;
     };
 
     const membership = await fetchMembership();
@@ -425,10 +461,10 @@ export const deleteTeam = async (teamId: string) => {
     }
 
     try {
-        const team = await prisma.team.findUnique({
+        const team = (await prisma.team.findUnique({
             where: { id: teamId },
             include: { members: true, nudges: { where: { status: 'ACTIVE' } } }
-        });
+        })) as TeamWithMembersAndNudges | null;
 
         if (!team) return { data: null, error: 'Team not found' };
 
@@ -489,10 +525,10 @@ export const enableTeam = async (teamId: string) => {
     }
 
     try {
-        const team = await prisma.team.findUnique({
+        const team = (await prisma.team.findUnique({
             where: { id: teamId },
             include: { members: true }
-        });
+        })) as TeamWithMembers | null;
 
         if (!team) return { data: null, error: 'Team not found' };
 
@@ -506,10 +542,10 @@ export const enableTeam = async (teamId: string) => {
             data: { status: 'ACTIVE' }
         });
 
-        const companyAdmins = await prisma.companyMember.findMany({
+        const companyAdmins = (await prisma.companyMember.findMany({
             where: { companyId: session.company.id, role: 'COMPANY_ADMIN' },
             include: { user: true }
-        });
+        })) as CompanyAdminMember[];
 
         for (const admin of companyAdmins) {
             const exists = team.members.some((m) => m.userId === admin.user.id);

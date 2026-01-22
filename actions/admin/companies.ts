@@ -1,7 +1,17 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@/generated/prisma';
+import { CompanyStatus } from '@/generated/prisma';
+import type { Prisma } from '@/generated/prisma';
+
+type CompanyWithRelations = Prisma.CompanyGetPayload<{
+    include: {
+        plan: true;
+        companySubscription: true;
+        industry: true;
+        _count: { select: { members: true; teams: true } };
+    };
+}>;
 
 export async function getCompanies(searchParams: {
     [key: string]: string | string[] | undefined;
@@ -12,50 +22,49 @@ export async function getCompanies(searchParams: {
     const status = searchParams.status as string | undefined;
     const plan = searchParams.plan as string | undefined;
 
-    const where: Prisma.CompanyWhereInput = {};
-
-    // Search filter - search by company name
-    if (search) {
-        where.name = {
-            contains: search,
-            mode: 'insensitive' as const
-        };
-    }
-
-    // Status filter
-    if (status && status !== 'all') {
-        where.status = status as Prisma.EnumCompanyStatusFilter;
-    }
-
-    // Plan filter - filter by plan slug
-    if (plan && plan !== 'all') {
-        where.plan = {
-            slug: plan
-        };
-    }
-
-    const [companies, totalCount] = await Promise.all([
-        prisma.company.findMany({
-            where,
-            include: {
-                plan: true,
-                companySubscription: true,
-                industry: true,
-                _count: {
-                    select: {
-                        members: true,
-                        teams: true
-                    }
-                }
-            },
-            orderBy: { createdAt: 'desc' },
-            ...(pageSize !== -1 && {
-                skip: (page - 1) * pageSize,
-                take: pageSize
-            })
+    const where = {
+        ...(search && {
+            name: {
+                contains: search,
+                mode: 'insensitive' as const
+            }
         }),
+        ...(status && status !== 'all' && {
+            status: status as CompanyStatus
+        }),
+        ...(plan && plan !== 'all' && {
+            plan: {
+                slug: plan
+            }
+        })
+    };
+
+    const companiesPromise = prisma.company.findMany({
+        where,
+        include: {
+            plan: true,
+            companySubscription: true,
+            industry: true,
+            _count: {
+                select: {
+                    members: true,
+                    teams: true
+                }
+            }
+        },
+        orderBy: { createdAt: 'desc' },
+        ...(pageSize !== -1 && {
+            skip: (page - 1) * pageSize,
+            take: pageSize
+        })
+    });
+
+    const [companiesRaw, totalCount] = await Promise.all([
+        companiesPromise,
         prisma.company.count({ where })
     ]);
+
+    const companies = companiesRaw as CompanyWithRelations[];
 
     return { companies, totalCount };
 }

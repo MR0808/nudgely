@@ -1,4 +1,13 @@
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@/generated/prisma';
+
+type CompanyWithTeams = Prisma.CompanyGetPayload<{
+    include: { teams: true };
+}>;
+
+type CompanyWithMembers = Prisma.CompanyGetPayload<{
+    include: { members: true };
+}>;
 
 export async function checkCompanyPermission(
     userId: string,
@@ -61,10 +70,10 @@ export async function checkTeamPermission(
 
 export const checkCompanyTeamLimits = async (companyId: string) => {
     try {
-        const company = await prisma.company.findUnique({
+        const company = (await prisma.company.findUnique({
             where: { id: companyId },
             include: { teams: { where: { status: 'ACTIVE' } } }
-        });
+        })) as CompanyWithTeams | null;
 
         if (!company) {
             throw new Error('Company not found');
@@ -98,10 +107,10 @@ export const checkCompanyTeamLimits = async (companyId: string) => {
 
 export const checkCompanyUserLimits = async (companyId: string) => {
     try {
-        const company = await prisma.company.findUnique({
+        const company = (await prisma.company.findUnique({
             where: { id: companyId },
             include: { members: true }
-        });
+        })) as CompanyWithMembers | null;
 
         if (!company) {
             throw new Error('Company not found');

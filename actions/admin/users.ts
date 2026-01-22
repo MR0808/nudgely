@@ -1,6 +1,6 @@
 'use server';
 
-import { Prisma, SiteRole, UserStatus } from '@/generated/prisma';
+import { SiteRole, UserStatus } from '@/generated/prisma';
 import { prisma } from '@/lib/prisma';
 
 export async function getUsers(searchParams: {
@@ -12,7 +12,7 @@ export async function getUsers(searchParams: {
     const page = parseInt((searchParams.page as string) || '1', 10);
     const pageSize = parseInt((searchParams.pageSize as string) || '20', 10);
 
-    const where: Prisma.UserWhereInput = {
+    const where = {
         ...(search && {
             OR: [
                 { name: { contains: search, mode: 'insensitive' as const } },

@@ -42,6 +42,13 @@ type AttentionRow = {
     lastInstanceDate: Date | null;
 };
 
+type RecentCompletionRow = Prisma.NudgeCompletionGetPayload<{
+    include: {
+        nudge: { select: { name: true } };
+        nudgeInstance: { select: { scheduledFor: true } };
+    };
+}>;
+
 /* -------------------------------------------------------------
  * MAIN SERVER ACTION — fully Accelerate compatible
  * ------------------------------------------------------------- */
@@ -226,7 +233,7 @@ export async function getDashboardStats(teamId?: string) {
     /* ---------------------------------------------------------
      * RECENT COMPLETIONS (native Prisma)
      * --------------------------------------------------------- */
-    const recentCompletionsRaw = await prisma.nudgeCompletion.findMany({
+    const recentCompletionsRaw = (await prisma.nudgeCompletion.findMany({
         where: { nudge: teamFilter },
         include: {
             nudge: { select: { name: true } },
@@ -234,7 +241,7 @@ export async function getDashboardStats(teamId?: string) {
         },
         orderBy: { createdAt: 'desc' },
         take: 10
-    });
+    })) as RecentCompletionRow[];
 
     /* ---------------------------------------------------------
      * ACTIVE RECIPIENTS

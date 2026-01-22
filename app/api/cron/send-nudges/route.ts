@@ -2,6 +2,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@/generated/prisma';
 import {
     shouldSendNudge,
     hasNudgeEnded,
@@ -10,6 +11,10 @@ import {
     formatScheduleInfo
 } from '@/lib/nudge-helpers';
 import { sendNudgeEmail } from '@/lib/mail';
+
+type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
+    include: { recipients: true; instances: true };
+}>;
 
 export async function GET(request: NextRequest) {
     try {
@@ -25,7 +30,7 @@ export async function GET(request: NextRequest) {
         console.log('[v0] Starting nudge cron job...');
 
         // Fetch all active nudges with their recipients
-        const nudges = await prisma.nudge.findMany({
+        const nudges = (await prisma.nudge.findMany({
             where: {
                 status: 'ACTIVE'
             },
@@ -38,7 +43,7 @@ export async function GET(request: NextRequest) {
                     take: 1
                 }
             }
-        });
+        })) as NudgeWithRecipientsAndInstances[];
 
         console.log(`[v0] Found ${nudges.length} active nudges`);
 

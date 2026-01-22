@@ -53,6 +53,18 @@ type CompanyMemberWithTeams = Prisma.CompanyMemberGetPayload<{
 // companyInvite row
 type CompanyInviteRow = Prisma.CompanyInviteGetPayload<{}>;
 
+const fetchCompanyAdminMembers = async (
+    companyId: string
+): Promise<CompanyAdminMember[]> => {
+    const members = await prisma.companyMember.findMany({
+        where: { companyId, role: 'COMPANY_ADMIN' },
+        include: { user: true },
+        orderBy: { user: { name: 'asc' } }
+    });
+
+    return members as CompanyAdminMember[];
+};
+
 /* ------------------------------------------------------------------
  * 📨 Invite / Add Company Admin
  * ------------------------------------------------------------------ */
@@ -206,12 +218,7 @@ export const inviteCompanyAdmin = async (
                 })
             ]);
 
-            const members: CompanyAdminMember[] =
-                await prisma.companyMember.findMany({
-                    where: { companyId: company.id, role: 'COMPANY_ADMIN' },
-                    include: { user: true },
-                    orderBy: { user: { name: 'asc' } }
-                });
+            const members = await fetchCompanyAdminMembers(company.id);
 
             return {
                 success: true,
@@ -331,12 +338,7 @@ export const getCompanyAdminMembers = async (): Promise<
     }
 
     try {
-        const members: CompanyAdminMember[] =
-            await prisma.companyMember.findMany({
-                where: { companyId: company.id, role: 'COMPANY_ADMIN' },
-                include: { user: true },
-                orderBy: { user: { name: 'asc' } }
-            });
+        const members = await fetchCompanyAdminMembers(company.id);
 
         return {
             success: true,
@@ -508,12 +510,7 @@ export const removeCompanyAdminMember = async (
             adminRemoved: memberId
         });
 
-        const members: CompanyAdminMember[] =
-            await prisma.companyMember.findMany({
-                where: { companyId: company.id, role: 'COMPANY_ADMIN' },
-                include: { user: true },
-                orderBy: { user: { name: 'asc' } }
-            });
+        const members = await fetchCompanyAdminMembers(company.id);
 
         return {
             success: true,
