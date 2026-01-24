@@ -8,7 +8,9 @@ import {
     hasNudgeEnded,
     wouldOccurAfterEndDate,
     calculateNextOccurrence,
-    formatScheduleInfo
+    formatScheduleInfo,
+    getDateComponentsInTimezone,
+    convertTo24Hour
 } from '@/lib/nudge-helpers';
 import { sendNudgeEmail } from '@/lib/mail';
 
@@ -16,7 +18,16 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
     include: { recipients: true; instances: true };
 }>;
 
-export async function GET(request: NextRequest) {
+    type NudgeInstanceWithNudgeAndEvents = Prisma.NudgeInstanceGetPayload<{
+        include: {
+            nudge: {
+                include: { recipients: true };
+            };
+            events: true;
+        };
+    }>;
+
+    export async function GET(request: NextRequest) {
     try {
         // Verify the request is from Vercel Cron
         const authHeader = request.headers.get('authorization');
@@ -52,7 +63,8 @@ export async function GET(request: NextRequest) {
             sent: 0,
             skipped: 0,
             finished: 0,
-            errors: 0
+            errors: 0,
+            reminders: 0
         };
 
         // Process each nudge
@@ -262,19 +274,17 @@ export async function GET(request: NextRequest) {
                 });
 
                 // Update instance status based on email results
+                // Only mark as FAILED if all sends failed. Otherwise keep PENDING (waiting for user completion).
                 const instanceStatus =
-                    failedSends === 0
-                        ? 'COMPLETED'
-                        : failedSends === nudge.recipients.length
-                          ? 'FAILED'
-                          : 'COMPLETED';
+                    failedSends === nudge.recipients.length &&
+                    nudge.recipients.length > 0
+                        ? 'FAILED'
+                        : 'PENDING';
 
                 await prisma.nudgeInstance.update({
                     where: { id: nudgeInstance.id },
                     data: {
                         status: instanceStatus,
-                        completedAt:
-                            instanceStatus === 'COMPLETED' ? new Date() : null,
                         failedAt:
                             instanceStatus === 'FAILED' ? new Date() : null
                     }
@@ -287,6 +297,126 @@ export async function GET(request: NextRequest) {
                     error
                 );
                 results.errors++;
+            }
+        }
+
+        // -------------------------------------------------------------
+        // PROCESS REMINDERS
+        // -------------------------------------------------------------
+        console.log('[v0] Checking for reminders...');
+        const pendingInstances = (await prisma.nudgeInstance.findMany({
+            where: { status: 'PENDING' },
+            include: {
+                nudge: {
+                    include: { recipients: true }
+                },
+                events: true
+            }
+        })) as NudgeInstanceWithNudgeAndEvents[];
+
+        for (const instance of pendingInstances) {
+            const { nudge } = instance;
+
+            // Check if time matches current time in nudge's timezone
+            const now = new Date();
+            const { hour, minute } = getDateComponentsInTimezone(
+                now,
+                nudge.timezone
+            );
+            const [nudgeHour, nudgeMinute] = convertTo24Hour(
+                nudge.timeOfDay
+            )
+                .split(':')
+                .map(Number);
+
+            // Allow 60 minute window to be robust for hourly crons
+            const currentMinutes = hour * 60 + minute;
+            const targetMinutes = nudgeHour * 60 + nudgeMinute;
+            const diff = currentMinutes - targetMinutes;
+
+            // Check if current time is within [scheduledTime, scheduledTime + 60 mins]
+            // We want to ensure we don't miss it if the cron runs slightly after the exact minute
+            // But we don't want to send it too late or too early
+            if (diff < 0 || diff >= 60) continue;
+
+            // Check if instance was created today (don't remind on day 0)
+            const today = now.toDateString();
+            if (instance.createdAt.toDateString() === today) continue;
+
+            console.log(
+                `[v0] Processing reminders for nudge instance ${instance.id} (${nudge.name})`
+            );
+
+            const scheduleInfo = formatScheduleInfo({
+                frequency: nudge.frequency,
+                interval: nudge.interval,
+                dayOfWeek: nudge.dayOfWeek,
+                monthlyType: nudge.monthlyType,
+                dayOfMonth: nudge.dayOfMonth,
+                nthOccurrence: nudge.nthOccurrence,
+                dayOfWeekForMonthly: nudge.dayOfWeekForMonthly,
+                timeOfDay: nudge.timeOfDay
+            });
+
+            // Find recipients who haven't completed it
+            // We look at events that don't have completedAt
+            for (const event of instance.events) {
+                if (event.completedAt) continue;
+
+                // Check if we already sent a reminder/attempt to THIS recipient recently
+                // This prevents spamming if the cron runs multiple times in the window
+                if (event.lastAttemptAt) {
+                    const hoursSince =
+                        (now.getTime() - event.lastAttemptAt.getTime()) /
+                        (1000 * 60 * 60);
+                    // If we attempted in the last 18 hours, assume it was for today's reminder cycle
+                    if (hoursSince < 18) continue;
+                }
+
+                // Send reminder email
+                try {
+                    const completionUrl = `${process.env.NEXT_PUBLIC_APP_URL}/complete/${event.token}`;
+
+                    const emailResult = await sendNudgeEmail({
+                        email: event.recipientEmail,
+                        name: event.recipientName,
+                        nudgeName: nudge.name,
+                        nudgeDescription: nudge.description,
+                        completionUrl,
+                        scheduleInfo,
+                        isReminder: true
+                    });
+
+                    if (emailResult.success) {
+                        await prisma.nudgeRecipientEvent.update({
+                            where: { id: event.id },
+                            data: {
+                                sent: true,
+                                attempts: { increment: 1 },
+                                lastAttemptAt: new Date()
+                            }
+                        });
+                        results.reminders++;
+                        console.log(
+                            `[v0] Reminder sent to ${event.recipientEmail}`
+                        );
+                    } else {
+                        await prisma.nudgeRecipientEvent.update({
+                            where: { id: event.id },
+                            data: {
+                                attempts: { increment: 1 },
+                                lastAttemptAt: new Date(),
+                                errorMessage:
+                                    emailResult.error || 'Reminder failed'
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error(
+                        `[v0] Error sending reminder to ${event.recipientEmail}:`,
+                        err
+                    );
+                }
             }
         }
 
@@ -308,4 +438,3 @@ export async function GET(request: NextRequest) {
         );
     }
 }
-

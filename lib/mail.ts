@@ -262,7 +262,8 @@ export const sendNudgeEmail = async ({
     nudgeName,
     nudgeDescription,
     completionUrl,
-    scheduleInfo
+    scheduleInfo,
+    isReminder
 }: {
     email: string;
     name: string;
@@ -270,11 +271,13 @@ export const sendNudgeEmail = async ({
     nudgeDescription?: string | null;
     completionUrl: string;
     scheduleInfo?: string;
+    isReminder?: boolean;
 }) => {
+    const subjectPrefix = isReminder ? 'Reminder: ' : '';
     const { error } = await resend.emails.send({
         from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
         to: email,
-        subject: `Nudgely - Reminder: ${nudgeName}`,
+        subject: `Nudgely - ${subjectPrefix}${nudgeName}`,
         react: NudgeReminderTemplate({
             name,
             nudgeName,

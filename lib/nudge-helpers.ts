@@ -497,7 +497,7 @@ export function shouldSendNudge(nudge: {
  * Get the current date/time components in a specific timezone
  * Returns an object with year, month, day, hour, minute in the target timezone
  */
-function getDateComponentsInTimezone(
+export function getDateComponentsInTimezone(
     date: Date,
     timezone: string
 ): {
