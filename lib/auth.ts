@@ -13,161 +13,157 @@ import { ac, roles } from '@/lib/permissions';
 import { logPasswordResetRequested } from '@/actions/audit/audit-auth';
 
 const options = {
-    database: prismaAdapter(prisma, {
-        provider: 'postgresql' // or "mysql", "postgresql", ...etc
+  database: prismaAdapter(prisma, {
+    provider: 'postgresql', // or "mysql", "postgresql", ...etc
+  }),
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
+  emailAndPassword: {
+    enabled: true,
+    password: {
+      hash: hashPassword,
+      verify: verifyPassword,
+    },
+    autoSignIn: false,
+    requireEmailVerification: false,
+    sendResetPassword: async ({ user, url }) => {
+      await sendResetEmail({
+        email: user.email,
+        link: url,
+        name: user.name,
+      });
+    },
+  },
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      // const newSession = ctx.context.newSession;
+      if (ctx.path === '/forget-password') {
+        await logPasswordResetRequested(ctx.body.email);
+      }
     }),
-    socialProviders: {
-        google: {
-            clientId: process.env.GOOGLE_CLIENT_ID as string,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string
-        }
+  },
+  advanced: {
+    database: {
+      generateId: false,
     },
-    emailAndPassword: {
-        enabled: true,
-        password: {
-            hash: hashPassword,
-            verify: verifyPassword
-        },
-        autoSignIn: false,
-        requireEmailVerification: false,
-        sendResetPassword: async ({ user, url }) => {
-            await sendResetEmail({
-                email: user.email,
-                link: url,
-                name: user.name
-            });
-        }
+  },
+  user: {
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailVerification: async ({ user, newEmail, url, token }, request) => {
+        await sendVerificationEmail({
+          email: newEmail,
+          otp: token,
+          name: user.name,
+        });
+      },
     },
-    hooks: {
-        after: createAuthMiddleware(async (ctx) => {
-            // const newSession = ctx.context.newSession;
-            if (ctx.path === '/forget-password') {
-                await logPasswordResetRequested(ctx.body.email);
-            }
-        })
+    additionalFields: {
+      lastName: {
+        type: 'string',
+        required: true,
+      },
+      role: {
+        type: ['USER', 'SITE_ADMIN'] as Array<SiteRole>,
+        required: false,
+      },
+      gender: {
+        type: ['MALE', 'FEMALE', 'OTHER', 'NOTSAY'] as Array<Gender>,
+        required: false,
+      },
+      dateOfBirth: {
+        type: 'date',
+        required: false,
+      },
+      countryId: {
+        type: 'string',
+        required: false,
+      },
+      regionId: {
+        type: 'string',
+        required: false,
+      },
+      phoneNumber: {
+        type: 'string',
+        required: false,
+      },
+      phoneVerified: {
+        type: 'boolean',
+        required: false,
+      },
+      emailVerified: {
+        type: 'boolean',
+        required: false,
+      },
+      timezone: {
+        type: 'string',
+        required: false,
+      },
+      locale: {
+        type: 'string',
+        required: false,
+      },
+      jobTitle: {
+        type: 'string',
+        required: false,
+      },
+      bio: {
+        type: 'string',
+        required: false,
+      },
     },
-    advanced: {
-        database: {
-            generateId: false
-        }
+  },
+  session: {
+    expiresIn: 30 * 24 * 60 * 60,
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
     },
-    user: {
-        changeEmail: {
-            enabled: true,
-            sendChangeEmailVerification: async (
-                { user, newEmail, url, token },
-                request
-            ) => {
-                await sendVerificationEmail({
-                    email: newEmail,
-                    otp: token,
-                    name: user.name
-                });
-            }
-        },
-        additionalFields: {
-            lastName: {
-                type: 'string',
-                required: true
-            },
-            role: {
-                type: ['USER', 'SITE_ADMIN'] as Array<SiteRole>,
-                required: false
-            },
-            gender: {
-                type: ['MALE', 'FEMALE', 'OTHER', 'NOTSAY'] as Array<Gender>,
-                required: false
-            },
-            dateOfBirth: {
-                type: 'date',
-                required: false
-            },
-            countryId: {
-                type: 'string',
-                required: false
-            },
-            regionId: {
-                type: 'string',
-                required: false
-            },
-            phoneNumber: {
-                type: 'string',
-                required: false
-            },
-            phoneVerified: {
-                type: 'boolean',
-                required: false
-            },
-            emailVerified: {
-                type: 'boolean',
-                required: false
-            },
-            timezone: {
-                type: 'string',
-                required: false
-            },
-            locale: {
-                type: 'string',
-                required: false
-            },
-            jobTitle: {
-                type: 'string',
-                required: false
-            },
-            bio: {
-                type: 'string',
-                required: false
-            }
-        }
+  },
+  account: {
+    accountLinking: {
+      enabled: false,
     },
-    session: {
-        expiresIn: 30 * 24 * 60 * 60,
-        cookieCache: {
-            enabled: true,
-            maxAge: 5 * 60
-        }
-    },
-    account: {
-        accountLinking: {
-            enabled: false
-        }
-    },
-    plugins: [
-        nextCookies(),
-        admin({
-            defaultRole: SiteRole.USER,
-            adminRoles: [SiteRole.SITE_ADMIN],
-            ac,
-            roles
-        })
-    ]
+  },
+  plugins: [
+    nextCookies(),
+    admin({
+      defaultRole: SiteRole.USER,
+      adminRoles: [SiteRole.SITE_ADMIN],
+      ac,
+      roles,
+    }),
+  ],
 } satisfies BetterAuthOptions;
 
 export const auth = betterAuth({
-    ...options,
-    plugins: [
-        ...(options.plugins ?? []),
-        customSession(async ({ user, session }, ctx) => {
-            const accounts = await prisma.account.findMany({
-                where: { id: user.id }
-            });
-            const userCompany = await prisma.companyMember.findFirst({
-                where: { userId: user.id },
-                include: { company: true }
-            });
-            if (!userCompany) throw error('no company found');
-            const company = userCompany.company;
-            return {
-                session,
-                user,
-                accounts,
-                company,
-                userCompany
-            };
-        }, options),
-        openAPI()
-    ]
+  ...options,
+  plugins: [
+    ...(options.plugins ?? []),
+    customSession(async ({ user, session }, ctx) => {
+      const accounts = await prisma.account.findMany({
+        where: { id: user.id },
+      });
+      const userCompany = await prisma.companyMember.findFirst({
+        where: { userId: user.id },
+        include: { company: true },
+      });
+      if (!userCompany) throw error('no company found');
+      const company = userCompany.company;
+      return {
+        session,
+        user,
+        accounts,
+        company,
+        userCompany,
+      };
+    }, options),
+    openAPI(),
+  ],
 });
 
 export type ErrorCode = keyof typeof auth.$ERROR_CODES | 'UNKNOWN';
-
