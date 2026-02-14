@@ -3,7 +3,12 @@
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { authCheckServer } from '@/lib/authCheck';
-import { Plan, PendingCompanySubscription, Company, CompanySubscription } from '@/generated/prisma/client';
+import {
+  Plan,
+  PendingCompanySubscription,
+  Company,
+  CompanySubscription,
+} from '@/generated/prisma/client';
 
 type ActionResult<T> =
   | { success: true; message: string; data: T }
@@ -15,7 +20,7 @@ type ActionResult<T> =
     };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
+  apiVersion: '2026-01-28.clover',
 });
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -339,4 +344,3 @@ export async function checkDowngradedPlan(companyId: string): Promise<ActionResu
     };
   }
 }
-
