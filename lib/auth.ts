@@ -12,7 +12,24 @@ import { sendVerificationEmail, sendResetEmail } from '@/lib/mail';
 import { ac, roles } from '@/lib/permissions';
 import { logPasswordResetRequested } from '@/actions/audit/audit-auth';
 
+const baseURL =
+  process.env.BETTER_AUTH_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  'http://localhost:3000';
+
+const trustedOrigins = [
+  baseURL,
+  process.env.NEXT_PUBLIC_APP_URL,
+  process.env.BETTER_AUTH_URL,
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+]
+  .filter(Boolean)
+  .map((origin) => origin!.replace(/\/$/, ''));
+
 const options = {
+  baseURL,
+  trustedOrigins,
   database: prismaAdapter(prisma, {
     provider: 'postgresql', // or "mysql", "postgresql", ...etc
   }),
