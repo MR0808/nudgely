@@ -1,0 +1,6 @@
+id,slug,name,size,createdAt,updatedAt,order
+cmf3xr9uw0000f5okdh6870jq,sole-proprietor,Sole Proprietor,1 employee,2025-09-03T12:10:43.497Z,2025-09-04T07:06:48.189Z,1
+cmf3xr9yy0001f5okcd2nbxcu,small-business,Small Business,2-50 employees,2025-09-03T12:10:43.642Z,2025-09-04T07:06:48.189Z,2
+cmf3xra2p0002f5okhymjmhxv,medium-business,Medium Business,51-250 employees,2025-09-03T12:10:43.778Z,2025-09-04T07:06:48.189Z,3
+cmf3xra6l0003f5ok3bdejzrt,large-business,Large Business,"251-1,000 employees",2025-09-03T12:10:43.918Z,2025-09-04T07:06:48.189Z,4
+cmf3xraab0004f5okw7qdu5lf,enterprise,Enterprise,"1,001+ employees",2025-09-03T12:10:44.052Z,2025-09-04T07:06:48.189Z,5

@@ -1,0 +1,248 @@
+id,isoCode,isoCode3,name,flag,latitude,longitude,currencyId,continentId,phonePrefix,createdAt,updatedAt
+cmeum0uf70000f54cnnls8zz0,AF,AFG,Afghanistan,🇦🇫,33,65,cmeulyzcr0001f5jsadz0m6cg,cmeulyjr00000f5hgh8t4atf7,93,2025-08-27T23:32:19.075Z,2025-08-27T23:32:19.075Z
+cmeum0upg0001f54cvm33mwan,AL,ALB,Albania,🇦🇱,41,20,cmeulyzgg0002f5jsyvkk726s,cmeulyjvz0001f5hgwc1kwgwk,355,2025-08-27T23:32:19.445Z,2025-08-27T23:32:19.445Z
+cmeum0uyj0002f54cikdcy0vm,DZ,DZA,Algeria,🇩🇿,28,3,cmeulz3f10014f5jsxxve8ng5,cmeulyjzz0002f5hgsk1gtkvu,213,2025-08-27T23:32:19.772Z,2025-08-27T23:32:19.772Z
+cmeum0v7c0003f54c1isrj3sx,AS,ASM,American Samoa,🇦🇸,-14.33333333,-170,cmeulzeu20049f5jsjb50j598,cmeulyk3w0003f5hg2fqex49s,+1-684,2025-08-27T23:32:20.088Z,2025-08-27T23:32:20.088Z
+cmeum0vgq0004f54cjp67modr,AD,AND,Andorra,🇦🇩,42.5,1.5,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,376,2025-08-27T23:32:20.426Z,2025-08-27T23:32:20.426Z
+cmeum0vq90005f54cfa6u1rev,AO,AGO,Angola,🇦🇴,-12.5,18.5,cmeulyzrc0005f5js6ubyyo8b,cmeulyjzz0002f5hgsk1gtkvu,244,2025-08-27T23:32:20.770Z,2025-08-27T23:32:20.770Z
+cmeum0vzs0006f54c8oa2v29k,AI,AIA,Anguilla,🇦🇮,18.25,-63.16666666,cmeulzfqb004if5jsc5cg3p7l,cmeulyk7n0004f5hg1zjhe35k,+1-264,2025-08-27T23:32:21.113Z,2025-08-27T23:32:21.113Z
+cmeum0w9b0007f54cc4nkzv6r,AQ,ATA,Antarctica,🇦🇶,-74.65,4.48,cmeulzeu20049f5jsjb50j598,cmeulyket0006f5hgi01rty6e,672,2025-08-27T23:32:21.456Z,2025-08-27T23:32:21.456Z
+cmeum0wir0008f54c4272i59g,AG,ATG,Antigua and Barbuda,🇦🇬,17.05,-61.8,cmeulzfqb004if5jsc5cg3p7l,cmeulyk7n0004f5hg1zjhe35k,+1-268,2025-08-27T23:32:21.796Z,2025-08-27T23:32:21.796Z
+cmeum0wrf0009f54cok01hles,AR,ARG,Argentina,🇦🇷,-34,-64,cmeulyzur0006f5jssvmvur5l,cmeulykbd0005f5hgfnq6hr3d,54,2025-08-27T23:32:22.108Z,2025-08-27T23:32:22.108Z
+cmeum0x0k000af54cycl8k4mh,AM,ARM,Armenia,🇦🇲,40,45,cmeulyzk20003f5jshf3d6z07,cmeulyjr00000f5hgh8t4atf7,374,2025-08-27T23:32:22.436Z,2025-08-27T23:32:22.436Z
+cmeum0x9p000bf54cat87aris,AW,ABW,Aruba,🇦🇼,12.5,-69.96666666,cmeulz02q0008f5jsgwpyzgx1,cmeulyk7n0004f5hg1zjhe35k,297,2025-08-27T23:32:22.765Z,2025-08-27T23:32:22.765Z
+cmeum0xj1000cf54cm31jzj96,AU,AUS,Australia,🇦🇺,-27,133,cmeulyzyx0007f5jsf7rb7u54,cmeulyk3w0003f5hg2fqex49s,61,2025-08-27T23:32:23.102Z,2025-08-27T23:32:23.102Z
+cmeum0xsg000df54cb9yrkks4,AT,AUT,Austria,🇦🇹,47.33333333,13.33333333,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,43,2025-08-27T23:32:23.441Z,2025-08-27T23:32:23.441Z
+cmeum0y1e000ef54c3mub7mfj,AZ,AZE,Azerbaijan,🇦🇿,40.5,47.5,cmeulz06x0009f5js7qud8tx6,cmeulyjr00000f5hgh8t4atf7,994,2025-08-27T23:32:23.762Z,2025-08-27T23:32:23.762Z
+cmeum0yb2000ff54cvl650xgs,BS,BHS,Bahamas,🇧🇸,24.25,-76,cmeulz1cy000kf5js5m4dlum2,cmeulyk7n0004f5hg1zjhe35k,+1-242,2025-08-27T23:32:24.110Z,2025-08-27T23:32:24.110Z
+cmeum0ykc000gf54c7y86fkzn,BH,BHR,Bahrain,🇧🇭,26,50.55,cmeulz0q7000ef5js29hldmwe,cmeulyjr00000f5hgh8t4atf7,973,2025-08-27T23:32:24.444Z,2025-08-27T23:32:24.444Z
+cmeum0yua000hf54c0plcz25w,BD,BGD,Bangladesh,🇧🇩,24,90,cmeulz0jd000cf5jsm9rnzmc9,cmeulyjr00000f5hgh8t4atf7,880,2025-08-27T23:32:24.802Z,2025-08-27T23:32:24.802Z
+cmeum0z49000if54cbds9gp1w,BB,BRB,Barbados,🇧🇧,13.16666666,-59.53333333,cmeulz0fs000bf5js41q6k1ke,cmeulyk7n0004f5hg1zjhe35k,+1-246,2025-08-27T23:32:25.162Z,2025-08-27T23:32:25.162Z
+cmeum0zdi000jf54c30vgtg98,BY,BLR,Belarus,🇧🇾,53,28,cmeulz1nx000nf5js7r7s1psp,cmeulyjvz0001f5hgwc1kwgwk,375,2025-08-27T23:32:25.495Z,2025-08-27T23:32:25.495Z
+cmeum0zmm000kf54cs8vdx6o6,BE,BEL,Belgium,🇧🇪,50.83333333,4,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,32,2025-08-27T23:32:25.823Z,2025-08-27T23:32:25.823Z
+cmeum0zvt000lf54ci91wqvng,BZ,BLZ,Belize,🇧🇿,17.25,-88.75,cmeulz1rh000of5js9y9x3uim,cmeulyk7n0004f5hg1zjhe35k,501,2025-08-27T23:32:26.153Z,2025-08-27T23:32:26.153Z
+cmeum1058000mf54c21jp6vuw,BJ,BEN,Benin,🇧🇯,9.5,2.25,cmeulzfu2004jf5jsms3ywf0o,cmeulyjzz0002f5hgsk1gtkvu,229,2025-08-27T23:32:26.492Z,2025-08-27T23:32:26.492Z
+cmeum10em000nf54cdp4ifdp9,BM,BMU,Bermuda,🇧🇲,32.33333333,-64.75,cmeulz0yi000gf5jsxrrdxn34,cmeulyk7n0004f5hg1zjhe35k,+1-441,2025-08-27T23:32:26.830Z,2025-08-27T23:32:26.830Z
+cmeum10p8000of54cu5sus112,BT,BTN,Bhutan,🇧🇹,27.5,90.5,cmeulz1gj000lf5jsy2i9ouf5,cmeulyjr00000f5hgh8t4atf7,975,2025-08-27T23:32:27.212Z,2025-08-27T23:32:27.212Z
+cmeum10y6000pf54cscf9yeho,BO,BOL,Bolivia,🇧🇴,-17,-65,cmeulz15j000if5jsyil83x7c,cmeulykbd0005f5hgfnq6hr3d,591,2025-08-27T23:32:27.535Z,2025-08-27T23:32:27.535Z
+cmeum117o000qf54c7q5m8v6s,BA,BIH,Bosnia and Herzegovina,🇧🇦,44,18,cmeulz0bl000af5jscdwoa0nj,cmeulyjvz0001f5hgwc1kwgwk,387,2025-08-27T23:32:27.876Z,2025-08-27T23:32:27.876Z
+cmeum11h4000rf54cw1o4wlfx,BW,BWA,Botswana,🇧🇼,-22,24,cmeulz1kf000mf5jsbjw82nab,cmeulyjzz0002f5hgsk1gtkvu,267,2025-08-27T23:32:28.217Z,2025-08-27T23:32:28.217Z
+cmeum11qh000sf54csgrdz7f1,BV,BVT,Bouvet Island,🇧🇻,-54.43333333,3.4,cmeulza2j002zf5js6zzy1bpq,cmeulyket0006f5hgi01rty6e,0055,2025-08-27T23:32:28.554Z,2025-08-27T23:32:28.554Z
+cmeum11zg000tf54cwi4dgfxy,BR,BRA,Brazil,🇧🇷,-10,-55,cmeulz19l000jf5js3k8skjgg,cmeulykbd0005f5hgfnq6hr3d,55,2025-08-27T23:32:28.876Z,2025-08-27T23:32:28.876Z
+cmeum128j000uf54ccan2sgtv,IO,IOT,British Indian Ocean Territory,🇮🇴,-6,71.5,cmeulzeu20049f5jsjb50j598,cmeulyjr00000f5hgh8t4atf7,246,2025-08-27T23:32:29.204Z,2025-08-27T23:32:29.204Z
+cmeum12hy000vf54cqw20bzm9,BN,BRN,Brunei,🇧🇳,4.5,114.66666666,cmeulz11x000hf5jspfgjbxu6,cmeulyjr00000f5hgh8t4atf7,673,2025-08-27T23:32:29.543Z,2025-08-27T23:32:29.543Z
+cmeum12qu000wf54cl3ulc5tb,BG,BGR,Bulgaria,🇧🇬,43,25,cmeulz0mp000df5js8xn19acq,cmeulyjvz0001f5hgwc1kwgwk,359,2025-08-27T23:32:29.862Z,2025-08-27T23:32:29.862Z
+cmeum12zl000xf54c38qcytto,BF,BFA,Burkina Faso,🇧🇫,13,-2,cmeulzfu2004jf5jsms3ywf0o,cmeulyjzz0002f5hgsk1gtkvu,226,2025-08-27T23:32:30.178Z,2025-08-27T23:32:30.178Z
+cmeum1395000yf54c8t71j7o9,BI,BDI,Burundi,🇧🇮,-3.5,30,cmeulz0uz000ff5jsbhyszpv9,cmeulyjzz0002f5hgsk1gtkvu,257,2025-08-27T23:32:30.521Z,2025-08-27T23:32:30.521Z
+cmeum13in000zf54c1x4t6uy5,KH,KHM,Cambodia,🇰🇭,13,105,cmeulz6zm0024f5jsf6j4zqmb,cmeulyjr00000f5hgh8t4atf7,855,2025-08-27T23:32:30.863Z,2025-08-27T23:32:30.863Z
+cmeum13rz0010f54cu5ibk8g8,CM,CMR,Cameroon,🇨🇲,6,12,cmeulzfml004hf5jsltdsl54n,cmeulyjzz0002f5hgsk1gtkvu,237,2025-08-27T23:32:31.200Z,2025-08-27T23:32:31.200Z
+cmeum14170011f54c2wix1pt8,CA,CAN,Canada,🇨🇦,60,-95,cmeulz1v1000pf5jsfgykzods,cmeulyk7n0004f5hg1zjhe35k,1,2025-08-27T23:32:31.531Z,2025-08-27T23:32:31.531Z
+cmeum14ap0012f54c62yl100k,CV,CPV,Cape Verde,🇨🇻,16,-24,cmeulz2wa000zf5js5w52oddm,cmeulyjzz0002f5hgsk1gtkvu,238,2025-08-27T23:32:31.874Z,2025-08-27T23:32:31.874Z
+cmeum14ju0013f54cwn2auwc6,KY,CYM,Cayman Islands,🇰🇾,19.5,-80.5,cmeulz7l2002af5js75hbi3ow,cmeulyk7n0004f5hg1zjhe35k,+1-345,2025-08-27T23:32:32.203Z,2025-08-27T23:32:32.203Z
+cmeum14sz0014f54ckaxmfslj,CF,CAF,Central African Republic,🇨🇫,7,21,cmeulzfml004hf5jsltdsl54n,cmeulyjzz0002f5hgsk1gtkvu,236,2025-08-27T23:32:32.531Z,2025-08-27T23:32:32.531Z
+cmeum15270015f54cnmnqf3az,TD,TCD,Chad,🇹🇩,15,19,cmeulzfml004hf5jsltdsl54n,cmeulyjzz0002f5hgsk1gtkvu,235,2025-08-27T23:32:32.863Z,2025-08-27T23:32:32.863Z
+cmeum15br0016f54cmrfjca0s,CL,CHL,Chile,🇨🇱,-30,-71,cmeulz29c000tf5js8crcsa42,cmeulykbd0005f5hgfnq6hr3d,56,2025-08-27T23:32:33.208Z,2025-08-27T23:32:33.208Z
+cmeum15kn0017f54cio7cjjh6,CN,CHN,China,🇨🇳,35,105,cmeulz2ct000uf5jsci650nxs,cmeulyjr00000f5hgh8t4atf7,86,2025-08-27T23:32:33.527Z,2025-08-27T23:32:33.527Z
+cmeum15u40018f54c185atgaq,CX,CXR,Christmas Island,🇨🇽,-10.5,105.66666666,cmeulyzyx0007f5jsf7rb7u54,cmeulyjr00000f5hgh8t4atf7,61,2025-08-27T23:32:33.869Z,2025-08-27T23:32:33.869Z
+cmeum164g0019f54cqj589u1b,CC,CCK,Cocos Islands,🇨🇨,-12.5,96.83333333,cmeulyzyx0007f5jsf7rb7u54,cmeulyjr00000f5hgh8t4atf7,61,2025-08-27T23:32:34.211Z,2025-08-27T23:32:34.211Z
+cmeum16dh001af54cnnlig8mn,CO,COL,Colombia,🇨🇴,4,-72,cmeulz2gb000vf5jsfsrbnh78,cmeulykbd0005f5hgfnq6hr3d,57,2025-08-27T23:32:34.566Z,2025-08-27T23:32:34.566Z
+cmeum16ml001bf54cqmdtm91c,KM,COM,Comoros,🇰🇲,-12.16666666,44.25,cmeulz76n0026f5js1sz158a2,cmeulyjzz0002f5hgsk1gtkvu,269,2025-08-27T23:32:34.893Z,2025-08-27T23:32:34.893Z
+cmeum16vq001cf54ch6ey336t,CG,COG,Congo,🇨🇬,-1,15,cmeulzfml004hf5jsltdsl54n,cmeulyjzz0002f5hgsk1gtkvu,242,2025-08-27T23:32:35.222Z,2025-08-27T23:32:35.222Z
+cmeum175i001df54cs6wjkc35,CD,COD,Democratic Republic of the Congo,🇨🇩,0,25,cmeulz1yp000qf5jsdpihp8kr,cmeulyjzz0002f5hgsk1gtkvu,243,2025-08-27T23:32:35.575Z,2025-08-27T23:32:35.575Z
+cmeum17ep001ef54cnf1z7j6e,CK,COK,Cook Islands,🇨🇰,-21.23333333,-159.76666666,cmeulza9c0031f5jspnn9vwtw,cmeulyk3w0003f5hg2fqex49s,682,2025-08-27T23:32:35.906Z,2025-08-27T23:32:35.906Z
+cmeum17oi001ff54cncg9whwd,CR,CRI,Costa Rica,🇨🇷,10,-84,cmeulz2js000wf5js0jzjpijz,cmeulyk7n0004f5hg1zjhe35k,506,2025-08-27T23:32:36.258Z,2025-08-27T23:32:36.258Z
+cmeum17xg001gf54cux2widvy,CI,CIV,Côte d'Ivoire,🇨🇮,8,-5,cmeulzfu2004jf5jsms3ywf0o,cmeulyjzz0002f5hgsk1gtkvu,225,2025-08-27T23:32:36.581Z,2025-08-27T23:32:36.581Z
+cmeum186g001hf54c9r6gg9cg,HR,HRV,Croatia,🇭🇷,45.16666666,15.5,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,385,2025-08-27T23:32:36.905Z,2025-08-27T23:32:36.905Z
+cmeum18g1001if54cwjqvwzs2,CU,CUB,Cuba,🇨🇺,21.5,-80,cmeulz2sn000yf5jsreg97atg,cmeulyk7n0004f5hg1zjhe35k,53,2025-08-27T23:32:37.249Z,2025-08-27T23:32:37.249Z
+cmeum18ot001jf54c5gokh8h0,CW,CUW,Curaçao,🇨🇼,12.116667,-68.933333,cmeulyznr0004f5jsepmu9k7k,cmeulyk7n0004f5hg1zjhe35k,599,2025-08-27T23:32:37.565Z,2025-08-27T23:32:37.565Z
+cmeum18y6001kf54c0z5ar4wm,CY,CYP,Cyprus,🇨🇾,35,33,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,357,2025-08-27T23:32:37.903Z,2025-08-27T23:32:37.903Z
+cmeum1978001lf54ctudp2x41,CZ,CZE,Czech Republic,🇨🇿,49.75,15.5,cmeulz2zw0010f5jsohdjhqzy,cmeulyjvz0001f5hgwc1kwgwk,420,2025-08-27T23:32:38.228Z,2025-08-27T23:32:38.228Z
+cmeum19gb001mf54curvuvfr0,DK,DNK,Denmark,🇩🇰,56,10,cmeulz37u0012f5js18lxh79f,cmeulyjvz0001f5hgwc1kwgwk,45,2025-08-27T23:32:38.556Z,2025-08-27T23:32:38.556Z
+cmeum19pk001nf54c4pbz3pzf,DJ,DJI,Djibouti,🇩🇯,11.5,43,cmeulz3490011f5js179pisqu,cmeulyjzz0002f5hgsk1gtkvu,253,2025-08-27T23:32:38.888Z,2025-08-27T23:32:38.888Z
+cmeum19zi001of54cp8dl3c42,DM,DMA,Dominica,🇩🇲,15.41666666,-61.33333333,cmeulzfqb004if5jsc5cg3p7l,cmeulyk7n0004f5hg1zjhe35k,+1-767,2025-08-27T23:32:39.247Z,2025-08-27T23:32:39.247Z
+cmeum1a95001pf54c6hwx6g7r,DO,DOM,Dominican Republic,🇩🇴,19,-70.66666666,cmeulz3bg0013f5jskklxcf30,cmeulyk7n0004f5hg1zjhe35k,+1-809 and 1-829,2025-08-27T23:32:39.593Z,2025-08-27T23:32:39.593Z
+cmeum1ai7001qf54c3lftloyx,EC,ECU,Ecuador,🇪🇨,-2,-77.5,cmeulzeu20049f5jsjb50j598,cmeulykbd0005f5hgfnq6hr3d,593,2025-08-27T23:32:39.919Z,2025-08-27T23:32:39.919Z
+cmeum1asb001rf54cel2gela1,EG,EGY,Egypt,🇪🇬,27,30,cmeulz3ja0015f5js6lxv4c6r,cmeulyjzz0002f5hgsk1gtkvu,20,2025-08-27T23:32:40.284Z,2025-08-27T23:32:40.284Z
+cmeum1b1l001sf54c6mj7d7fa,SV,SLV,El Salvador,🇸🇻,13.83333333,-88.91666666,cmeulzeu20049f5jsjb50j598,cmeulyk7n0004f5hg1zjhe35k,503,2025-08-27T23:32:40.618Z,2025-08-27T23:32:40.618Z
+cmeum1bav001tf54cfoyhbe94,GQ,GNQ,Equatorial Guinea,🇬🇶,2,10,cmeulzfml004hf5jsltdsl54n,cmeulyjzz0002f5hgsk1gtkvu,240,2025-08-27T23:32:40.952Z,2025-08-27T23:32:40.952Z
+cmeum1bkb001uf54c7n7swjho,ER,ERI,Eritrea,🇪🇷,15,39,cmeulz3qe0017f5jssnu0ej6l,cmeulyjzz0002f5hgsk1gtkvu,291,2025-08-27T23:32:41.291Z,2025-08-27T23:32:41.291Z
+cmeum1btz001vf54cu9u187bi,EE,EST,Estonia,🇪🇪,59,26,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,372,2025-08-27T23:32:41.640Z,2025-08-27T23:32:41.640Z
+cmeum1c34001wf54ckgmxrg1p,SZ,SWZ,Eswatini,🇸🇿,-26.5,31.5,cmeulzdin003wf5jsh8y88rbo,cmeulyjzz0002f5hgsk1gtkvu,268,2025-08-27T23:32:41.969Z,2025-08-27T23:32:41.969Z
+cmeum1ccp001xf54c3u25diaj,ET,ETH,Ethiopia,🇪🇹,8,38,cmeulz3u40018f5jsh412esx5,cmeulyjzz0002f5hgsk1gtkvu,251,2025-08-27T23:32:42.313Z,2025-08-27T23:32:42.313Z
+cmeum1clo001yf54c20w62wce,FK,FLK,Falkland Islands,🇫🇰,-51.75,-59,cmeulz44d001bf5js8ptw6kpy,cmeulykbd0005f5hgfnq6hr3d,500,2025-08-27T23:32:42.636Z,2025-08-27T23:32:42.636Z
+cmeum1cvh001zf54cdyrs11st,FO,FRO,Faroe Islands,🇫🇴,62,-7,cmeulz37u0012f5js18lxh79f,cmeulyjvz0001f5hgwc1kwgwk,298,2025-08-27T23:32:42.990Z,2025-08-27T23:32:42.990Z
+cmeum1d4m0020f54cjdopfyr5,FJ,FJI,Fiji,🇫🇯,-18,175,cmeulz40z001af5jspldvy0dc,cmeulyk3w0003f5hg2fqex49s,679,2025-08-27T23:32:43.319Z,2025-08-27T23:32:43.319Z
+cmeum1ddz0021f54c1jhtjv5s,FI,FIN,Finland,🇫🇮,64,26,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,358,2025-08-27T23:32:43.655Z,2025-08-27T23:32:43.655Z
+cmeum1dob0022f54cj5m21ym4,FR,FRA,France,🇫🇷,46,2,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,33,2025-08-27T23:32:44.027Z,2025-08-27T23:32:44.027Z
+cmeum1dx70023f54ccyc90hsj,GF,GUF,French Guiana,🇬🇫,4,-53,cmeulz3xi0019f5jsvrzaobil,cmeulykbd0005f5hgfnq6hr3d,594,2025-08-27T23:32:44.348Z,2025-08-27T23:32:44.348Z
+cmeum1e6n0024f54c5eew5gqu,PF,PYF,French Polynesia,🇵🇫,-15,-140,cmeulzfxz004kf5jskd64h1zg,cmeulyk3w0003f5hg2fqex49s,689,2025-08-27T23:32:44.688Z,2025-08-27T23:32:44.688Z
+cmeum1egc0025f54cw0l7byy5,TF,ATF,French Southern Territories,🇹🇫,-49.25,69.167,cmeulz3xi0019f5jsvrzaobil,cmeulyket0006f5hgi01rty6e,262,2025-08-27T23:32:45.036Z,2025-08-27T23:32:45.036Z
+cmeum1epr0026f54cd2c2jiwl,GA,GAB,Gabon,🇬🇦,-1,11.75,cmeulzfml004hf5jsltdsl54n,cmeulyjzz0002f5hgsk1gtkvu,241,2025-08-27T23:32:45.376Z,2025-08-27T23:32:45.376Z
+cmeum1ezo0027f54c3nekmnqc,GM,GMB,Gambia,🇬🇲,13.46666666,-16.56666666,cmeulz4sv001if5jsw7ws3ltd,cmeulyjzz0002f5hgsk1gtkvu,220,2025-08-27T23:32:45.732Z,2025-08-27T23:32:45.732Z
+cmeum1f980028f54cx610q5tm,GE,GEO,Georgia,🇬🇪,42,43.5,cmeulz4f1001ef5js5kpswg8u,cmeulyjr00000f5hgh8t4atf7,995,2025-08-27T23:32:46.076Z,2025-08-27T23:32:46.076Z
+cmeum1fke0029f54chqfrs0vg,DE,DEU,Germany,🇩🇪,51,9,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,49,2025-08-27T23:32:46.478Z,2025-08-27T23:32:46.478Z
+cmeum1ftu002af54cvu68okml,GH,GHA,Ghana,🇬🇭,8,-2,cmeulz4m0001gf5jsqbqtrtuw,cmeulyjzz0002f5hgsk1gtkvu,233,2025-08-27T23:32:46.819Z,2025-08-27T23:32:46.819Z
+cmeum1g38002bf54c2cwzn4mo,GI,GIB,Gibraltar,🇬🇮,36.13333333,-5.35,cmeulz4pe001hf5jswq7of1l9,cmeulyjvz0001f5hgwc1kwgwk,350,2025-08-27T23:32:47.156Z,2025-08-27T23:32:47.156Z
+cmeum1gcr002cf54cx9r0vrjv,GR,GRC,Greece,🇬🇷,39,22,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,30,2025-08-27T23:32:47.499Z,2025-08-27T23:32:47.499Z
+cmeum1glz002df54cdmdo93zp,GL,GRL,Greenland,🇬🇱,72,-40,cmeulz37u0012f5js18lxh79f,cmeulyk7n0004f5hg1zjhe35k,299,2025-08-27T23:32:47.831Z,2025-08-27T23:32:47.831Z
+cmeum1gvg002ef54cbc31l5cq,GD,GRD,Grenada,🇬🇩,12.11666666,-61.66666666,cmeulzfqb004if5jsc5cg3p7l,cmeulyk7n0004f5hg1zjhe35k,+1-473,2025-08-27T23:32:48.173Z,2025-08-27T23:32:48.173Z
+cmeum1h5e002ff54cj13purht,GP,GLP,Guadeloupe,🇬🇵,16.25,-61.583333,cmeulz3xi0019f5jsvrzaobil,cmeulyk7n0004f5hg1zjhe35k,590,2025-08-27T23:32:48.531Z,2025-08-27T23:32:48.531Z
+cmeum1hf0002gf54cufqgjnm2,GU,GUM,Guam,🇬🇺,13.46666666,144.78333333,cmeulzeu20049f5jsjb50j598,cmeulyk3w0003f5hg2fqex49s,+1-671,2025-08-27T23:32:48.876Z,2025-08-27T23:32:48.876Z
+cmeum1hoy002hf54cbo4jhj0z,GT,GTM,Guatemala,🇬🇹,15.5,-90.25,cmeulz509001kf5jsfq1ilisy,cmeulyk7n0004f5hg1zjhe35k,502,2025-08-27T23:32:49.234Z,2025-08-27T23:32:49.234Z
+cmeum1hzy002if54cmuzxsod6,GG,GGY,Guernsey,🇬🇬,49.46666666,-2.58333333,cmeulz4bj001df5jshygsb0e8,cmeulyjvz0001f5hgwc1kwgwk,+44-1481,2025-08-27T23:32:49.601Z,2025-08-27T23:32:49.601Z
+cmeum1i9l002jf54c8hiyto92,GN,GIN,Guinea,🇬🇳,11,-10,cmeulz4wp001jf5jsu16kqxsz,cmeulyjzz0002f5hgsk1gtkvu,224,2025-08-27T23:32:49.978Z,2025-08-27T23:32:49.978Z
+cmeum1iiv002kf54cq1bz5f0y,GW,GNB,Guinea-Bissau,🇬🇼,12,-15,cmeulzfu2004jf5jsms3ywf0o,cmeulyjzz0002f5hgsk1gtkvu,245,2025-08-27T23:32:50.311Z,2025-08-27T23:32:50.311Z
+cmeum1isj002lf54cck8hzfgp,GY,GUY,Guyana,🇬🇾,5,-59,cmeulz542001lf5js3w03fu4s,cmeulykbd0005f5hgfnq6hr3d,592,2025-08-27T23:32:50.660Z,2025-08-27T23:32:50.660Z
+cmeum1j1n002mf54cbs4dp5sv,HT,HTI,Haiti,🇭🇹,19,-72.41666666,cmeulz5ig001pf5jsevdgf7ky,cmeulyk7n0004f5hg1zjhe35k,509,2025-08-27T23:32:50.987Z,2025-08-27T23:32:50.987Z
+cmeum1jau002nf54c9tsvf07f,HM,HMD,Heard Island and McDonald Islands,🇭🇲,-53.1,72.51666666,cmeulyzyx0007f5jsf7rb7u54,cmeulyket0006f5hgi01rty6e,672,2025-08-27T23:32:51.318Z,2025-08-27T23:32:51.318Z
+cmeum1jkf002of54cepuc2sme,VA,VAT,Vatican City,🇻🇦,41.9,12.45,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,379,2025-08-27T23:32:51.663Z,2025-08-27T23:32:51.663Z
+cmeum1jtf002pf54c185879r5,HN,HND,Honduras,🇭🇳,15,-86.5,cmeulz5ba001nf5jsdofgz6dj,cmeulyk7n0004f5hg1zjhe35k,504,2025-08-27T23:32:51.988Z,2025-08-27T23:32:51.988Z
+cmeum1k2k002qf54ca78o0p1r,HK,HKG,Hong Kong,🇭🇰,22.25,114.16666666,cmeulz57n001mf5jsy98c8pwq,cmeulyjr00000f5hgh8t4atf7,852,2025-08-27T23:32:52.316Z,2025-08-27T23:32:52.316Z
+cmeum1kb7002rf54c2509tw2b,HU,HUN,Hungary,🇭🇺,47,20,cmeulz5lw001qf5jsq9x1x4zq,cmeulyjvz0001f5hgwc1kwgwk,36,2025-08-27T23:32:52.628Z,2025-08-27T23:32:52.628Z
+cmeum1kkh002sf54c545w672p,IS,ISL,Iceland,🇮🇸,65,-18,cmeulz6aq001xf5jsyyifgyes,cmeulyjvz0001f5hgwc1kwgwk,354,2025-08-27T23:32:52.962Z,2025-08-27T23:32:52.962Z
+cmeum1kua002tf54cwrealhwv,IN,IND,India,🇮🇳,20,77,cmeulz600001uf5jszpz6p10n,cmeulyjr00000f5hgh8t4atf7,91,2025-08-27T23:32:53.315Z,2025-08-27T23:32:53.315Z
+cmeum1l3l002uf54cuwyba7ub,ID,IDN,Indonesia,🇮🇩,-5,120,cmeulz5pf001rf5jsnv6zo2b2,cmeulyjr00000f5hgh8t4atf7,62,2025-08-27T23:32:53.649Z,2025-08-27T23:32:53.649Z
+cmeum1ldh002vf54cmrlmnlkf,IR,IRN,Iran,🇮🇷,32,53,cmeulz675001wf5jslvqrhed4,cmeulyjr00000f5hgh8t4atf7,98,2025-08-27T23:32:54.006Z,2025-08-27T23:32:54.006Z
+cmeum1lmf002wf54c1kvv278m,IQ,IRQ,Iraq,🇮🇶,33,44,cmeulz63l001vf5jsg1hfio4o,cmeulyjr00000f5hgh8t4atf7,964,2025-08-27T23:32:54.328Z,2025-08-27T23:32:54.328Z
+cmeum1lw4002xf54cugoq7bhu,IE,IRL,Ireland,🇮🇪,53,-8,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,353,2025-08-27T23:32:54.677Z,2025-08-27T23:32:54.677Z
+cmeum1m66002yf54ca2s74vzs,IM,IMN,Isle of Man,🇮🇲,54.25,-4.5,cmeulz4bj001df5jshygsb0e8,cmeulyjvz0001f5hgwc1kwgwk,+44-1624,2025-08-27T23:32:55.038Z,2025-08-27T23:32:55.038Z
+cmeum1mg1002zf54c81gg2xmv,IL,ISR,Israel,🇮🇱,31.5,34.75,cmeulz5t5001sf5js0t6j1v39,cmeulyjr00000f5hgh8t4atf7,972,2025-08-27T23:32:55.394Z,2025-08-27T23:32:55.394Z
+cmeum1mpk0030f54cq2x9ihsa,IT,ITA,Italy,🇮🇹,42.83333333,12.83333333,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,39,2025-08-27T23:32:55.737Z,2025-08-27T23:32:55.737Z
+cmeum1myn0031f54c9mny2xbb,JM,JAM,Jamaica,🇯🇲,18.25,-77.5,cmeulz6hk001zf5jsbtf4owdm,cmeulyk7n0004f5hg1zjhe35k,+1-876,2025-08-27T23:32:56.064Z,2025-08-27T23:32:56.064Z
+cmeum1n7r0032f54c4455o14s,JP,JPN,Japan,🇯🇵,36,138,cmeulz6or0021f5js5zhf25bb,cmeulyjr00000f5hgh8t4atf7,81,2025-08-27T23:32:56.391Z,2025-08-27T23:32:56.391Z
+cmeum1nh90033f54cj44wrzba,JE,JEY,Jersey,🇯🇪,49.25,-2.16666666,cmeulz4bj001df5jshygsb0e8,cmeulyjvz0001f5hgwc1kwgwk,+44-1534,2025-08-27T23:32:56.734Z,2025-08-27T23:32:56.734Z
+cmeum1nqy0034f54c63dkrvt2,JO,JOR,Jordan,🇯🇴,31,36,cmeulz6kz0020f5js4egxnnjv,cmeulyjr00000f5hgh8t4atf7,962,2025-08-27T23:32:57.083Z,2025-08-27T23:32:57.083Z
+cmeum1o0t0035f54cdpc66ztm,KZ,KAZ,Kazakhstan,🇰🇿,48,68,cmeulz7og002bf5js6nmsf923,cmeulyjr00000f5hgh8t4atf7,7,2025-08-27T23:32:57.437Z,2025-08-27T23:32:57.437Z
+cmeum1oap0036f54cwowzf3xx,KE,KEN,Kenya,🇰🇪,1,38,cmeulz6sj0022f5jsmg2mnbu0,cmeulyjzz0002f5hgsk1gtkvu,254,2025-08-27T23:32:57.794Z,2025-08-27T23:32:57.794Z
+cmeum1okd0037f54cwwd1fku7,KI,KIR,Kiribati,🇰🇮,1.41666666,173,cmeulyzyx0007f5jsf7rb7u54,cmeulyk3w0003f5hg2fqex49s,686,2025-08-27T23:32:58.142Z,2025-08-27T23:32:58.142Z
+cmeum1otg0038f54cswwsbpcb,KP,PRK,North Korea,🇰🇵,40,127,cmeulz7a50027f5js99oogdwj,cmeulyjr00000f5hgh8t4atf7,850,2025-08-27T23:32:58.469Z,2025-08-27T23:32:58.469Z
+cmeum1p300039f54cwiv384uv,KR,KOR,South Korea,🇰🇷,37,127.5,cmeulz7e40028f5jsjo6fksc8,cmeulyjr00000f5hgh8t4atf7,82,2025-08-27T23:32:58.813Z,2025-08-27T23:32:58.813Z
+cmeum1pci003af54cxdja0ptm,KW,KWT,Kuwait,🇰🇼,29.5,45.75,cmeulz7hn0029f5jsr36qn53v,cmeulyjr00000f5hgh8t4atf7,965,2025-08-27T23:32:59.154Z,2025-08-27T23:32:59.154Z
+cmeum1plx003bf54cp9dsgf61,KG,KGZ,Kyrgyzstan,🇰🇬,41,75,cmeulz6w30023f5jsw2o3glqd,cmeulyjr00000f5hgh8t4atf7,996,2025-08-27T23:32:59.494Z,2025-08-27T23:32:59.494Z
+cmeum1pv5003cf54c7iupal0t,LA,LAO,Laos,🇱🇦,18,105,cmeulz7s1002cf5jsj0tldbav,cmeulyjr00000f5hgh8t4atf7,856,2025-08-27T23:32:59.826Z,2025-08-27T23:32:59.826Z
+cmeum1q44003df54cqrsswuiu,LV,LVA,Latvia,🇱🇻,57,25,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,371,2025-08-27T23:33:00.148Z,2025-08-27T23:33:00.148Z
+cmeum1qd9003ef54c7eug7mqx,LB,LBN,Lebanon,🇱🇧,33.83333333,35.83333333,cmeulz7vg002df5jsoji9ntz1,cmeulyjr00000f5hgh8t4atf7,961,2025-08-27T23:33:00.477Z,2025-08-27T23:33:00.477Z
+cmeum1qmm003ff54cuzukljze,LS,LSO,Lesotho,🇱🇸,-29.5,28.5,cmeulz868002gf5js2tjnv4a7,cmeulyjzz0002f5hgsk1gtkvu,266,2025-08-27T23:33:00.815Z,2025-08-27T23:33:00.815Z
+cmeum1qw0003gf54cf3zme575,LR,LBR,Liberia,🇱🇷,6.5,-9.5,cmeulz82m002ff5jsecv1kpsq,cmeulyjzz0002f5hgsk1gtkvu,231,2025-08-27T23:33:01.152Z,2025-08-27T23:33:01.152Z
+cmeum1r4x003hf54cqgfx7yrl,LY,LBY,Libya,🇱🇾,25,17,cmeulz89s002hf5jswus9tryr,cmeulyjzz0002f5hgsk1gtkvu,218,2025-08-27T23:33:01.474Z,2025-08-27T23:33:01.474Z
+cmeum1re3003if54c2m0qo78q,LI,LIE,Liechtenstein,🇱🇮,47.26666666,9.53333333,cmeulz227000rf5jskvgq91fa,cmeulyjvz0001f5hgwc1kwgwk,423,2025-08-27T23:33:01.803Z,2025-08-27T23:33:01.803Z
+cmeum1rn8003jf54ccmwi3eu6,LT,LTU,Lithuania,🇱🇹,56,24,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,370,2025-08-27T23:33:02.132Z,2025-08-27T23:33:02.132Z
+cmeum1rwl003kf54cgu8mss3p,LU,LUX,Luxembourg,🇱🇺,49.75,6.16666666,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,352,2025-08-27T23:33:02.470Z,2025-08-27T23:33:02.470Z
+cmeum1s5i003lf54cwdr6q02c,MO,MAC,Macao,🇲🇴,22.16666666,113.55,cmeulz8yh002of5jsvc1nui2k,cmeulyjr00000f5hgh8t4atf7,853,2025-08-27T23:33:02.790Z,2025-08-27T23:33:02.790Z
+cmeum1seh003mf54cjc5th1x4,MG,MDG,Madagascar,🇲🇬,-20,47,cmeulz8kg002kf5jsbu9evpck,cmeulyjzz0002f5hgsk1gtkvu,261,2025-08-27T23:33:03.113Z,2025-08-27T23:33:03.113Z
+cmeum1snh003nf54c849yen0d,MW,MWI,Malawi,🇲🇼,-13.5,34,cmeulz9d3002sf5js9zwul7ks,cmeulyjzz0002f5hgsk1gtkvu,265,2025-08-27T23:33:03.437Z,2025-08-27T23:33:03.437Z
+cmeum1sx4003of54c7nfd7h1a,MY,MYS,Malaysia,🇲🇾,2.5,112.5,cmeulz9k7002uf5jstctsxaha,cmeulyjr00000f5hgh8t4atf7,60,2025-08-27T23:33:03.784Z,2025-08-27T23:33:03.784Z
+cmeum1t69003pf54ck5tr79ph,MV,MDV,Maldives,🇲🇻,3.25,73,cmeulz998002rf5jsnh7p9cax,cmeulyjr00000f5hgh8t4atf7,960,2025-08-27T23:33:04.113Z,2025-08-27T23:33:04.113Z
+cmeum1tf7003qf54cl9jsogh3,ML,MLI,Mali,🇲🇱,17,-4,cmeulzfu2004jf5jsms3ywf0o,cmeulyjzz0002f5hgsk1gtkvu,223,2025-08-27T23:33:04.435Z,2025-08-27T23:33:04.435Z
+cmeum1tpf003rf54cuvneuexq,MT,MLT,Malta,🇲🇹,35.83333333,14.58333333,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,356,2025-08-27T23:33:04.777Z,2025-08-27T23:33:04.777Z
+cmeum1tyd003sf54caxn1i22u,MH,MHL,Marshall Islands,🇲🇭,9,168,cmeulzeu20049f5jsjb50j598,cmeulyk3w0003f5hg2fqex49s,692,2025-08-27T23:33:05.126Z,2025-08-27T23:33:05.126Z
+cmeum1u7a003tf54c1d2jtqov,MQ,MTQ,Martinique,🇲🇶,14.666667,-61,cmeulz3xi0019f5jsvrzaobil,cmeulyk7n0004f5hg1zjhe35k,596,2025-08-27T23:33:05.446Z,2025-08-27T23:33:05.446Z
+cmeum1ugc003uf54c25utxvtx,MR,MRT,Mauritania,🇲🇷,20,-12,cmeulz925002pf5jscfska10y,cmeulyjzz0002f5hgsk1gtkvu,222,2025-08-27T23:33:05.772Z,2025-08-27T23:33:05.772Z
+cmeum1upu003vf54c3qscyss8,MU,MUS,Mauritius,🇲🇺,-20.28333333,57.55,cmeulz95n002qf5jsphbpmx0k,cmeulyjzz0002f5hgsk1gtkvu,230,2025-08-27T23:33:06.114Z,2025-08-27T23:33:06.114Z
+cmeum1uz3003wf54coizohrt9,YT,MYT,Mayotte,🇾🇹,-12.83333333,45.16666666,cmeulz3xi0019f5jsvrzaobil,cmeulyjzz0002f5hgsk1gtkvu,262,2025-08-27T23:33:06.447Z,2025-08-27T23:33:06.447Z
+cmeum1v8t003xf54ci8hvcv3u,MX,MEX,Mexico,🇲🇽,23,-102,cmeulz9gl002tf5js97rn28gj,cmeulyk7n0004f5hg1zjhe35k,52,2025-08-27T23:33:06.797Z,2025-08-27T23:33:06.797Z
+cmeum1vht003yf54cye9in0vl,FM,FSM,Micronesia,🇫🇲,6.91666666,158.25,cmeulzeu20049f5jsjb50j598,cmeulyk3w0003f5hg2fqex49s,691,2025-08-27T23:33:07.122Z,2025-08-27T23:33:07.122Z
+cmeum1vr3003zf54c1r9v1jow,MD,MDA,Moldova,🇲🇩,47,29,cmeulz8gq002jf5jsdi1lhzzg,cmeulyjvz0001f5hgwc1kwgwk,373,2025-08-27T23:33:07.456Z,2025-08-27T23:33:07.456Z
+cmeum1w110040f54cbnr8eumw,MC,MCO,Monaco,🇲🇨,43.73333333,7.4,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,377,2025-08-27T23:33:07.813Z,2025-08-27T23:33:07.813Z
+cmeum1wa90041f54c4cjecfmf,MN,MNG,Mongolia,🇲🇳,46,105,cmeulz8uy002nf5js23cuin3z,cmeulyjr00000f5hgh8t4atf7,976,2025-08-27T23:33:08.145Z,2025-08-27T23:33:08.145Z
+cmeum1wk30042f54cgy6k9jwf,ME,MNE,Montenegro,🇲🇪,42.5,19.3,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,382,2025-08-27T23:33:08.499Z,2025-08-27T23:33:08.499Z
+cmeum1wt60043f54c04t67m5v,MS,MSR,Montserrat,🇲🇸,16.75,-62.2,cmeulzfqb004if5jsc5cg3p7l,cmeulyk7n0004f5hg1zjhe35k,+1-664,2025-08-27T23:33:08.827Z,2025-08-27T23:33:08.827Z
+cmeum1x320044f54c91i8ef08,MA,MAR,Morocco,🇲🇦,32,-5,cmeulz8d6002if5js8p1y6cm1,cmeulyjzz0002f5hgsk1gtkvu,212,2025-08-27T23:33:09.182Z,2025-08-27T23:33:09.182Z
+cmeum1xcc0045f54cypo0nwkn,MZ,MOZ,Mozambique,🇲🇿,-18.25,35,cmeulz9oa002vf5jsawcxoesz,cmeulyjzz0002f5hgsk1gtkvu,258,2025-08-27T23:33:09.516Z,2025-08-27T23:33:09.516Z
+cmeum1xm10046f54cd9kpcs6y,MM,MMR,Myanmar,🇲🇲,22,98,cmeulz8rh002mf5jsu2kd548v,cmeulyjr00000f5hgh8t4atf7,95,2025-08-27T23:33:09.865Z,2025-08-27T23:33:09.865Z
+cmeum1xvw0047f54chzc3c88g,NA,NAM,Namibia,🇳🇦,-22,17,cmeulz9rr002wf5jsqjv8sj3i,cmeulyjzz0002f5hgsk1gtkvu,264,2025-08-27T23:33:10.221Z,2025-08-27T23:33:10.221Z
+cmeum1y5g0048f54c537kqzah,NR,NRU,Nauru,🇳🇷,-0.53333333,166.91666666,cmeulyzyx0007f5jsf7rb7u54,cmeulyk3w0003f5hg2fqex49s,674,2025-08-27T23:33:10.564Z,2025-08-27T23:33:10.564Z
+cmeum1yeh0049f54cjonlvmh7,NP,NPL,Nepal,🇳🇵,28,84,cmeulza5x0030f5js2n6hkpbh,cmeulyjr00000f5hgh8t4atf7,977,2025-08-27T23:33:10.890Z,2025-08-27T23:33:10.890Z
+cmeum1yni004af54chw1okief,NL,NLD,Netherlands,🇳🇱,52.5,5.75,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,31,2025-08-27T23:33:11.215Z,2025-08-27T23:33:11.215Z
+cmeum1ywu004bf54c7bc4cpb8,NC,NCL,New Caledonia,🇳🇨,-21.5,165.5,cmeulzfxz004kf5jskd64h1zg,cmeulyk3w0003f5hg2fqex49s,687,2025-08-27T23:33:11.550Z,2025-08-27T23:33:11.550Z
+cmeum1z5n004cf54cupnf5w63,NZ,NZL,New Zealand,🇳🇿,-41,174,cmeulza9c0031f5jspnn9vwtw,cmeulyk3w0003f5hg2fqex49s,64,2025-08-27T23:33:11.868Z,2025-08-27T23:33:11.868Z
+cmeum1zfu004df54cn2ofb8zf,NI,NIC,Nicaragua,🇳🇮,13,-85,cmeulz9yx002yf5jszn65nr07,cmeulyk7n0004f5hg1zjhe35k,505,2025-08-27T23:33:12.235Z,2025-08-27T23:33:12.235Z
+cmeum1zpm004ef54capw4d3hz,NE,NER,Niger,🇳🇪,16,8,cmeulzfu2004jf5jsms3ywf0o,cmeulyjzz0002f5hgsk1gtkvu,227,2025-08-27T23:33:12.586Z,2025-08-27T23:33:12.586Z
+cmeum1zz0004ff54c1oicq54b,NG,NGA,Nigeria,🇳🇬,10,8,cmeulz9vd002xf5jsbqx3lyvd,cmeulyjzz0002f5hgsk1gtkvu,234,2025-08-27T23:33:12.925Z,2025-08-27T23:33:12.925Z
+cmeum208a004gf54cuz0agby1,NU,NIU,Niue,🇳🇺,-19.03333333,-169.86666666,cmeulza9c0031f5jspnn9vwtw,cmeulyk3w0003f5hg2fqex49s,683,2025-08-27T23:33:13.258Z,2025-08-27T23:33:13.258Z
+cmeum20hk004hf54c3ytlzpzr,NF,NFK,Norfolk Island,🇳🇫,-29.03333333,167.95,cmeulyzyx0007f5jsf7rb7u54,cmeulyk3w0003f5hg2fqex49s,672,2025-08-27T23:33:13.593Z,2025-08-27T23:33:13.593Z
+cmeum20qv004if54cg77lgsgu,MK,MKD,North Macedonia,🇲🇰,41.83333333,22,cmeulz8o1002lf5jswpaums84,cmeulyjvz0001f5hgwc1kwgwk,389,2025-08-27T23:33:13.928Z,2025-08-27T23:33:13.928Z
+cmeum2100004jf54cv6h1n7yc,MP,MNP,Northern Mariana Islands,🇲🇵,15.2,145.75,cmeulzeu20049f5jsjb50j598,cmeulyk3w0003f5hg2fqex49s,+1-670,2025-08-27T23:33:14.257Z,2025-08-27T23:33:14.257Z
+cmeum219q004kf54chp7l4cv9,NO,NOR,Norway,🇳🇴,62,10,cmeulza2j002zf5js6zzy1bpq,cmeulyjvz0001f5hgwc1kwgwk,47,2025-08-27T23:33:14.606Z,2025-08-27T23:33:14.606Z
+cmeum21ix004lf54c4c40kj81,OM,OMN,Oman,🇴🇲,21,57,cmeulzacu0032f5js0xest387,cmeulyjr00000f5hgh8t4atf7,968,2025-08-27T23:33:14.937Z,2025-08-27T23:33:14.937Z
+cmeum21sc004mf54cjynrsws8,PK,PAK,Pakistan,🇵🇰,30,70,cmeulzawk0037f5js8dzxbf0a,cmeulyjr00000f5hgh8t4atf7,92,2025-08-27T23:33:15.276Z,2025-08-27T23:33:15.276Z
+cmeum221n004nf54c374ptyi6,PW,PLW,Palau,🇵🇼,7.5,134.5,cmeulzeu20049f5jsjb50j598,cmeulyk3w0003f5hg2fqex49s,680,2025-08-27T23:33:15.612Z,2025-08-27T23:33:15.612Z
+cmeum22b3004of54ccs9fbgb6,PS,PSE,Palestine,🇵🇸,31.9,35.2,cmeulz5t5001sf5js0t6j1v39,cmeulyjr00000f5hgh8t4atf7,970,2025-08-27T23:33:15.951Z,2025-08-27T23:33:15.951Z
+cmeum22ki004pf54cs3cceaqn,PA,PAN,Panama,🇵🇦,9,-80,cmeulzagy0033f5jses57v0v6,cmeulyk7n0004f5hg1zjhe35k,507,2025-08-27T23:33:16.290Z,2025-08-27T23:33:16.290Z
+cmeum22tz004qf54cle65nm1y,PG,PNG,Papua New Guinea,🇵🇬,-6,147,cmeulzaoi0035f5jsedpa1uxc,cmeulyk3w0003f5hg2fqex49s,675,2025-08-27T23:33:16.631Z,2025-08-27T23:33:16.631Z
+cmeum233a004rf54chn9w4pd9,PY,PRY,Paraguay,🇵🇾,-23,-58,cmeulzbca003bf5jshs4n39dn,cmeulykbd0005f5hgfnq6hr3d,595,2025-08-27T23:33:16.967Z,2025-08-27T23:33:16.967Z
+cmeum23cm004sf54cqi6m7yq7,PE,PER,Peru,🇵🇪,-10,-76,cmeulzal10034f5js2vrcs64r,cmeulykbd0005f5hgfnq6hr3d,51,2025-08-27T23:33:17.302Z,2025-08-27T23:33:17.302Z
+cmeum23mc004tf54cwku6mgak,PH,PHL,Philippines,🇵🇭,13,122,cmeulzas00036f5jsutdrtf8h,cmeulyjr00000f5hgh8t4atf7,63,2025-08-27T23:33:17.653Z,2025-08-27T23:33:17.653Z
+cmeum23vh004uf54cbh1wli9g,PN,PCN,Pitcairn,🇵🇳,-25.06666666,-130.1,cmeulza9c0031f5jspnn9vwtw,cmeulyk3w0003f5hg2fqex49s,870,2025-08-27T23:33:17.981Z,2025-08-27T23:33:17.981Z
+cmeum244u004vf54cip1js7mu,PL,POL,Poland,🇵🇱,52,20,cmeulzb0a0038f5js8mwtdtwn,cmeulyjvz0001f5hgwc1kwgwk,48,2025-08-27T23:33:18.319Z,2025-08-27T23:33:18.319Z
+cmeum24e3004wf54czbvzxctr,PT,PRT,Portugal,🇵🇹,39.5,-8,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,351,2025-08-27T23:33:18.651Z,2025-08-27T23:33:18.651Z
+cmeum24n7004xf54cwho5fpki,PR,PRI,Puerto Rico,🇵🇷,18.25,-66.5,cmeulzeu20049f5jsjb50j598,cmeulyk7n0004f5hg1zjhe35k,+1-787 and 1-939,2025-08-27T23:33:18.980Z,2025-08-27T23:33:18.980Z
+cmeum24wo004yf54cdzvviuya,QA,QAT,Qatar,🇶🇦,25.5,51.25,cmeulzbgk003cf5js6pmkrxcl,cmeulyjr00000f5hgh8t4atf7,974,2025-08-27T23:33:19.320Z,2025-08-27T23:33:19.320Z
+cmeum2561004zf54cjt62k9ik,RE,REU,Réunion,🇷🇪,-21.15,55.5,cmeulz3xi0019f5jsvrzaobil,cmeulyjzz0002f5hgsk1gtkvu,262,2025-08-27T23:33:19.658Z,2025-08-27T23:33:19.658Z
+cmeum25fs0050f54cnll5dr0b,RO,ROU,Romania,🇷🇴,46,25,cmeulzbkf003df5jsjdcd58rt,cmeulyjvz0001f5hgwc1kwgwk,40,2025-08-27T23:33:19.982Z,2025-08-27T23:33:19.982Z
+cmeum25ov0051f54c7t7ncdhj,RU,RUS,Russia,🇷🇺,60,100,cmeulzbrq003ff5js5iel7fm1,cmeulyjvz0001f5hgwc1kwgwk,7,2025-08-27T23:33:20.336Z,2025-08-27T23:33:20.336Z
+cmeum25y70052f54cznkm4g65,RW,RWA,Rwanda,🇷🇼,-2,30,cmeulzbva003gf5jsrnouviod,cmeulyjzz0002f5hgsk1gtkvu,250,2025-08-27T23:33:20.672Z,2025-08-27T23:33:20.672Z
+cmeum267k0053f54cpd1hndix,BL,BLM,Saint Barthélemy,🇧🇱,18.5,-63.41666666,cmeulz3xi0019f5jsvrzaobil,cmeulyk7n0004f5hg1zjhe35k,590,2025-08-27T23:33:21.009Z,2025-08-27T23:33:21.009Z
+cmeum26gg0054f54cbsgva7lj,SH,SHN,Saint Helena,🇸🇭,-15.95,-5.7,cmeulzckw003nf5jsczr1vd9m,cmeulyjzz0002f5hgsk1gtkvu,290,2025-08-27T23:33:21.328Z,2025-08-27T23:33:21.328Z
+cmeum26q70055f54ciyuqssy5,KN,KNA,Saint Kitts and Nevis,🇰🇳,17.33333333,-62.75,cmeulzfqb004if5jsc5cg3p7l,cmeulyk7n0004f5hg1zjhe35k,+1-869,2025-08-27T23:33:21.679Z,2025-08-27T23:33:21.679Z
+cmeum26zm0056f54cx8yuamjs,LC,LCA,Saint Lucia,🇱🇨,13.88333333,-60.96666666,cmeulzfqb004if5jsc5cg3p7l,cmeulyk7n0004f5hg1zjhe35k,+1-758,2025-08-27T23:33:22.019Z,2025-08-27T23:33:22.019Z
+cmeum278v0057f54cpdxl9b3v,MF,MAF,Saint Martin,🇲🇫,18.08333333,-63.95,cmeulz3xi0019f5jsvrzaobil,cmeulyk7n0004f5hg1zjhe35k,590,2025-08-27T23:33:22.351Z,2025-08-27T23:33:22.351Z
+cmeum27i60058f54ctrfeli99,PM,SPM,Saint Pierre and Miquelon,🇵🇲,46.83333333,-56.33333333,cmeulz3xi0019f5jsvrzaobil,cmeulyk7n0004f5hg1zjhe35k,508,2025-08-27T23:33:22.686Z,2025-08-27T23:33:22.686Z
+cmeum27rt0059f54cueeiz07m,VC,VCT,Saint Vincent and the Grenadines,🇻🇨,13.25,-61.2,cmeulzfqb004if5jsc5cg3p7l,cmeulyk7n0004f5hg1zjhe35k,+1-784,2025-08-27T23:33:23.034Z,2025-08-27T23:33:23.034Z
+cmeum2816005af54clldrfp0l,WS,WSM,Samoa,🇼🇸,-13.58333333,-172.33333333,cmeulzfiv004gf5js6jmjmhhk,cmeulyk3w0003f5hg2fqex49s,685,2025-08-27T23:33:23.370Z,2025-08-27T23:33:23.370Z
+cmeum28ac005bf54c311g37qs,SM,SMR,San Marino,🇸🇲,43.76666666,12.41666666,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,378,2025-08-27T23:33:23.700Z,2025-08-27T23:33:23.700Z
+cmeum28jy005cf54cadu6a5sw,ST,STP,São Tomé and Príncipe,🇸🇹,1,7,cmeulzd7p003tf5jstzul3q6q,cmeulyjzz0002f5hgsk1gtkvu,239,2025-08-27T23:33:24.046Z,2025-08-27T23:33:24.046Z
+cmeum28t4005df54cnpdpd25e,SA,SAU,Saudi Arabia,🇸🇦,25,45,cmeulzbyr003hf5jskwyvduw4,cmeulyjr00000f5hgh8t4atf7,966,2025-08-27T23:33:24.376Z,2025-08-27T23:33:24.376Z
+cmeum292d005ef54c5od974fc,SN,SEN,Senegal,🇸🇳,14,-14,cmeulzfu2004jf5jsms3ywf0o,cmeulyjzz0002f5hgsk1gtkvu,221,2025-08-27T23:33:24.710Z,2025-08-27T23:33:24.710Z
+cmeum29br005ff54cko73y8am,RS,SRB,Serbia,🇷🇸,44,21,cmeulzbo3003ef5jsh8l3mg4n,cmeulyjvz0001f5hgwc1kwgwk,381,2025-08-27T23:33:25.048Z,2025-08-27T23:33:25.048Z
+cmeum29kq005gf54cvyg43nau,SC,SYC,Seychelles,🇸🇨,-4.58333333,55.66666666,cmeulzc61003jf5jsmuo4935b,cmeulyjzz0002f5hgsk1gtkvu,248,2025-08-27T23:33:25.370Z,2025-08-27T23:33:25.370Z
+cmeum29u5005hf54cpruwzgdw,SL,SLE,Sierra Leone,🇸🇱,8.5,-11.5,cmeulzcpp003of5js2jcaghg4,cmeulyjzz0002f5hgsk1gtkvu,232,2025-08-27T23:33:25.710Z,2025-08-27T23:33:25.710Z
+cmeum2a3g005if54cd8jayjam,SG,SGP,Singapore,🇸🇬,1.36666666,103.8,cmeulzchd003mf5js3p3vmuh8,cmeulyjr00000f5hgh8t4atf7,65,2025-08-27T23:33:26.044Z,2025-08-27T23:33:26.044Z
+cmeum2acf005jf54c8of19rvh,SX,SXM,Sint Maarten,🇸🇽,18.033333,-63.05,cmeulyznr0004f5jsepmu9k7k,cmeulyk7n0004f5hg1zjhe35k,1721,2025-08-27T23:33:26.368Z,2025-08-27T23:33:26.368Z
+cmeum2ama005kf54cy7l6p81w,SK,SVK,Slovakia,🇸🇰,48.66666666,19.5,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,421,2025-08-27T23:33:26.722Z,2025-08-27T23:33:26.722Z
+cmeum2awc005lf54c03h3seej,SI,SVN,Slovenia,🇸🇮,46.11666666,14.81666666,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,386,2025-08-27T23:33:27.085Z,2025-08-27T23:33:27.085Z
+cmeum2b6b005mf54cdzr9anop,SB,SLB,Solomon Islands,🇸🇧,-8,159,cmeulzc29003if5jswi4b3g6a,cmeulyk3w0003f5hg2fqex49s,677,2025-08-27T23:33:27.444Z,2025-08-27T23:33:27.444Z
+cmeum2bg8005nf54cqur1gfm3,SO,SOM,Somalia,🇸🇴,10,49,cmeulzcwp003qf5js7kwe4qzz,cmeulyjzz0002f5hgsk1gtkvu,252,2025-08-27T23:33:27.800Z,2025-08-27T23:33:27.800Z
+cmeum2bpi005of54ctphdviwb,ZA,ZAF,South Africa,🇿🇦,-29,24,cmeulzg52004mf5jst2ird5e0,cmeulyjzz0002f5hgsk1gtkvu,27,2025-08-27T23:33:28.134Z,2025-08-27T23:33:28.134Z
+cmeum2byh005pf54cbs48f11v,GS,SGS,South Georgia and the South Sandwich Islands,🇬🇸,-54.5,-37,cmeulz4bj001df5jshygsb0e8,cmeulyket0006f5hgi01rty6e,500,2025-08-27T23:33:28.457Z,2025-08-27T23:33:28.457Z
+cmeum2c7i005qf54ciqlmdk6r,SS,SSD,South Sudan,🇸🇸,7,30,cmeulzd4c003sf5jsh33xqbbc,cmeulyjzz0002f5hgsk1gtkvu,211,2025-08-27T23:33:28.782Z,2025-08-27T23:33:28.782Z
+cmeum2cgz005rf54c42xiyaav,ES,ESP,Spain,🇪🇸,40,-4,cmeulz3xi0019f5jsvrzaobil,cmeulyjvz0001f5hgwc1kwgwk,34,2025-08-27T23:33:29.123Z,2025-08-27T23:33:29.123Z
+cmeum2cpv005sf54cgu61yoga,LK,LKA,Sri Lanka,🇱🇰,7,81,cmeulz7z2002ef5jse2xi6qq7,cmeulyjr00000f5hgh8t4atf7,94,2025-08-27T23:33:29.444Z,2025-08-27T23:33:29.444Z
+cmeum2cyl005tf54crx9thdyb,SD,SDN,Sudan,🇸🇩,15,30,cmeulzc9j003kf5jsnhtsmtvg,cmeulyjzz0002f5hgsk1gtkvu,249,2025-08-27T23:33:29.757Z,2025-08-27T23:33:29.757Z
+cmeum2d7l005uf54cyx2wclfr,SR,SUR,Suriname,🇸🇷,4,-56,cmeulzd0w003rf5jsqe3eyzu4,cmeulykbd0005f5hgfnq6hr3d,597,2025-08-27T23:33:30.082Z,2025-08-27T23:33:30.082Z
+cmeum2dh4005vf54c2afwl4c9,SJ,SJM,Svalbard and Jan Mayen,🇸🇯,78,20,cmeulza2j002zf5js6zzy1bpq,cmeulyjvz0001f5hgwc1kwgwk,47,2025-08-27T23:33:30.424Z,2025-08-27T23:33:30.424Z
+cmeum2dq9005wf54ce06lc4zu,SE,SWE,Sweden,🇸🇪,62,15,cmeulzcdr003lf5jsm0t39v72,cmeulyjvz0001f5hgwc1kwgwk,46,2025-08-27T23:33:30.753Z,2025-08-27T23:33:30.753Z
+cmeum2dzf005xf54cazx75vso,CH,CHE,Switzerland,🇨🇭,47,8,cmeulz227000rf5jskvgq91fa,cmeulyjvz0001f5hgwc1kwgwk,41,2025-08-27T23:33:31.084Z,2025-08-27T23:33:31.084Z
+cmeum2e8t005yf54cm4xb9254,SY,SYR,Syria,🇸🇾,35,38,cmeulzdf6003vf5jsojh1rxv7,cmeulyjr00000f5hgh8t4atf7,963,2025-08-27T23:33:31.421Z,2025-08-27T23:33:31.421Z
+cmeum2ehx005zf54cyoia4594,TW,TWN,Taiwan,🇹🇼,23.5,121,cmeulzefa0045f5jsvpubp63q,cmeulyjr00000f5hgh8t4atf7,886,2025-08-27T23:33:31.750Z,2025-08-27T23:33:31.750Z
+cmeum2era0060f54c84x01asg,TJ,TJK,Tajikistan,🇹🇯,39,71,cmeulzdpx003yf5js0tq3287p,cmeulyjr00000f5hgh8t4atf7,992,2025-08-27T23:33:32.086Z,2025-08-27T23:33:32.086Z
+cmeum2f0g0061f54cpbstlrw2,TZ,TZA,Tanzania,🇹🇿,-6,35,cmeulzeis0046f5jsh0sedon0,cmeulyjzz0002f5hgsk1gtkvu,255,2025-08-27T23:33:32.417Z,2025-08-27T23:33:32.417Z
+cmeum2f9q0062f54c9kv8jflo,TH,THA,Thailand,🇹🇭,15,100,cmeulzdma003xf5js4e7qsrhj,cmeulyjr00000f5hgh8t4atf7,66,2025-08-27T23:33:32.751Z,2025-08-27T23:33:32.751Z
+cmeum2fit0063f54cgajparc1,TL,TLS,Timor-Leste,🇹🇱,-8.83333333,125.91666666,cmeulzeu20049f5jsjb50j598,cmeulyjr00000f5hgh8t4atf7,670,2025-08-27T23:33:33.077Z,2025-08-27T23:33:33.077Z
+cmeum2frw0064f54cndhi40sk,TG,TGO,Togo,🇹🇬,8,1.16666666,cmeulzfu2004jf5jsms3ywf0o,cmeulyjzz0002f5hgsk1gtkvu,228,2025-08-27T23:33:33.404Z,2025-08-27T23:33:33.404Z
+cmeum2g0t0065f54c1id8ff2z,TK,TKL,Tokelau,🇹🇰,-9,-172,cmeulza9c0031f5jspnn9vwtw,cmeulyk3w0003f5hg2fqex49s,690,2025-08-27T23:33:33.725Z,2025-08-27T23:33:33.725Z
+cmeum2ga70066f54cifvhnfu5,TO,TON,Tonga,🇹🇴,-20,-175,cmeulze0s0041f5js1x5c4zs3,cmeulyk3w0003f5hg2fqex49s,676,2025-08-27T23:33:34.063Z,2025-08-27T23:33:34.063Z
+cmeum2gj80067f54c83z199sc,TT,TTO,Trinidad and Tobago,🇹🇹,11,-61,cmeulze7p0043f5js9b9evjum,cmeulyk7n0004f5hg1zjhe35k,+1-868,2025-08-27T23:33:34.388Z,2025-08-27T23:33:34.388Z
+cmeum2gsk0068f54cy3svjucq,TN,TUN,Tunisia,🇹🇳,34,9,cmeulzdx10040f5js0d646n5e,cmeulyjzz0002f5hgsk1gtkvu,216,2025-08-27T23:33:34.725Z,2025-08-27T23:33:34.725Z
+cmeum2h2e0069f54c8ocvhqmb,TR,TUR,Turkey,🇹🇷,39,35,cmeulze470042f5jscjz2o7iy,cmeulyjr00000f5hgh8t4atf7,90,2025-08-27T23:33:35.051Z,2025-08-27T23:33:35.051Z
+cmeum2hcd006af54c22xtqbz9,TM,TKM,Turkmenistan,🇹🇲,40,60,cmeulzdth003zf5jsop5620ui,cmeulyjr00000f5hgh8t4atf7,993,2025-08-27T23:33:35.437Z,2025-08-27T23:33:35.437Z
+cmeum2hm4006bf54cd4jltrqt,TC,TCA,Turks and Caicos Islands,🇹🇨,21.75,-71.58333333,cmeulzeu20049f5jsjb50j598,cmeulyk7n0004f5hg1zjhe35k,+1-649,2025-08-27T23:33:35.788Z,2025-08-27T23:33:35.788Z
+cmeum2hvi006cf54cp8i5hb2r,TV,TUV,Tuvalu,🇹🇻,-8,178,cmeulyzyx0007f5jsf7rb7u54,cmeulyk3w0003f5hg2fqex49s,688,2025-08-27T23:33:36.126Z,2025-08-27T23:33:36.126Z
+cmeum2i4v006df54cn2rd320a,UG,UGA,Uganda,🇺🇬,1,32,cmeulzeqm0048f5jsqtg5t805,cmeulyjzz0002f5hgsk1gtkvu,256,2025-08-27T23:33:36.463Z,2025-08-27T23:33:36.463Z
+cmeum2iej006ef54ck4d92btc,UA,UKR,Ukraine,🇺🇦,49,32,cmeulzem70047f5js55erp4yc,cmeulyjvz0001f5hgwc1kwgwk,380,2025-08-27T23:33:36.812Z,2025-08-27T23:33:36.812Z
+cmeum2inq006ff54c6eylmrpc,AE,ARE,United Arab Emirates,🇦🇪,24,54,cmeulyz8u0000f5jsurmq1yiz,cmeulyjr00000f5hgh8t4atf7,971,2025-08-27T23:33:37.142Z,2025-08-27T23:33:37.142Z
+cmeum2iwy006gf54c7r3g1n8x,GB,GBR,United Kingdom,🇬🇧,54,-2,cmeulz4bj001df5jshygsb0e8,cmeulyjvz0001f5hgwc1kwgwk,44,2025-08-27T23:33:37.474Z,2025-08-27T23:33:37.474Z
+cmeum2j6a006hf54cjl0rjfk4,US,USA,United States,🇺🇸,38,-97,cmeulzeu20049f5jsjb50j598,cmeulyk7n0004f5hg1zjhe35k,1,2025-08-27T23:33:37.810Z,2025-08-27T23:33:37.810Z
+cmeum2jf9006if54cj5amqzs6,UM,UMI,United States Minor Outlying Islands,🇺🇲,0,0,cmeulzeu20049f5jsjb50j598,cmeulyk3w0003f5hg2fqex49s,1,2025-08-27T23:33:38.133Z,2025-08-27T23:33:38.133Z
+cmeum2jor006jf54c15dj7uxv,UY,URY,Uruguay,🇺🇾,-33,-56,cmeulzexl004af5js94plrkfv,cmeulykbd0005f5hgfnq6hr3d,598,2025-08-27T23:33:38.475Z,2025-08-27T23:33:38.475Z
+cmeum2jya006kf54cculdeld7,UZ,UZB,Uzbekistan,🇺🇿,41,64,cmeulzf15004bf5jscarrlg7m,cmeulyjr00000f5hgh8t4atf7,998,2025-08-27T23:33:38.818Z,2025-08-27T23:33:38.818Z
+cmeum2k7l006lf54czyoy4yg9,VU,VUT,Vanuatu,🇻🇺,-16,167,cmeulzffl004ff5jsqu5lyqex,cmeulyk3w0003f5hg2fqex49s,678,2025-08-27T23:33:39.153Z,2025-08-27T23:33:39.153Z
+cmeum2kh0006mf54cl4p822y0,VE,VEN,Venezuela,🇻🇪,8,-66,cmeulzf57004cf5jskkfqt6v1,cmeulykbd0005f5hgfnq6hr3d,58,2025-08-27T23:33:39.493Z,2025-08-27T23:33:39.493Z
+cmeum2kqe006nf54ckhyupko8,VN,VNM,Vietnam,🇻🇳,16.16666666,107.83333333,cmeulzfc4004ef5jsb7ufig86,cmeulyjr00000f5hgh8t4atf7,84,2025-08-27T23:33:39.830Z,2025-08-27T23:33:39.830Z
+cmeum2l0i006of54cs10hddun,VG,VGB,British Virgin Islands,🇻🇬,18.431383,-64.62305,cmeulzeu20049f5jsjb50j598,cmeulyk7n0004f5hg1zjhe35k,+1-284,2025-08-27T23:33:40.195Z,2025-08-27T23:33:40.195Z
+cmeum2l9r006pf54cijaoxl7i,VI,VIR,U.S. Virgin Islands,🇻🇮,18.34,-64.93,cmeulzeu20049f5jsjb50j598,cmeulyk7n0004f5hg1zjhe35k,+1-340,2025-08-27T23:33:40.528Z,2025-08-27T23:33:40.528Z
+cmeum2liz006qf54c2lrq7ziu,WF,WLF,Wallis and Futuna,🇼🇫,-13.3,-176.2,cmeulzfxz004kf5jskd64h1zg,cmeulyk3w0003f5hg2fqex49s,681,2025-08-27T23:33:40.859Z,2025-08-27T23:33:40.859Z
+cmeum2lse006rf54cqgpsxtsn,EH,ESH,Western Sahara,🇪🇭,24.5,-13,cmeulz8d6002if5js8p1y6cm1,cmeulyjzz0002f5hgsk1gtkvu,212,2025-08-27T23:33:41.199Z,2025-08-27T23:33:41.199Z
+cmeum2m4n006sf54cki45sk6n,YE,YEM,Yemen,🇾🇪,15,48,cmeulzg1e004lf5js5bmx44us,cmeulyjr00000f5hgh8t4atf7,967,2025-08-27T23:33:41.640Z,2025-08-27T23:33:41.640Z
+cmeum2mj4006tf54cf6ewf5kt,ZM,ZMB,Zambia,🇿🇲,-15,30,cmeulzg8i004nf5js8kmz2pps,cmeulyjzz0002f5hgsk1gtkvu,260,2025-08-27T23:33:42.160Z,2025-08-27T23:33:42.160Z
+cmeum2mta006uf54cv663s57m,ZW,ZWE,Zimbabwe,🇿🇼,-20,30,cmeulzeu20049f5jsjb50j598,cmeulyjzz0002f5hgsk1gtkvu,263,2025-08-27T23:33:42.527Z,2025-08-27T23:33:42.527Z

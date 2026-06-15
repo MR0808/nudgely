@@ -1,0 +1,2 @@
+id,stripeSubscriptionId,billingInterval,currentPeriodEnd,priceId,createdAt,updatedAt,status,nextBillingDate
+7434aebc-40c9-4a86-9421-417ab39acd88,sub_1SKGAYA2U6Kl9wPzvYayNpxu,YEARLY,2026-10-20T10:18:24.000Z,price_1SAUzhA2U6Kl9wPzLQ86x4wV,2025-10-20T10:18:32.969Z,2025-10-20T10:18:32.969Z,active,

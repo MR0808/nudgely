@@ -1,0 +1,4 @@
+id,createdAt,updatedAt,accountId,providerId,accessToken,refreshToken,idToken,accessTokenExpiresAt,refreshTokenExpiresAt,scope,password,userId
+f1ddead4-dd88-484c-8cca-fc59bcfc3d5e,2025-09-14T11:19:49.885Z,2025-09-14T11:19:49.885Z,eaf1a9da-45df-4889-92d3-29086726d353,credential,,,,,,,"$argon2id$v=19$m=19456,t=2,p=1$J4xOSE70P0tl8ZpEiQ4lNQ$uh+Vh4sBHStgTqWpKnL+8RU49OiJMbthDHxkceUyHK4",eaf1a9da-45df-4889-92d3-29086726d353
+43a8cb13-5fdf-4e33-9163-bab051880360,2025-09-14T11:28:45.689Z,2025-09-14T11:28:45.689Z,95c96cd3-a60e-400b-abdb-dec7ee452804,credential,,,,,,,"$argon2id$v=19$m=19456,t=2,p=1$6pY8ZcI8HAFSVF6J1rkGtQ$r/E/xW0NEoDLEIhy7BrG8guTJSYAW6ioG4gLRJ90szw",95c96cd3-a60e-400b-abdb-dec7ee452804
+c6210330-b2c3-47f0-94ed-c2114e990375,2025-09-16T07:23:52.124Z,2025-09-16T07:23:52.124Z,81348265-fc03-49de-a353-757b96443f3f,credential,,,,,,,"$argon2id$v=19$m=19456,t=2,p=1$oNgbF0rsHBH61/Qx2ONW3Q$29Mt32u1TLvwaQGgJS5ZNmThcWZ5Xh+zdh8UdG/CprQ",81348265-fc03-49de-a353-757b96443f3f
