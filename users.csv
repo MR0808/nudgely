@@ -1,4 +1,0 @@
-id,createdAt,updatedAt,name,lastName,email,emailVerified,image,banned,banReason,banExpires,gender,dateOfBirth,phoneNumber,phoneVerified,timezone,locale,countryId,regionId,status,jobTitle,bio,role
-81348265-fc03-49de-a353-757b96443f3f,2025-09-16T07:23:51.967Z,2025-09-16T07:23:51.967Z,John,Cena,mark@mr8initiatives.com,true,,false,,,,,,false,,,,,ACTIVE,,,USER
-eaf1a9da-45df-4889-92d3-29086726d353,2025-09-14T11:19:49.524Z,2025-09-14T11:19:49.524Z,Mark,Rosenberg,kram@grebnesor.com,true,,false,,,,,,false,,,,,ACTIVE,,,USER
-95c96cd3-a60e-400b-abdb-dec7ee452804,2025-09-14T11:28:45.555Z,2025-09-14T11:28:45.555Z,Mike,Smith,mark@buxmate.com,true,,false,,,,,,false,,,,,ACTIVE,,,USER

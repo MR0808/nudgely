@@ -18,6 +18,8 @@
     "db:push": "npx prisma db push",
     "db:sync": "npx prisma db push",
     "db:seed": "npx prisma db seed",
+    "db:seed:demo": "tsx prisma/seed/seed-demo.ts",
+    "db:reset": "npx prisma migrate reset",
     "db:generate": "npx prisma generate",
     "stripe:test": "tsx scripts/stripe-test.ts",
     "stripe:test:check": "tsx scripts/stripe-test.ts --check-only",
