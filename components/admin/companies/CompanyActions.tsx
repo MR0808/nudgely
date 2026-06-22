@@ -368,6 +368,9 @@ export function CompanyActions({
                         <DialogTitle>Change Plan</DialogTitle>
                         <DialogDescription>
                             Change the subscription plan for {company.name}.
+                            If the company has an active Stripe subscription,
+                            it will be updated to match (no proration). Free
+                            plan changes cancel the subscription.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">

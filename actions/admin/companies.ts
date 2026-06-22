@@ -1,7 +1,14 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { stripe } from '@/lib/stripe';
+import {
+    cancelStripeSubscription,
+    getStripePriceIdForPlan,
+    isFreePlan,
+    subscriptionSyncPayload,
+    updateStripeSubscriptionPlan
+} from '@/lib/stripe-admin';
+import { checkDowngradedPlan } from '@/actions/subscriptions';
 import { CompanyStatus } from '@/generated/prisma/client';
 import type { Prisma } from '@/generated/prisma/client';
 
@@ -132,7 +139,7 @@ export async function grantFreePlan(companyId: string) {
 
     if (company.companySubscription?.stripeSubscriptionId) {
         try {
-            await stripe.subscriptions.cancel(
+            await cancelStripeSubscription(
                 company.companySubscription.stripeSubscriptionId
             );
         } catch (error) {
@@ -179,14 +186,78 @@ export async function extendTrial(companyId: string, days: number) {
 }
 
 export async function changePlan(companyId: string, planId: string) {
-    await prisma.company.update({
+    const company = await prisma.company.findUnique({
         where: { id: companyId },
-        data: {
-            planId
-        }
+        include: { plan: true, companySubscription: true }
     });
 
-    // TODO: Update Stripe subscription if exists
+    if (!company) {
+        throw new Error('Company not found');
+    }
+
+    const targetPlan = await prisma.plan.findUnique({
+        where: { id: planId }
+    });
+
+    if (!targetPlan) {
+        throw new Error('Plan not found');
+    }
+
+    if (company.planId === planId) {
+        return { success: true };
+    }
+
+    const isDowngrade = targetPlan.level < company.plan.level;
+
+    if (isFreePlan(targetPlan)) {
+        if (company.companySubscription?.stripeSubscriptionId) {
+            await cancelStripeSubscription(
+                company.companySubscription.stripeSubscriptionId
+            );
+        }
+
+        await prisma.company.update({
+            where: { id: companyId },
+            data: {
+                planId,
+                companySubscriptionId: null
+            }
+        });
+
+        await checkDowngradedPlan(companyId);
+        return { success: true };
+    }
+
+    if (company.companySubscription?.stripeSubscriptionId) {
+        const priceId = getStripePriceIdForPlan(
+            targetPlan,
+            company.companySubscription.billingInterval
+        );
+
+        if (!priceId) {
+            throw new Error('Target plan has no Stripe price for the current billing interval');
+        }
+
+        const updatedSubscription = await updateStripeSubscriptionPlan(
+            company.companySubscription.stripeSubscriptionId,
+            priceId,
+            { companyId }
+        );
+
+        await prisma.companySubscription.update({
+            where: { id: company.companySubscription.id },
+            data: subscriptionSyncPayload(updatedSubscription)
+        });
+    }
+
+    await prisma.company.update({
+        where: { id: companyId },
+        data: { planId }
+    });
+
+    if (isDowngrade) {
+        await checkDowngradedPlan(companyId);
+    }
 
     return { success: true };
 }

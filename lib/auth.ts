@@ -70,7 +70,7 @@ const options = {
   user: {
     changeEmail: {
       enabled: true,
-      sendChangeEmailVerification: async ({ user, newEmail, url, token }, request) => {
+      sendChangeEmailConfirmation: async ({ user, newEmail, token }) => {
         await sendVerificationEmail({
           email: newEmail,
           otp: token,

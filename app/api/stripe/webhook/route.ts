@@ -17,6 +17,7 @@ import {
     getAuditUserId,
     getCancellationEndDate,
     getSubscriptionPriceId,
+    isAdminPlanChange,
     shouldSendCancellationEmail,
     stripeCustomerId
 } from '@/lib/stripe-subscription';
@@ -230,11 +231,13 @@ async function handleSubscriptionCreated(event: Stripe.Event) {
         data: { planId: plan.id }
     });
 
-    await sendUpgradeEmail({
-        email: company.contactEmail || company.creator.email,
-        name: company.creator.name,
-        plan: plan.name
-    });
+    if (!isAdminPlanChange(subscription)) {
+        await sendUpgradeEmail({
+            email: company.contactEmail || company.creator.email,
+            name: company.creator.name,
+            plan: plan.name
+        });
+    }
 
     await logSubscriptionCreate(
         getAuditUserId(subscription, company.creatorId) || company.creatorId,
@@ -293,18 +296,20 @@ async function handleSubscriptionUpdated(event: Stripe.Event) {
 
             await checkDowngradedPlan(company.id);
 
-            if (oldPlan.level > plan.level) {
-                await sendDowngradeEmail({
-                    email: company.contactEmail || company.creator.email,
-                    name: company.creator.name,
-                    plan: plan.name
-                });
-            } else if (oldPlan.level < plan.level) {
-                await sendUpgradeEmail({
-                    email: company.contactEmail || company.creator.email,
-                    name: company.creator.name,
-                    plan: plan.name
-                });
+            if (!isAdminPlanChange(subscription)) {
+                if (oldPlan.level > plan.level) {
+                    await sendDowngradeEmail({
+                        email: company.contactEmail || company.creator.email,
+                        name: company.creator.name,
+                        plan: plan.name
+                    });
+                } else if (oldPlan.level < plan.level) {
+                    await sendUpgradeEmail({
+                        email: company.contactEmail || company.creator.email,
+                        name: company.creator.name,
+                        plan: plan.name
+                    });
+                }
             }
 
             const companySubscription = await syncSubscriptionRecord(

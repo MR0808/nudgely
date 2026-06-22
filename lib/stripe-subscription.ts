@@ -82,6 +82,10 @@ export function shouldSendCancellationEmail(
     subscription: Stripe.Subscription,
     previous?: Partial<Stripe.Subscription>
 ): boolean {
+    if (isAdminPlanChange(subscription)) {
+        return false;
+    }
+
     if (
         subscription.cancel_at_period_end &&
         !previous?.cancel_at_period_end
@@ -94,4 +98,8 @@ export function shouldSendCancellationEmail(
     }
 
     return false;
+}
+
+export function isAdminPlanChange(subscription: Stripe.Subscription): boolean {
+    return subscription.metadata?.adminPlanChange === 'true';
 }
