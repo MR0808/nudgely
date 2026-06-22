@@ -77,7 +77,7 @@ export function ProfileDropdown({
                                 <User /> Profile
                             </Link>
                         </DropdownMenuItem>
-                        {session?.userCompany.role === 'COMPANY_ADMIN' && (
+                        {session?.userCompany?.role === 'COMPANY_ADMIN' && (
                             <DropdownMenuItem asChild>
                                 <Link
                                     href="/billing"

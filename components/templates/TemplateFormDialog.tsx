@@ -1,6 +1,5 @@
 'use client';
 
-import * as z from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTransition } from 'react';
@@ -34,17 +33,8 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { createTeamTemplate, updateTeamTemplate } from '@/actions/template';
-import { TEMPLATE_CATEGORIES } from '@/types/template';
-import { TemplateFormDialogProps, TeamTemplate } from '@/types/template';
-
-const templateFormSchema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    description: z.string().min(1, 'Description is required'),
-    category: z.enum(Object.values(TemplateCategory) as [string, ...string[]]),
-    isActive: z.boolean()
-});
-
-type TemplateFormData = z.infer<typeof templateFormSchema>;
+import { TEMPLATE_CATEGORIES, TemplateFormDialogProps } from '@/types/template';
+import { TemplateFormSchema, type TemplateFormData } from '@/schemas/template';
 
 const TemplateFormDialog = ({
     open,
@@ -56,7 +46,7 @@ const TemplateFormDialog = ({
     const [isPending, startTransition] = useTransition();
 
     const form = useForm<TemplateFormData>({
-        resolver: zodResolver(templateFormSchema),
+        resolver: zodResolver(TemplateFormSchema),
         defaultValues: {
             name: template?.name || '',
             description: template?.description || '',

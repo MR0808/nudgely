@@ -11,7 +11,6 @@ import {
     Section,
     Text
 } from '@react-email/components';
-import { string } from 'zod';
 
 interface TeamInviteEmailTemplateProps {
     link?: string;

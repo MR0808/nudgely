@@ -1,82 +1,89 @@
-import Stripe from 'stripe';
 import { stringify } from 'csv-stringify/sync';
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-01-28.clover',
-});
+import { authCheckServerWithCompany } from '@/lib/authCheck';
+import { stripe } from '@/lib/stripe';
 
 export async function GET(req: Request) {
-  try {
-    // Get customer_id from query parameters
+    const session = await authCheckServerWithCompany();
+    if (!session || session.userCompany.role !== 'COMPANY_ADMIN') {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
     const { searchParams } = new URL(req.url);
     const customerId = searchParams.get('customer_id');
 
     if (!customerId) {
-      return new Response(JSON.stringify({ error: 'customer_id is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+        return new Response(
+            JSON.stringify({ error: 'customer_id is required' }),
+            {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            }
+        );
     }
 
-    // Optional: Add authentication check (e.g., verify customer_id belongs to the user)
-    // Example: const session = await getServerSession();
-    // if (session.user.stripeCustomerId !== customerId) { return unauthorized; }
-
-    // Fetch invoices for this customer
-    const invoices = await stripe.invoices.list({
-      customer: customerId,
-      limit: 100, // Max per request; pagination handles the rest
-    });
-
-    // Prepare CSV data
-    const csvData = [];
-    const headers = [
-      'Invoice ID',
-      'Number',
-      'Customer Name',
-      'Customer Email',
-      'Date',
-      'Amount Due',
-      'Currency',
-      'Status',
-      'Invoice PDF',
-    ];
-
-    for await (const invoice of invoices.data) {
-      csvData.push([
-        invoice.id,
-        invoice.number || '',
-        invoice.customer_name || 'N/A',
-        invoice.customer_email || 'N/A',
-        new Date(invoice.created * 1000).toISOString().split('T')[0], // Convert Unix timestamp to YYYY-MM-DD
-        (invoice.amount_due / 100).toFixed(2), // Convert cents to dollars
-        invoice.currency.toUpperCase(),
-        invoice.status,
-        invoice.invoice_pdf || 'N/A',
-      ]);
+    if (session.company.stripeCustomerId !== customerId) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 
-    // Generate CSV string
-    const csvString = stringify([headers, ...csvData], {
-      header: false,
-    });
+    try {
+        const invoices = await stripe.invoices.list({
+            customer: customerId,
+            limit: 100
+        });
 
-    // Set response headers for CSV download
-    const headersResponse = new Headers({
-      'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename="invoices_${customerId}.csv"`,
-    });
+        const csvData: (string | number)[][] = [];
+        const headers = [
+            'Invoice ID',
+            'Number',
+            'Customer Name',
+            'Customer Email',
+            'Date',
+            'Amount Due',
+            'Currency',
+            'Status',
+            'Invoice PDF'
+        ];
 
-    return new Response(csvString, {
-      status: 200,
-      headers: headersResponse,
-    });
-  } catch (error) {
-    console.error('Error fetching invoices:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch invoices' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+        for (const invoice of invoices.data) {
+            csvData.push([
+                invoice.id,
+                invoice.number || '',
+                invoice.customer_name || 'N/A',
+                invoice.customer_email || 'N/A',
+                new Date(invoice.created * 1000).toISOString().split('T')[0],
+                (invoice.amount_due / 100).toFixed(2),
+                invoice.currency.toUpperCase(),
+                invoice.status || 'unknown',
+                invoice.invoice_pdf || 'N/A'
+            ]);
+        }
+
+        const csvString = stringify([headers, ...csvData], {
+            header: false
+        });
+
+        return new Response(csvString, {
+            status: 200,
+            headers: {
+                'Content-Type': 'text/csv',
+                'Content-Disposition': `attachment; filename="invoices_${customerId}.csv"`
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching invoices:', error);
+        return new Response(
+            JSON.stringify({ error: 'Failed to fetch invoices' }),
+            {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            }
+        );
+    }
 }

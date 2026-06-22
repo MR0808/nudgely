@@ -3,7 +3,7 @@
 import GithubSlugger from 'github-slugger';
 import { Plan, TemplateCategory } from '@/generated/prisma/client';
 
-import { authCheckServer } from '@/lib/authCheck';
+import { authCheckServerWithCompany } from '@/lib/authCheck';
 import { prisma } from '@/lib/prisma';
 import {
     CombinedTemplate,
@@ -72,7 +72,7 @@ export const getAllTemplates = async ({
     templates: CombinedTemplate[];
     categories: string[];
 }> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {
@@ -132,7 +132,7 @@ export const createTeamTemplate = async (data: {
     isActive: boolean;
     teamId: string;
 }): Promise<{ success: boolean; error?: string; template?: TeamTemplate }> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return { success: false, error: 'Not authorised' };
@@ -186,7 +186,7 @@ export async function updateTeamTemplate(
         isActive: boolean;
     }
 ): Promise<{ success: boolean; error?: string }> {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return { success: false, error: 'Not authorised' };
@@ -253,7 +253,7 @@ export async function updateTeamTemplate(
 export const deleteTeamTemplate = async (
     id: string
 ): Promise<{ success: boolean; error?: string }> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return { success: false, error: 'Not authorised' };

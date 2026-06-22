@@ -80,7 +80,7 @@ const CompanyOnboardingWizard = ({
     const form = useForm<z.infer<typeof CompanyOnboardingSchema>>({
         resolver: zodResolver(CompanyOnboardingSchema),
         defaultValues: {
-            name: userSession?.company.name || '',
+            name: userSession?.company?.name || '',
             logo: company.image || '',
             address1: company.address1 || '',
             address2: company.address2 || '',

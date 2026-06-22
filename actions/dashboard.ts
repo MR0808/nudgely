@@ -3,7 +3,7 @@ import 'server-only';
 
 import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
-import { authCheckServer } from '@/lib/authCheck';
+import { authCheckServerWithCompany } from '@/lib/authCheck';
 
 /* -------------------------------------------------------------
  * Raw SQL result types (NOT exported to prevent client imports)
@@ -54,7 +54,7 @@ type RecentCompletionRow = Prisma.NudgeCompletionGetPayload<{
  * ------------------------------------------------------------- */
 
 export async function getDashboardStats(teamId?: string) {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) {
         throw new Error('Not authorised');
     }

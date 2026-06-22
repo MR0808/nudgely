@@ -15,11 +15,6 @@ enum BadgeColour {
   default
 }
 
-enum UserRole {
-  USER
-  ADMIN
-}
-
 enum SiteRole {
   USER
   SITE_ADMIN
@@ -466,7 +461,9 @@ model CompanySubscription {
   nextBillingDate      DateTime?
   company              Company?
   priceId              String? // store Stripe price id for quick checks
-  status               String?
+  status               String? // mirrors Stripe subscription status
+  cancelAtPeriodEnd    Boolean         @default(false)
+  canceledAt           DateTime?
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 
@@ -797,4 +794,12 @@ model Plan {
   colour              BadgeColour
 
   @@map("plans")
+}
+
+model ProcessedStripeEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
+
+  @@map("processed_stripe_events")
 }

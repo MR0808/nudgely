@@ -4,11 +4,11 @@ import { ImageType } from '@/generated/prisma/client';
 
 import { supabaseServer } from '@/lib/supabase';
 import { prisma } from '@/lib/prisma';
-import { authCheckServer } from '@/lib/authCheck';
+import { authCheckServerWithCompany } from '@/lib/authCheck';
 import { cleanupOrphanedImages } from '@/lib/supabase';
 
 export const uploadAvatar = async (formData: FormData) => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {
@@ -93,7 +93,7 @@ export const deleteAvatar = async ({
     imageUrl: string;
     bucket: string;
 }) => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {
@@ -142,7 +142,7 @@ export const deleteAvatar = async ({
 };
 
 export const uploadImage = async (formData: FormData) => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {
@@ -244,7 +244,7 @@ export const deleteImage = async (
     bucket: string,
     imageId: string
 ) => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {

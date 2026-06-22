@@ -5,7 +5,7 @@ import GithubSlugger from 'github-slugger';
 import { revalidatePath } from 'next/cache';
 
 import { prisma } from '@/lib/prisma';
-import { authCheckServer } from '@/lib/authCheck';
+import { authCheckServerWithCompany } from '@/lib/authCheck';
 import { CreateNudgeSchema } from '@/schemas/nudge';
 import {
     logNudgePaused,
@@ -66,7 +66,7 @@ type NudgeWithInstances = Prisma.NudgeGetPayload<{
  * ------------------------------------------------------------------ */
 
 export const getCompanyNudgeCount = async (): Promise<number> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         throw new Error('Not authorised');
@@ -110,7 +110,7 @@ export const getCompanyNudgeCount = async (): Promise<number> => {
 };
 
 export const getTotalCompanyNudges = async (): Promise<number> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         throw new Error('Not authorised');
@@ -141,7 +141,7 @@ type GetTeamNudgesData = {
 export const getTeamNudges = async (
     teamId: string
 ): Promise<ActionResult<GetTeamNudgesData>> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {
@@ -188,7 +188,7 @@ type CreateNudgeData = {
 export const createNudge = async (
     values: z.infer<typeof CreateNudgeSchema>
 ): Promise<ActionResult<CreateNudgeData>> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {
@@ -445,7 +445,7 @@ export const updateNudge = async (
     values: z.infer<typeof CreateNudgeSchema>,
     nudgeId: string
 ): Promise<ActionResult<UpdateNudgeData>> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {
@@ -797,7 +797,7 @@ type PauseResumeData = {
 export const pauseNudge = async (
     id: string
 ): Promise<ActionResult<PauseResumeData>> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {
@@ -851,7 +851,7 @@ export const pauseNudge = async (
 export const resumeNudge = async (
     id: string
 ): Promise<ActionResult<PauseResumeData>> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {
@@ -909,7 +909,7 @@ type GetNudgeBySlugData = {
 export const getNudgeBySlug = async (
     slug: string
 ): Promise<ActionResult<GetNudgeBySlugData>> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {

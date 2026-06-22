@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { authCheckServer } from '@/lib/authCheck';
+import { authCheckServerWithCompany } from '@/lib/authCheck';
 import { ActionResult } from '@/types/global';
 import { Plan } from '@/generated/prisma/client';
 
@@ -11,7 +11,7 @@ import { Plan } from '@/generated/prisma/client';
 // ---------------------------------------------------------
 //
 export const getPlan = async (): Promise<ActionResult<{ plan: Plan }>> => {
-    const userSession = await authCheckServer();
+    const userSession = await authCheckServerWithCompany();
 
     if (!userSession) {
         return {

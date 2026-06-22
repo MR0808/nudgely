@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { stripe } from '@/lib/stripe';
 import { CompanyStatus } from '@/generated/prisma/client';
 import type { Prisma } from '@/generated/prisma/client';
 
@@ -112,7 +113,6 @@ export async function deleteCompany(companyId: string) {
 }
 
 export async function grantFreePlan(companyId: string) {
-    // Find the free plan
     const freePlan = await prisma.plan.findFirst({
         where: { slug: 'free' }
     });
@@ -121,7 +121,28 @@ export async function grantFreePlan(companyId: string) {
         throw new Error('Free plan not found');
     }
 
-    // Update company to free plan and cancel subscription
+    const company = await prisma.company.findUnique({
+        where: { id: companyId },
+        include: { companySubscription: true }
+    });
+
+    if (!company) {
+        throw new Error('Company not found');
+    }
+
+    if (company.companySubscription?.stripeSubscriptionId) {
+        try {
+            await stripe.subscriptions.cancel(
+                company.companySubscription.stripeSubscriptionId
+            );
+        } catch (error) {
+            console.error(
+                '[admin:grantFreePlan] Failed to cancel Stripe subscription:',
+                error
+            );
+        }
+    }
+
     await prisma.company.update({
         where: { id: companyId },
         data: {
@@ -130,8 +151,6 @@ export async function grantFreePlan(companyId: string) {
             trialEndsAt: null
         }
     });
-
-    // TODO: Cancel Stripe subscription if exists
 
     return { success: true };
 }

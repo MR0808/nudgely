@@ -1,6 +1,7 @@
-import { PrismaClient } from '@/generated/prisma/client';
+import 'dotenv/config';
+import { createDirectPrismaClient } from '@/lib/create-prisma-client';
 
-const prisma = new PrismaClient();
+const prisma = createDirectPrismaClient();
 
 async function main() {
     console.log('🌱 Starting seed...');

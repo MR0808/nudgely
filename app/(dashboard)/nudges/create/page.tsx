@@ -50,7 +50,7 @@ const CreateNudgePage = async ({
     if (!resPlan.data || !resPlan.success) return null;
 
     let initialTimezone = 'UTC';
-    if (userSession.company.timezone) {
+    if (userSession.company?.timezone) {
         initialTimezone = userSession.company.timezone;
     } else if (userSession.user.timezone) {
         initialTimezone = userSession.user.timezone;
@@ -78,9 +78,7 @@ const CreateNudgePage = async ({
     }
 
     return (
-        // <div className="container mx-auto max-w-5xl py-10 grid grid-cols-1 md:grid-cols-1 gap-8">
         <div>
-            {/* Left Column: Form */}
             <NudgeCreateForm
                 returnTeams={teams}
                 initialTeam={initialTeam}
@@ -88,9 +86,6 @@ const CreateNudgePage = async ({
                 userSession={userSession}
                 plan={resPlan.data.plan}
             />
-
-            {/* Right Column: Live Preview */}
-            {/* <NudgePreview /> */}
         </div>
     );
 };

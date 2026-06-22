@@ -39,7 +39,7 @@ export function NavAdmin({
                         if (
                             !item.admin ||
                             (item.admin &&
-                                userSession?.userCompany.role ===
+                                userSession?.userCompany?.role ===
                                     'COMPANY_ADMIN')
                         ) {
                             const isActive = pathname === item.url;

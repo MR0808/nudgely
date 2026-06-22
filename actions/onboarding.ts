@@ -34,6 +34,8 @@ const requireCompanyAdmin = async () => {
 
     const { user, company, userCompany } = session;
 
+    if (!userCompany || !company) return false;
+
     if (userCompany.role !== 'COMPANY_ADMIN') {
         return false;
     }

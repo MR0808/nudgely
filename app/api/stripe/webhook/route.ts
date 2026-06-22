@@ -1,4 +1,5 @@
 import { stripe } from '@/lib/stripe';
+import type Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import {
     logSubscriptionCancel,
@@ -11,11 +12,56 @@ import {
     sendDowngradeEmail,
     sendUpgradeEmail
 } from '@/lib/mail';
+import {
+    buildSubscriptionSyncData,
+    getAuditUserId,
+    getCancellationEndDate,
+    getSubscriptionPriceId,
+    shouldSendCancellationEmail,
+    stripeCustomerId
+} from '@/lib/stripe-subscription';
+
+async function isDuplicateStripeEvent(eventId: string): Promise<boolean> {
+    const existing = await prisma.processedStripeEvent.findUnique({
+        where: { id: eventId }
+    });
+    return existing !== null;
+}
+
+async function markStripeEventProcessed(
+    eventId: string,
+    eventType: string
+): Promise<void> {
+    await prisma.processedStripeEvent.create({
+        data: { id: eventId, type: eventType }
+    });
+}
+
+async function findPlanByStripePriceId(priceId: string) {
+    return prisma.plan.findFirst({
+        where: {
+            OR: [
+                { stripeMonthlyId: priceId },
+                { stripeYearlyId: priceId }
+            ]
+        }
+    });
+}
+
+async function syncSubscriptionRecord(
+    subscription: Stripe.Subscription,
+    companySubscriptionId: string
+) {
+    return prisma.companySubscription.update({
+        where: { id: companySubscriptionId },
+        data: buildSubscriptionSyncData(subscription)
+    });
+}
 
 export async function POST(req: Request) {
     const body = await req.text();
     const sig = req.headers.get('stripe-signature')!;
-    let event;
+    let event: Stripe.Event;
 
     try {
         event = stripe.webhooks.constructEvent(
@@ -29,299 +75,373 @@ export async function POST(req: Request) {
         });
     }
 
+    if (await isDuplicateStripeEvent(event.id)) {
+        return new Response(
+            JSON.stringify({ received: true, duplicate: true }),
+            { status: 200 }
+        );
+    }
+
+    try {
+        await processStripeEvent(event);
+        await markStripeEventProcessed(event.id, event.type);
+    } catch (err) {
+        console.error('[stripe:webhook] Handler error:', err);
+        return new Response(
+            JSON.stringify({ error: 'Webhook handler failed' }),
+            { status: 500 }
+        );
+    }
+
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
+}
+
+async function processStripeEvent(event: Stripe.Event) {
     switch (event.type) {
-        case 'subscription_schedule.updated': {
-            const session = event.data.object;
-            if (session.status === 'released') {
-                await prisma.pendingCompanySubscription.delete({
-                    where: { stripeScheduleId: session.id }
-                });
-                break;
-            }
-            let customerId = '';
-            if (typeof session.customer === 'string') {
-                customerId = session.customer;
-            } else {
-                customerId = session.customer?.id || '1';
-            }
-            const company = await prisma.company.findUnique({
-                where: { stripeCustomerId: customerId }
-            });
-            if (!company) break;
-            if (session.status === 'active') {
-                const pendingCompanySubscription =
-                    await prisma.pendingCompanySubscription.findUnique({
-                        where: { stripeScheduleId: session.id }
-                    });
-                if (!pendingCompanySubscription) {
-                    let priceId = '';
-                    if (typeof session.phases[1].items[0].price === 'string') {
-                        priceId = session.phases[1].items[0].price;
-                    } else {
-                        priceId = session.phases[1].items[0].price.id || '1';
-                    }
-                    const nextMonthDate = new Date();
-                    const activeDate = session.current_phase?.end_date
-                        ? new Date(session.current_phase.end_date * 1000)
-                        : (nextMonthDate.setMonth(nextMonthDate.getMonth() + 1),
-                          nextMonthDate);
-                    await prisma.pendingCompanySubscription.create({
-                        data: {
-                            stripeScheduleId: session.id,
-                            activeDate,
-                            priceId,
-                            company: {
-                                connect: {
-                                    id: company.id
-                                }
-                            }
-                        }
-                    });
-                }
-            }
+        case 'subscription_schedule.updated':
+            await handleSubscriptionScheduleUpdated(event);
             break;
-        }
-        case 'checkout.session.completed': {
-            const session = event.data.object;
-            let customerId = '';
-            if (session.client_reference_id) {
-                if (typeof session.customer === 'string') {
-                    customerId = session.customer;
-                } else {
-                    customerId = session.customer?.id || '1';
-                }
-                await prisma.company.update({
-                    where: { id: session.client_reference_id },
-                    data: { stripeCustomerId: customerId }
-                });
-            }
+        case 'checkout.session.completed':
+            await handleCheckoutSessionCompleted(event);
             break;
-        }
-        case 'customer.subscription.created': {
-            const session = event.data.object;
-            let customerId = '';
-            if (typeof session.customer === 'string') {
-                customerId = session.customer;
-            } else {
-                customerId = session.customer?.id || '1';
-            }
-            const stripeId = session.items.data[0].plan.id;
-            const interval = session.items.data[0].plan.interval;
-            const plan = await prisma.plan.findFirst({
-                where: {
-                    OR: [
-                        { stripeMonthlyId: stripeId },
-                        { stripeYearlyId: stripeId }
-                    ]
-                },
-                select: {
-                    id: true // Only select the plan's ID
-                }
-            });
+        case 'customer.subscription.created':
+            await handleSubscriptionCreated(event);
+            break;
+        case 'customer.subscription.updated':
+            await handleSubscriptionUpdated(event);
+            break;
+        case 'invoice.paid':
+            await handleInvoicePaid(event);
+            break;
+        case 'invoice.payment_failed':
+            await handleInvoicePaymentFailed(event);
+            break;
+        case 'customer.subscription.deleted':
+            await handleSubscriptionDeleted(event);
+            break;
+    }
+}
 
-            if (!plan) {
-                throw new Error('No plan found for the provided Stripe ID');
-            }
-            const company = await prisma.company.update({
-                where: {
-                    stripeCustomerId: customerId
-                },
-                data: {
-                    planId: plan.id
-                }
-            });
-            const companySubscription = await prisma.companySubscription.create(
-                {
-                    data: {
-                        stripeSubscriptionId: session.id,
-                        billingInterval:
-                            interval === 'month' ? 'MONTHLY' : 'YEARLY',
-                        company: {
-                            connect: {
-                                id: company.id
-                            }
-                        }, // or map via user table
-                        priceId: stripeId,
-                        currentPeriodEnd: new Date(
-                            (session.items?.data?.[0]?.current_period_end ||
-                                0) * 1000
-                        ),
-                        status: session.status
-                    }
-                }
-            );
-            await logSubscriptionCreate(session.metadata.userId, {
-                companyId: company.id,
-                companySubscription: companySubscription.id
-            });
+async function handleSubscriptionScheduleUpdated(event: Stripe.Event) {
+    const session = event.data.object as Stripe.SubscriptionSchedule;
 
-            break;
+    if (session.status === 'released') {
+        await prisma.pendingCompanySubscription.deleteMany({
+            where: { stripeScheduleId: session.id }
+        });
+        return;
+    }
+
+    const customerId = stripeCustomerId(session.customer);
+    if (!customerId) return;
+
+    const company = await prisma.company.findUnique({
+        where: { stripeCustomerId: customerId }
+    });
+    if (!company) return;
+
+    if (session.status !== 'active' || !session.phases[1]?.items[0]) {
+        return;
+    }
+
+    const existing = await prisma.pendingCompanySubscription.findUnique({
+        where: { stripeScheduleId: session.id }
+    });
+    if (existing) return;
+
+    const priceRef = session.phases[1].items[0].price;
+    const priceId =
+        typeof priceRef === 'string' ? priceRef : priceRef?.id || '';
+
+    if (!priceId) return;
+
+    const activeDate = session.current_phase?.end_date
+        ? new Date(session.current_phase.end_date * 1000)
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    await prisma.pendingCompanySubscription.create({
+        data: {
+            stripeScheduleId: session.id,
+            activeDate,
+            priceId,
+            company: { connect: { id: company.id } }
         }
-        case 'customer.subscription.updated': {
-            const session = event.data.object;
-            let customerId = '';
-            if (typeof session.customer === 'string') {
-                customerId = session.customer;
-            } else {
-                customerId = session.customer?.id || '1';
+    });
+}
+
+async function handleCheckoutSessionCompleted(event: Stripe.Event) {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const companyId = session.client_reference_id;
+    const customerId = stripeCustomerId(session.customer);
+
+    if (!companyId || !customerId) return;
+
+    await prisma.company.update({
+        where: { id: companyId },
+        data: { stripeCustomerId: customerId }
+    });
+}
+
+async function handleSubscriptionCreated(event: Stripe.Event) {
+    const subscription = event.data.object as Stripe.Subscription;
+    const customerId = stripeCustomerId(subscription.customer);
+    if (!customerId) return;
+
+    const priceId = getSubscriptionPriceId(subscription);
+    const plan = await findPlanByStripePriceId(priceId);
+
+    if (!plan) {
+        throw new Error(`No plan found for Stripe price ${priceId}`);
+    }
+
+    const company = await prisma.company.findUnique({
+        where: { stripeCustomerId: customerId },
+        include: { creator: true, companySubscription: true }
+    });
+
+    if (!company) {
+        throw new Error(`No company found for Stripe customer ${customerId}`);
+    }
+
+    const syncData = buildSubscriptionSyncData(subscription);
+
+    let companySubscription = company.companySubscription;
+
+    if (companySubscription) {
+        companySubscription = await prisma.companySubscription.update({
+            where: { id: companySubscription.id },
+            data: {
+                stripeSubscriptionId: subscription.id,
+                ...syncData
             }
-            const company = await prisma.company.findFirst({
-                where: { stripeCustomerId: customerId },
-                include: {
-                    plan: true,
-                    companySubscription: true,
-                    creator: true
-                }
+        });
+    } else {
+        companySubscription = await prisma.companySubscription.create({
+            data: {
+                stripeSubscriptionId: subscription.id,
+                ...syncData,
+                company: { connect: { id: company.id } }
+            }
+        });
+    }
+
+    await prisma.company.update({
+        where: { id: company.id },
+        data: { planId: plan.id }
+    });
+
+    await sendUpgradeEmail({
+        email: company.contactEmail || company.creator.email,
+        name: company.creator.name,
+        plan: plan.name
+    });
+
+    await logSubscriptionCreate(
+        getAuditUserId(subscription, company.creatorId) || company.creatorId,
+        {
+            companyId: company.id,
+            companySubscription: companySubscription.id
+        }
+    );
+}
+
+async function handleSubscriptionUpdated(event: Stripe.Event) {
+    const subscription = event.data.object as Stripe.Subscription;
+    const previous = event.data.previous_attributes as
+        | Partial<Stripe.Subscription>
+        | undefined;
+    const customerId = stripeCustomerId(subscription.customer);
+    if (!customerId) return;
+
+    const company = await prisma.company.findFirst({
+        where: { stripeCustomerId: customerId },
+        include: {
+            plan: true,
+            companySubscription: true,
+            creator: true
+        }
+    });
+
+    if (!company?.companySubscriptionId) return;
+
+    const syncData = buildSubscriptionSyncData(subscription);
+    const priceId = syncData.priceId;
+    const previousPriceId = company.companySubscription?.priceId;
+
+    if (shouldSendCancellationEmail(subscription, previous)) {
+        const endDate = getCancellationEndDate(subscription);
+        if (endDate) {
+            await sendCancellationEmail({
+                email: company.contactEmail || company.creator.email,
+                name: company.creator.name,
+                endDate
             });
-            if (company && session.cancel_at) {
-                await sendCancellationEmail({
-                    email: company.contactEmail || company.creator.email,
-                    name: company.creator.name,
-                    endDate: new Date(session.cancel_at * 1000)
-                });
-            }
-            let billingInterval: 'MONTHLY' | 'YEARLY' = 'MONTHLY';
-            if (company && company.companySubscriptionId) {
-                const priceId = session.items.data[0].price.id;
-                if (
-                    priceId &&
-                    priceId !== company.plan.stripeMonthlyId &&
-                    priceId !== company.plan.stripeYearlyId
-                ) {
-                    const plan = await prisma.plan.findFirst({
-                        where: {
-                            OR: [
-                                { stripeMonthlyId: priceId },
-                                { stripeYearlyId: priceId }
-                            ]
-                        }
-                    });
-                    if (priceId === plan?.stripeMonthlyId) {
-                        billingInterval = 'MONTHLY';
-                    } else {
-                        billingInterval = 'YEARLY';
-                    }
-                    await prisma.company.update({
-                        where: { id: company.id },
-                        data: { planId: plan?.id }
-                    });
-                    await checkDowngradedPlan(company.id);
-                    if (plan && company.plan.level > plan.level) {
-                        await sendDowngradeEmail({
-                            email:
-                                company.contactEmail || company.creator.email,
-                            name: company.creator.name,
-                            plan: plan.name
-                        });
-                    } else if (plan && company.plan.level < plan.level) {
-                        await sendUpgradeEmail({
-                            email:
-                                company.contactEmail || company.creator.email,
-                            name: company.creator.name,
-                            plan: plan.name
-                        });
-                    }
-                    const companySubscription =
-                        await prisma.companySubscription.update({
-                            where: { id: company.companySubscriptionId },
-                            data: { billingInterval, priceId }
-                        });
-                    await logSubscriptionUpdate(session.metadata.userId, {
-                        companyId: company.id,
-                        oldPlan: company.planId,
-                        companySubscription: companySubscription.id
-                    });
-                }
-            }
-            break;
         }
-        case 'invoice.paid': {
-            // const session = event.data.object;
-            // let customerId = '';
-            // if (typeof session.customer === 'string') {
-            //     customerId = session.customer;
-            // } else {
-            //     customerId = session.customer?.id || '1';
-            // }
-            // const company = await prisma.company.findFirst({
-            //     where: { stripeCustomerId: customerId },
-            //     include: { plan: true, companySubscription: true }
-            // });
-            // let billingInterval: 'MONTHLY' | 'YEARLY' = 'MONTHLY';
-            // if (company && company.companySubscriptionId) {
-            //     const priceId =
-            //         session.lines.data[0].pricing?.price_details?.price;
-            //     if (
-            //         priceId &&
-            //         priceId !== company.plan.stripeMonthlyId &&
-            //         priceId !== company.plan.stripeYearlyId
-            //     ) {
-            //         const plan = await prisma.plan.findFirst({
-            //             where: {
-            //                 OR: [
-            //                     { stripeMonthlyId: priceId },
-            //                     { stripeYearlyId: priceId }
-            //                 ]
-            //             }
-            //         });
-            //         if (priceId === plan?.stripeMonthlyId) {
-            //             billingInterval = 'MONTHLY';
-            //         } else {
-            //             billingInterval = 'YEARLY';
-            //         }
-            //         await prisma.company.update({
-            //             where: { id: company.id },
-            //             data: { planId: plan?.id }
-            //         });
-            //         await prisma.companySubscription.update({
-            //             where: { id: company.companySubscriptionId },
-            //             data: { billingInterval, priceId }
-            //         });
-            //     }
-            // }
-            break;
-        }
-        case 'invoice.payment_failed': {
-            // mark payment failed; consider notifying user or retry logic
-            break;
-        }
-        case 'customer.subscription.deleted': {
-            const session = event.data.object;
-            // mark canceled in your DB
-            await prisma.companySubscription.updateMany({
-                where: { stripeSubscriptionId: session.id },
-                data: {
-                    billingInterval: 'MONTHLY',
-                    currentPeriodEnd: null,
-                    nextBillingDate: null,
-                    status: 'canceled'
-                }
-            });
+    }
 
-            const plan = await prisma.plan.findFirst({ where: { level: 1 } });
+    const planChanged = Boolean(priceId && priceId !== previousPriceId);
 
-            if (!plan) break;
-            let customerId = '';
-            if (typeof session.customer === 'string') {
-                customerId = session.customer;
-            } else {
-                customerId = session.customer?.id || '1';
-            }
+    if (planChanged) {
+        const plan = await findPlanByStripePriceId(priceId);
+        if (plan) {
+            const oldPlan = company.plan;
 
-            const company = await prisma.company.update({
-                where: { stripeCustomerId: customerId },
-                data: { planId: plan.id, stripeCustomerId: null }
+            await prisma.company.update({
+                where: { id: company.id },
+                data: { planId: plan.id }
             });
 
             await checkDowngradedPlan(company.id);
 
-            await logSubscriptionCancel(session.metadata.userId, {
-                companyId: company.id
-            });
+            if (oldPlan.level > plan.level) {
+                await sendDowngradeEmail({
+                    email: company.contactEmail || company.creator.email,
+                    name: company.creator.name,
+                    plan: plan.name
+                });
+            } else if (oldPlan.level < plan.level) {
+                await sendUpgradeEmail({
+                    email: company.contactEmail || company.creator.email,
+                    name: company.creator.name,
+                    plan: plan.name
+                });
+            }
 
-            break;
+            const companySubscription = await syncSubscriptionRecord(
+                subscription,
+                company.companySubscriptionId
+            );
+
+            await logSubscriptionUpdate(
+                getAuditUserId(subscription, company.creatorId) ||
+                    company.creatorId,
+                {
+                    companyId: company.id,
+                    oldPlan: company.planId,
+                    companySubscription: companySubscription.id
+                }
+            );
+            return;
         }
     }
 
-    return new Response(JSON.stringify({ received: true }), { status: 200 });
+    await syncSubscriptionRecord(subscription, company.companySubscriptionId);
+}
+
+async function handleInvoicePaid(event: Stripe.Event) {
+    const invoice = event.data.object as Stripe.Invoice;
+    const customerId = stripeCustomerId(invoice.customer);
+    if (!customerId) return;
+
+    const company = await prisma.company.findFirst({
+        where: { stripeCustomerId: customerId },
+        include: { plan: true, companySubscription: true }
+    });
+
+    if (!company?.companySubscriptionId) return;
+
+    const lineItem = invoice.lines?.data?.[0];
+    const priceRef = lineItem?.pricing?.price_details?.price;
+    const legacyPrice = lineItem as
+        | { price?: string | { id?: string } }
+        | undefined;
+    const priceId =
+        typeof priceRef === 'string'
+            ? priceRef
+            : typeof legacyPrice?.price === 'string'
+              ? legacyPrice.price
+              : legacyPrice?.price?.id;
+
+    const subscriptionRef = invoice.parent?.subscription_details?.subscription;
+    const subscriptionId =
+        typeof subscriptionRef === 'string'
+            ? subscriptionRef
+            : subscriptionRef?.id;
+
+    let syncData: ReturnType<typeof buildSubscriptionSyncData> | null = null;
+
+    if (subscriptionId) {
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        syncData = buildSubscriptionSyncData(subscription);
+    }
+
+    if (priceId && company.companySubscription) {
+        const matchesCurrentPlan =
+            priceId === company.plan.stripeMonthlyId ||
+            priceId === company.plan.stripeYearlyId;
+
+        if (!matchesCurrentPlan) {
+            const plan = await findPlanByStripePriceId(priceId);
+            if (plan) {
+                await prisma.company.update({
+                    where: { id: company.id },
+                    data: { planId: plan.id }
+                });
+            }
+        }
+    }
+
+    await prisma.companySubscription.update({
+        where: { id: company.companySubscriptionId },
+        data: {
+            ...(syncData ?? { status: 'active' }),
+            ...(priceId ? { priceId } : {})
+        }
+    });
+}
+
+async function handleInvoicePaymentFailed(event: Stripe.Event) {
+    const invoice = event.data.object as Stripe.Invoice;
+    const customerId = stripeCustomerId(invoice.customer);
+    if (!customerId) return;
+
+    const company = await prisma.company.findUnique({
+        where: { stripeCustomerId: customerId },
+        include: { companySubscription: true }
+    });
+
+    if (!company?.companySubscriptionId) return;
+
+    await prisma.companySubscription.update({
+        where: { id: company.companySubscriptionId },
+        data: { status: 'past_due' }
+    });
+}
+
+async function handleSubscriptionDeleted(event: Stripe.Event) {
+    const subscription = event.data.object as Stripe.Subscription;
+    const customerId = stripeCustomerId(subscription.customer);
+    if (!customerId) return;
+
+    await prisma.companySubscription.updateMany({
+        where: { stripeSubscriptionId: subscription.id },
+        data: {
+            billingInterval: 'MONTHLY',
+            currentPeriodEnd: null,
+            nextBillingDate: null,
+            status: 'canceled',
+            cancelAtPeriodEnd: false,
+            canceledAt: subscription.canceled_at
+                ? new Date(subscription.canceled_at * 1000)
+                : new Date()
+        }
+    });
+
+    const freePlan = await prisma.plan.findFirst({ where: { level: 1 } });
+    if (!freePlan) return;
+
+    const company = await prisma.company.update({
+        where: { stripeCustomerId: customerId },
+        data: {
+            planId: freePlan.id,
+            companySubscriptionId: null
+        }
+    });
+
+    await checkDowngradedPlan(company.id);
+
+    await logSubscriptionCancel(
+        getAuditUserId(subscription, company.creatorId) || company.creatorId,
+        { companyId: company.id }
+    );
 }

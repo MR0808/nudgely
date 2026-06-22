@@ -2,7 +2,7 @@
 
 import z from 'zod';
 import { prisma } from '@/lib/prisma';
-import { authCheckServer } from '@/lib/authCheck';
+import { authCheckServerWithCompany } from '@/lib/authCheck';
 import { TeamSchema } from '@/schemas/team';
 import { checkCompanyTeamLimits } from '@/lib/team';
 import { revalidatePath } from 'next/cache';
@@ -110,7 +110,7 @@ async function fetchCompanyTeamsWithAdmins(
 ------------------------------------------------------------- */
 
 export const getCompanyTeams = async () => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) {
         return { data: null, error: 'Not authorised' };
     }
@@ -139,7 +139,7 @@ export const getCompanyTeams = async () => {
 ------------------------------------------------------------- */
 
 export const getUserTeams = async () => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return null;
 
     try {
@@ -174,7 +174,7 @@ export const getUserTeams = async () => {
 ------------------------------------------------------------- */
 
 export const getCurrentTeam = async (teamId?: string) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return null;
 
     const { user } = session;
@@ -234,7 +234,7 @@ export const getCurrentTeam = async (teamId?: string) => {
 ------------------------------------------------------------- */
 
 export const getCurrentTeamBySlug = async (slug: string) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return null;
 
     try {
@@ -302,7 +302,7 @@ export const createTeam = async (
     values: z.infer<typeof TeamSchema>,
     companyId: string
 ) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return { data: null, message: 'Not authorised' };
 
     if (session.userCompany.role !== 'COMPANY_ADMIN') {
@@ -386,7 +386,7 @@ export const updateTeam = async (
     teamId: string,
     companyId: string
 ) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return { data: null, message: 'Not authorised' };
 
     try {
@@ -453,7 +453,7 @@ export const updateTeam = async (
 ------------------------------------------------------------- */
 
 export const deleteTeam = async (teamId: string) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return { data: null, error: 'Not authorised' };
 
     if (session.userCompany.role !== 'COMPANY_ADMIN') {
@@ -517,7 +517,7 @@ export const deleteTeam = async (teamId: string) => {
 ------------------------------------------------------------- */
 
 export const enableTeam = async (teamId: string) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return { data: null, error: 'Not authorised' };
 
     if (session.userCompany.role !== 'COMPANY_ADMIN') {

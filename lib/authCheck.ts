@@ -37,7 +37,14 @@ export const authCheck = async (callbackUrl?: string) => {
 
     if (!session.user.emailVerified) throw redirect('/auth/verify-email');
 
-    return session;
+    if (!session.userCompany || !session.company) {
+        throw redirect('/onboarding');
+    }
+
+    return session as typeof session & {
+        company: NonNullable<typeof session.company>;
+        userCompany: NonNullable<typeof session.userCompany>;
+    };
 };
 
 export const authCheckServer = async () => {
@@ -45,14 +52,28 @@ export const authCheckServer = async () => {
     return session ?? false;
 };
 
+/** Session guard for server actions that require company context. */
+export const authCheckServerWithCompany = async () => {
+    const session = await authCheckServer();
+    if (!session || !session.company || !session.userCompany) {
+        return false;
+    }
+    return session as typeof session & {
+        company: NonNullable<typeof session.company>;
+        userCompany: NonNullable<typeof session.userCompany>;
+    };
+};
+
 export const authCheckOnboarding = async () => {
     const session = await getSessionFromHeaders();
 
     if (!session) throw redirect('/auth/login');
 
-    if (session.company.profileCompleted) throw redirect('/');
+    if (session.company?.profileCompleted) throw redirect('/');
 
-    if (session.userCompany.role !== 'COMPANY_ADMIN') throw redirect('/');
+    if (!session.userCompany || session.userCompany.role !== 'COMPANY_ADMIN') {
+        throw redirect('/');
+    }
 
     return session;
 };

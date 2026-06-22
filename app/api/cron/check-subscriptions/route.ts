@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 import { sendDowngradeWarningEmail } from '@/lib/mail';
+import { verifyCronRequest } from '@/lib/cron-auth';
 
 export async function GET(request: NextRequest) {
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = verifyCronRequest(request);
+    if (authError) return authError;
+
     try {
         // Calculate tomorrow's date (UTC)
         const tomorrow = new Date();
@@ -69,12 +69,10 @@ export async function GET(request: NextRequest) {
             { status: 200 }
         );
     } catch (error) {
-        console.error('Cron job error:', error);
+        console.error('[cron:check-subscriptions] Cron job error:', error);
         return NextResponse.json(
             { error: 'Failed to process activations' },
             { status: 500 }
         );
-    } finally {
-        await prisma.$disconnect();
     }
 }

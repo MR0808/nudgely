@@ -4,7 +4,6 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
 import { SiteRole, Gender } from '@/generated/prisma/client';
 import { admin, customSession, openAPI } from 'better-auth/plugins';
-import { error } from 'console';
 
 import { prisma } from '@/lib/prisma';
 import { hashPassword, verifyPassword } from '@/lib/argon2';
@@ -46,7 +45,7 @@ const options = {
       verify: verifyPassword,
     },
     autoSignIn: false,
-    requireEmailVerification: false,
+    requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
       await sendResetEmail({
         email: user.email,
@@ -161,16 +160,19 @@ export const auth = betterAuth({
   ...options,
   plugins: [
     ...(options.plugins ?? []),
-    customSession(async ({ user, session }, ctx) => {
+    customSession(async ({ user, session }) => {
       const accounts = await prisma.account.findMany({
-        where: { id: user.id },
+        where: { userId: user.id },
       });
       const userCompany = await prisma.companyMember.findFirst({
         where: { userId: user.id },
-        include: { company: true },
+        orderBy: { createdAt: 'asc' },
       });
-      if (!userCompany) throw error('no company found');
-      const company = userCompany.company;
+      const company = userCompany
+        ? await prisma.company.findUnique({
+            where: { id: userCompany.companyId },
+          })
+        : null;
       return {
         session,
         user,

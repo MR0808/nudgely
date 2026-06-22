@@ -5,7 +5,7 @@ import { randomBytes } from 'crypto';
 import { revalidatePath } from 'next/cache';
 
 import { prisma } from '@/lib/prisma';
-import { authCheckServer } from '@/lib/authCheck';
+import { authCheckServerWithCompany } from '@/lib/authCheck';
 import { InviteTeamMemberSchema } from '@/schemas/teamMember';
 import {
     logTeamMemberAdded,
@@ -97,7 +97,7 @@ export const inviteTeamMember = async (
     values: z.infer<typeof InviteTeamMemberSchema>,
     teamId: string
 ) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return { success: false, error: 'Not authorised' };
 
     const { user, company } = session;
@@ -250,7 +250,7 @@ export const inviteTeamMember = async (
    RESEND INVITE
    ============================================================ */
 export const resendTeamInvitation = async (id: string, teamId: string) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return { data: null, error: 'Not authorised' };
 
     const { user, company } = session;
@@ -297,7 +297,7 @@ export const cancelTeamInvitation = async (
     teamId: string,
     slug: string
 ) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return { success: false, error: 'Not authorised' };
 
     const { user } = session;
@@ -332,7 +332,7 @@ export const changeTeamMemberRole = async (
     newRole: 'TEAM_ADMIN' | 'TEAM_MEMBER',
     teamId: string
 ) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return { data: null, error: 'Not authorised' };
 
     const { user } = session;
@@ -380,7 +380,7 @@ export const changeTeamMemberRole = async (
    REMOVE MEMBER
    ============================================================ */
 export const removeTeamMember = async (memberId: string, teamId: string) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return { data: null, error: 'Not authorised' };
 
     const { user } = session;
@@ -430,7 +430,7 @@ export const updateTeamMember = async (
     addTeams: string[],
     removeTeams: string[]
 ) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return { data: null, error: 'Not authorised' };
 
     const { user, company, userCompany } = session;
@@ -497,7 +497,7 @@ export const updateTeamMember = async (
    ENABLE MEMBER
    ============================================================ */
 export const enableTeamMember = async (memberId: string, teamId: string) => {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return { data: null, error: 'Not authorised' };
 
     const { user } = session;

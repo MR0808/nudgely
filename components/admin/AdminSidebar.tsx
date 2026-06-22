@@ -7,17 +7,7 @@ import {
     LayoutDashboard,
     Users,
     Building2,
-    Users2,
-    CreditCard,
-    Globe,
-    DollarSign,
-    MapPin,
-    Briefcase,
-    Building,
-    FileText,
-    Clock,
-    Settings,
-    PlayCircle
+    Settings
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -31,45 +21,20 @@ const navigation = [
         title: 'User Management',
         items: [
             { name: 'Users', href: '/admin/users', icon: Users },
-            { name: 'Companies', href: '/admin/companies', icon: Building2 },
-            { name: 'Teams', href: '/admin/teams', icon: Users2 }
-        ]
-    },
-    {
-        title: 'Billing & Plans',
-        items: [
-            {
-                name: 'Subscriptions',
-                href: '/admin/subscriptions',
-                icon: CreditCard
-            },
-            { name: 'Plans', href: '/admin/plans', icon: FileText }
-        ]
-    },
-    {
-        title: 'Reference Data',
-        items: [
-            { name: 'Continents', href: '/admin/continents', icon: Globe },
-            { name: 'Countries', href: '/admin/countries', icon: MapPin },
-            { name: 'Regions', href: '/admin/regions', icon: MapPin },
-            { name: 'Currencies', href: '/admin/currencies', icon: DollarSign },
-            { name: 'Industries', href: '/admin/industries', icon: Briefcase },
-            {
-                name: 'Company Sizes',
-                href: '/admin/company-sizes',
-                icon: Building
-            }
-        ]
-    },
-    {
-        title: 'Content & System',
-        items: [
-            { name: 'Templates', href: '/admin/templates', icon: FileText },
-            { name: 'Nudges', href: '/admin/nudges', icon: Clock },
-            { name: 'Cron Jobs', href: '/admin/cron-jobs', icon: PlayCircle },
-            { name: 'Audit Logs', href: '/admin/audit-logs', icon: Settings }
+            { name: 'Companies', href: '/admin/companies', icon: Building2 }
         ]
     }
+];
+
+const comingSoon = [
+    'Teams',
+    'Subscriptions',
+    'Plans',
+    'Reference Data',
+    'Templates',
+    'Nudges',
+    'Cron Jobs',
+    'Audit Logs'
 ];
 
 export function AdminSidebar() {
@@ -120,6 +85,22 @@ export function AdminSidebar() {
                             </div>
                         </div>
                     ))}
+
+                    <div>
+                        <h3 className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Coming Soon
+                        </h3>
+                        <div className="space-y-1">
+                            {comingSoon.map((name) => (
+                                <div
+                                    key={name}
+                                    className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground/60 cursor-not-allowed"
+                                >
+                                    {name}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </nav>
             </ScrollArea>
         </aside>

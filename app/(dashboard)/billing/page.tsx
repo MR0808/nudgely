@@ -174,6 +174,19 @@ const BillingPage = async ({
                     </Alert>
                 )}
 
+                {company.companySubscription?.cancelAtPeriodEnd &&
+                    company.companySubscription.currentPeriodEnd && (
+                        <Alert variant="default">
+                            <AlertTitle>Cancellation scheduled</AlertTitle>
+                            <AlertDescription>
+                                Your subscription will end on{' '}
+                                {company.companySubscription.currentPeriodEnd.toLocaleDateString()}
+                                . You can reactivate from the billing portal
+                                before then.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
                 {/* Current Plan Overview */}
                 <Card>
                     <CardHeader>
@@ -254,12 +267,23 @@ const BillingPage = async ({
                                             ? ' • Billed yearly'
                                             : ' • Billed monthly')}
                                 </p>
-                                {details?.data?.nextBillingDate && (
+                                {details?.data?.nextBillingDate &&
+                                    !company.companySubscription
+                                        ?.cancelAtPeriodEnd && (
                                     <p className="text-sm text-muted-foreground mt-1">
                                         Next billing date:{' '}
                                         {nextBillingDate.toLocaleDateString()}
                                     </p>
                                 )}
+                                {company.companySubscription
+                                    ?.cancelAtPeriodEnd &&
+                                    company.companySubscription
+                                        .currentPeriodEnd && (
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            Access until:{' '}
+                                            {company.companySubscription.currentPeriodEnd.toLocaleDateString()}
+                                        </p>
+                                    )}
                             </div>
                         </div>
                     </CardContent>

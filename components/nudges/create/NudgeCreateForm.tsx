@@ -16,6 +16,7 @@ import NudgeCreateFormTeamSelection from '@/components/nudges/form/NudgeCreateFo
 import NudgeCreateFormScheduleSettings from '@/components/nudges/form/NudgeCreateFormScheduleSettings';
 import NudgeCreateFormEndDate from '@/components/nudges/form/NudgeCreateFormEndDate';
 import NudgeCreateFormRecipients from '@/components/nudges/form/NudgeCreateFormRecipients';
+import NudgePreview from '@/components/nudges/create/NudgePreview';
 import { createNudge } from '@/actions/nudges';
 import { logNudgeCreated } from '@/actions/audit/audit-nudge';
 
@@ -42,8 +43,7 @@ const NudgeCreateForm = ({
             teamId: initialTeam,
             interval: 1,
             endType: 'NEVER',
-            // timezone: initialTimezone,
-            timezone: 'Australia/Melbourne',
+            timezone: initialTimezone || 'UTC',
             recipients: [{ name: '', email: '' }],
             timeOfDay: '12:00 PM',
             monthlyType: undefined, // or a default enum value
@@ -78,10 +78,11 @@ const NudgeCreateForm = ({
 
     return (
         <Form {...form}>
-            <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="max-w-5xl mx-auto p-6 space-y-8"
-            >
+            <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-8"
+                >
                 <div className="text-center space-y-2">
                     <h1 className="text-4xl font-bold">Create Nudge</h1>
                     <p className="text-muted-foreground text-lg">
@@ -135,7 +136,12 @@ const NudgeCreateForm = ({
                         {isPending ? 'Creating...' : 'Create Nudge'}
                     </Button>
                 </div>
-            </form>
+                </form>
+
+                <div className="lg:sticky lg:top-6 lg:self-start">
+                    <NudgePreview />
+                </div>
+            </div>
         </Form>
     );
 };

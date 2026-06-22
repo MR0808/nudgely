@@ -1,182 +1,126 @@
-# HyreLog API (Phase 0)
+# Nudgely
 
-HyreLog is a developer-first immutable audit log API. **Phase 0** sets up the foundations only:
+B2B SaaS for recurring email task reminders. Companies create scheduled nudges; recipients complete tasks via tokenized public links.
 
-- **API**: internal endpoints only (`/internal/*`) — no customer business endpoints yet
-- **Worker**: placeholder jobs only (archival, GDPR, webhooks)
-- **Data**: Prisma schema for multi-region storage + archival + GDPR workflows
-- **Infra**: AWS CDK scaffold for deploying **one region at a time**
+## Stack
 
-Supported logical regions from day one:
+- Next.js 16, React 19, TypeScript
+- Prisma 7 + PostgreSQL
+- better-auth, Stripe, Resend, Supabase
 
-- **US** → `us-east-1` (default)
-- **EU** → `eu-west-1`
-- **UK** → `eu-west-2`
-- **AU** → `ap-southeast-2`
+## Local development
 
-## Local dev (beginner-friendly)
+### Prerequisites
 
-### 1) Install prerequisites
+- Node.js 20+
+- PostgreSQL database (or Prisma Accelerate URL)
 
-- Install **Node.js 20+**
-- Install **Docker Desktop**
-
-Verify:
-
-```bash
-node -v
-docker -v
-docker compose version
-```
-
-### 2) Start local infrastructure (4 Postgres DBs + MinIO)
-
-From repo root:
-
-```bash
-docker compose up -d
-docker ps
-```
-
-You should see:
-
-- `hyrelog-postgres-us` on `localhost:54321`
-- `hyrelog-postgres-eu` on `localhost:54322`
-- `hyrelog-postgres-uk` on `localhost:54323`
-- `hyrelog-postgres-au` on `localhost:54324`
-- `hyrelog-minio` on `localhost:9000` (S3 API) and `localhost:9001` (Console UI)
-
-### 3) Create your `.env`
-
-Copy the example env file:
-
-- Copy `.env.example` → `.env`
-
-Then open `.env` and set values. At minimum, you need:
-
-- `INTERNAL_TOKEN` (any random string)
-- `DATABASE_URL_US`, `DATABASE_URL_EU`, `DATABASE_URL_UK`, `DATABASE_URL_AU`
-
-Typical local values (match `docker-compose.yml` ports):
-
-- `DATABASE_URL_US=postgresql://hyrelog:hyrelog@localhost:54321/hyrelog_us?schema=public`
-- `DATABASE_URL_EU=postgresql://hyrelog:hyrelog@localhost:54322/hyrelog_eu?schema=public`
-- `DATABASE_URL_UK=postgresql://hyrelog:hyrelog@localhost:54323/hyrelog_uk?schema=public`
-- `DATABASE_URL_AU=postgresql://hyrelog:hyrelog@localhost:54324/hyrelog_au?schema=public`
-
-MinIO (S3-compatible) defaults:
-
-- **Console**: `http://localhost:9001`
-- **Username**: `minioadmin`
-- **Password**: `minioadmin`
-
-Optional: create buckets in MinIO Console:
-
-- `hyrelog-archive-us`
-- `hyrelog-archive-eu`
-- `hyrelog-archive-uk`
-- `hyrelog-archive-au`
-
-### 4) Install dependencies (npm workspaces)
-
-From repo root:
+### Setup
 
 ```bash
 npm install
-```
-
-### 5) Create DB schema in ALL 4 region databases
-
-This repo stores data per-region. For local dev we emulate that with 4 Postgres DBs.
-
-Run the helper to create the first migration (if needed) and apply it to all regions:
-
-```bash
-npm --workspace services/api run prisma:migrate:all
-```
-
-### 6) Start the API
-
-```bash
+cp .env.example .env
+npm run db:generate   # generate client (also runs on postinstall)
+npm run db:push       # or npm run db:migrate
 npm run dev
 ```
 
-### 7) Call internal health endpoint
+### Prisma 7.8
 
-The API only exposes internal endpoints in Phase 0. They require an internal token header.
+This project uses **Prisma ORM 7.8** with the `prisma-client` generator (output: `generated/prisma`).
 
-PowerShell:
+| File | Role |
+|------|------|
+| `prisma/schema.prisma` | Schema (edit this) |
+| `prisma.config.ts` | CLI config — DB URL, migrations, seed |
+| `lib/prisma.ts` | App runtime client (Accelerate) |
+| `lib/create-prisma-client.ts` | Client factories |
+| `generated/prisma/` | Generated client — do not edit |
 
-```powershell
-$token = "YOUR_INTERNAL_TOKEN_FROM_.env"
-Invoke-RestMethod -Headers @{ "x-internal-token" = $token } http://localhost:3000/internal/health
+**Do not edit** `generated/prisma/schema.prisma` — it is a generated copy and will be overwritten on `prisma generate`.
+
+### Database URLs (important)
+
+Nudgely uses **Prisma Accelerate** at runtime (`DATABASE_URL` in `lib/prisma.ts`). The Prisma CLI cannot migrate through Accelerate — you need a **direct** Postgres URL as well:
+
+| Variable | Used for |
+|----------|----------|
+| `DATABASE_URL` | App runtime (Accelerate URL) |
+| `DIRECT_DATABASE_URL` | `db:migrate`, `db:push`, `db:seed` |
+
+On **Supabase**, set `DIRECT_DATABASE_URL` to the **Session pooler** URI (port **5432**), not the Direct host:
+
+```
+postgresql://postgres.[ref]:[password]@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres
 ```
 
-curl (Git Bash / WSL):
+Supabase → Project Settings → Database → Connection string → **Session mode** → URI
 
+**Why not `db.[ref].supabase.co`?** That direct host is often **IPv6-only**. On Windows and many networks Node.js cannot reach it, causing `P1001` / `ENOTFOUND`. The session pooler uses IPv4 and works reliably.
+
+Do **not** use port 6543 (transaction pooler) for Prisma.
+
+### Supabase + migrations
+
+This project was originally synced with `db push`. Migration history is baselined in `prisma/migrations/0_baseline/`.
+
+**Day-to-day schema changes (recommended on Supabase):**
 ```bash
-curl -H "x-internal-token: YOUR_INTERNAL_TOKEN_FROM_.env" http://localhost:3000/internal/health
+npm run db:sync        # alias for db push — fast, no shadow DB needed
 ```
 
-## Deploy later (AWS CDK scaffold)
-
-CDK is scaffolded under `infra/`. **Phase 0** is intentionally minimal and deploys **one region per command**.
-
-### Example: deploy US
-
+**If you need proper migration files for production deploy:**
 ```bash
-cd infra
-npm install
-npx cdk bootstrap --context region=US
-npx cdk deploy --context region=US
+npx prisma migrate dev --name your_change   # creates a new migration
+npm run db:migrate:deploy                   # apply in production (no shadow DB)
 ```
 
-### Other regions
-
-Use `EU`, `UK`, or `AU`:
-
+**If migration history gets out of sync** (existing DB, already has tables):
 ```bash
-npx cdk deploy --context region=EU
+npm run db:sync
+npm run db:migrate:resolve   # marks 0_baseline as applied — run once only
 ```
 
-Notes:
+### Useful scripts
 
-- The stack creates VPC, ECS cluster, ECR repos, RDS Postgres (encrypted, backups enabled), an S3 archive bucket with lifecycle to Glacier/Deep Archive, and CloudWatch log groups.
-- Services are created with **desired count = 0** in Phase 0 so the deploy doesn’t require container images yet.
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run test` | Run unit tests |
+| `npm run db:generate` | Regenerate Prisma client |
+| `npm run db:migrate` | Apply migrations (via `DIRECT_DATABASE_URL`) |
+| `npm run db:push` | Push schema (via `DIRECT_DATABASE_URL`) |
+| `npm run db:seed` | Seed demo data (via `DIRECT_DATABASE_URL`) |
+| `npm run email` | Preview React Email templates |
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Cron jobs (Vercel)
 
-## Getting Started
+| Schedule | Route | Purpose |
+|----------|-------|---------|
+| Hourly at :05 | `/api/cron/send-nudges` | Send nudges and reminders |
+| Daily 03:00 UTC | `/api/cron/daily-summary` | Admin digest email |
+| Daily 04:00 UTC | `/api/cron/check-subscriptions` | Downgrade warning emails |
 
-First, run the development server:
+All cron routes require `Authorization: Bearer $CRON_SECRET`. On Vercel, `x-vercel-cron` is also validated.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Set `CRON_SUMMARY_TIMEZONE` (default `UTC`) for daily summary date boundaries.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Migrations
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Migration history is baselined in `prisma/migrations/0_baseline/`. The database was originally created with `db push`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+For local Supabase development, prefer `npm run db:sync` over `migrate dev` — Supabase does not support Prisma shadow databases, which can cause intermittent `P1001` errors during `migrate dev`.
 
-## Learn More
+Use `npm run db:migrate:deploy` in production/CI to apply pending migrations without a shadow DB.
 
-To learn more about Next.js, take a look at the following resources:
+## Environment variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Key variables:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `DATABASE_URL` — Prisma Accelerate URL (app runtime)
+- `DIRECT_DATABASE_URL` — Direct Postgres URL (migrations, db push, seed)
+- `CRON_SECRET` — Cron job authentication
+- `STRIPE_*` — Billing
+- `RESEND_API_KEY` — Email delivery
+- `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_*` — Authentication

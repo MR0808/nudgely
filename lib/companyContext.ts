@@ -2,7 +2,7 @@
 
 'use server';
 
-import { authCheckServer } from '@/lib/authCheck';
+import { authCheckServerWithCompany } from '@/lib/authCheck';
 import { CompanyRole } from '@/generated/prisma/client';
 
 export type CompanyContext = {
@@ -13,7 +13,7 @@ export type CompanyContext = {
 };
 
 export async function getCompanyContext(): Promise<CompanyContext | null> {
-    const session = await authCheckServer();
+    const session = await authCheckServerWithCompany();
     if (!session) return null;
 
     const { user, company, userCompany } = session;

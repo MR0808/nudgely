@@ -1,5 +1,3 @@
-'use server';
-
 import { type NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@/generated/prisma/client';
@@ -13,37 +11,35 @@ import {
     convertTo24Hour
 } from '@/lib/nudge-helpers';
 import { sendNudgeEmail } from '@/lib/mail';
+import { verifyCronRequest } from '@/lib/cron-auth';
 
 type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
     include: { recipients: true; instances: true };
 }>;
 
-    type NudgeInstanceWithNudgeAndEvents = Prisma.NudgeInstanceGetPayload<{
-        include: {
-            nudge: {
-                include: { recipients: true };
-            };
-            events: true;
+type NudgeInstanceWithNudgeAndEvents = Prisma.NudgeInstanceGetPayload<{
+    include: {
+        nudge: {
+            include: { recipients: true };
         };
-    }>;
+        events: true;
+    };
+}>;
 
-    export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest) {
+    const authError = verifyCronRequest(request);
+    if (authError) return authError;
+
     try {
-        // Verify the request is from Vercel Cron
-        const authHeader = request.headers.get('authorization');
-        if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            );
-        }
+        console.log('[cron:send-nudges] Starting nudge cron job...');
 
-        console.log('[v0] Starting nudge cron job...');
-
-        // Fetch all active nudges with their recipients
         const nudges = (await prisma.nudge.findMany({
             where: {
-                status: 'ACTIVE'
+                status: 'ACTIVE',
+                team: {
+                    status: 'ACTIVE',
+                    isFrozen: false
+                }
             },
             include: {
                 recipients: true,
@@ -56,7 +52,7 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
             }
         })) as NudgeWithRecipientsAndInstances[];
 
-        console.log(`[v0] Found ${nudges.length} active nudges`);
+        console.log(`[cron:send-nudges] Found ${nudges.length} active nudges`);
 
         const results = {
             processed: 0,
@@ -87,7 +83,7 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
 
                 if (hasEnded) {
                     console.log(
-                        `[v0] Nudge ${nudge.name} (${nudge.id}) has reached its end condition`
+                        `[cron:send-nudges] Nudge ${nudge.name} (${nudge.id}) has reached its end condition`
                     );
 
                     // Update nudge status to FINISHED
@@ -106,7 +102,7 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
                     wouldOccurAfterEndDate(nextOccurrence, nudge)
                 ) {
                     console.log(
-                        `[v0] Next occurrence for ${nudge.name} would be after end date, marking as FINISHED`
+                        `[cron:send-nudges] Next occurrence for ${nudge.name} would be after end date, marking as FINISHED`
                     );
 
                     await prisma.nudge.update({
@@ -126,7 +122,7 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
                     continue;
                 }
 
-                console.log(`[v0] Sending nudge: ${nudge.name} (${nudge.id})`);
+                console.log(`[cron:send-nudges] Sending nudge: ${nudge.name} (${nudge.id})`);
 
                 // Parse the time of day (format: "9:00 AM" or "3:00 PM")
                 const [time, period] = nudge.timeOfDay.split(' ');
@@ -211,16 +207,26 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
                                 }
                             });
 
-                        // Send the email
-                        const emailResult = await sendNudgeEmail({
+                        // Send the email (with one retry on failure)
+                        let emailResult = await sendNudgeEmail({
                             email: recipient.email,
-                            // email: 'kram@grebnesor.com',
                             name: recipient.name,
                             nudgeName: nudge.name,
                             nudgeDescription: nudge.description,
                             completionUrl,
                             scheduleInfo
                         });
+
+                        if (!emailResult.success) {
+                            emailResult = await sendNudgeEmail({
+                                email: recipient.email,
+                                name: recipient.name,
+                                nudgeName: nudge.name,
+                                nudgeDescription: nudge.description,
+                                completionUrl,
+                                scheduleInfo
+                            });
+                        }
 
                         // Update the recipient event based on send result
                         if (emailResult.success) {
@@ -234,7 +240,7 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
                             });
                             successfulSends++;
                             console.log(
-                                `[v0] Email sent successfully to ${recipient.email}`
+                                `[cron:send-nudges] Email sent successfully to ${recipient.email}`
                             );
                         } else {
                             await prisma.nudgeRecipientEvent.update({
@@ -249,20 +255,20 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
                             });
                             failedSends++;
                             console.error(
-                                `[v0] Failed to send email to ${recipient.email}: ${emailResult.error}`
+                                `[cron:send-nudges] Failed to send email to ${recipient.email}: ${emailResult.error}`
                             );
                         }
                     } catch (recipientError) {
                         failedSends++;
                         console.error(
-                            `[v0] Error processing recipient ${recipient.email}:`,
+                            `[cron:send-nudges] Error processing recipient ${recipient.email}:`,
                             recipientError
                         );
                     }
                 }
 
                 console.log(
-                    `[v0] Email sending complete: ${successfulSends} successful, ${failedSends} failed`
+                    `[cron:send-nudges] Email sending complete: ${successfulSends} successful, ${failedSends} failed`
                 );
 
                 // Update the nudge's lastInstanceCreatedAt
@@ -293,7 +299,7 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
                 results.sent++;
             } catch (error) {
                 console.error(
-                    `[v0] Error processing nudge ${nudge.id}:`,
+                    `[cron:send-nudges] Error processing nudge ${nudge.id}:`,
                     error
                 );
                 results.errors++;
@@ -303,9 +309,17 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
         // -------------------------------------------------------------
         // PROCESS REMINDERS
         // -------------------------------------------------------------
-        console.log('[v0] Checking for reminders...');
+        console.log('[cron:send-nudges] Checking for reminders...');
         const pendingInstances = (await prisma.nudgeInstance.findMany({
-            where: { status: 'PENDING' },
+            where: {
+                status: 'PENDING',
+                nudge: {
+                    team: {
+                        status: 'ACTIVE',
+                        isFrozen: false
+                    }
+                }
+            },
             include: {
                 nudge: {
                     include: { recipients: true }
@@ -344,7 +358,7 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
             if (instance.createdAt.toDateString() === today) continue;
 
             console.log(
-                `[v0] Processing reminders for nudge instance ${instance.id} (${nudge.name})`
+                `[cron:send-nudges] Processing reminders for nudge instance ${instance.id} (${nudge.name})`
             );
 
             const scheduleInfo = formatScheduleInfo({
@@ -398,7 +412,7 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
                         });
                         results.reminders++;
                         console.log(
-                            `[v0] Reminder sent to ${event.recipientEmail}`
+                            `[cron:send-nudges] Reminder sent to ${event.recipientEmail}`
                         );
                     } else {
                         await prisma.nudgeRecipientEvent.update({
@@ -413,21 +427,21 @@ type NudgeWithRecipientsAndInstances = Prisma.NudgeGetPayload<{
                     }
                 } catch (err) {
                     console.error(
-                        `[v0] Error sending reminder to ${event.recipientEmail}:`,
+                        `[cron:send-nudges] Error sending reminder to ${event.recipientEmail}:`,
                         err
                     );
                 }
             }
         }
 
-        console.log('[v0] Nudge cron job completed:', results);
+        console.log('[cron:send-nudges] Nudge cron job completed:', results);
 
         return NextResponse.json({
             success: true,
             results
         });
     } catch (error) {
-        console.error('[v0] Cron job error:', error);
+        console.error('[cron:send-nudges] Cron job error:', error);
         return NextResponse.json(
             {
                 error: 'Internal server error',

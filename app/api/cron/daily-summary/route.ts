@@ -1,27 +1,22 @@
-'use server';
-
 import { type NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendDailySummaryEmail } from '@/lib/mail';
+import { verifyCronRequest } from '@/lib/cron-auth';
+
+const SUMMARY_TIMEZONE =
+    process.env.CRON_SUMMARY_TIMEZONE || 'UTC';
 
 export async function GET(request: NextRequest) {
+    const authError = verifyCronRequest(request);
+    if (authError) return authError;
+
     try {
-        // Verify the request is from Vercel Cron
-        const authHeader = request.headers.get('authorization');
-        if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            );
-        }
+        console.log('[cron:daily-summary] Starting daily summary cron job...');
 
-        console.log('[v0] Starting daily summary cron job...');
-
-        // Calculate date range for today (Australia/Melbourne time)
-        const melbourneTime = new Date().toLocaleString('en-US', {
-            timeZone: 'Australia/Melbourne'
+        const summaryTime = new Date().toLocaleString('en-US', {
+            timeZone: SUMMARY_TIMEZONE
         });
-        const now = new Date(melbourneTime);
+        const now = new Date(summaryTime);
         const startOfDay = new Date(
             now.getFullYear(),
             now.getMonth(),
@@ -48,7 +43,7 @@ export async function GET(request: NextRequest) {
         );
 
         console.log(
-            `[v0] Collecting stats for ${startOfDay.toLocaleDateString()}`
+            `[cron:daily-summary] Collecting stats for ${startOfDay.toLocaleDateString()}`
         );
 
         // Fetch all nudge instances created today
@@ -168,7 +163,7 @@ export async function GET(request: NextRequest) {
 
         const teamStats = Array.from(teamStatsMap.values());
 
-        console.log('[v0] Daily summary stats:');
+        console.log('[cron:daily-summary] Daily summary stats:');
         console.log(`  Nudges sent: ${totalNudgesSent}`);
         console.log(`  Emails sent: ${totalEmailsSent}`);
         console.log(`  Emails failed: ${totalEmailsFailed}`);
@@ -179,7 +174,7 @@ export async function GET(request: NextRequest) {
         const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_FROM;
         if (!adminEmail) {
             console.warn(
-                '[v0] No admin email configured, skipping summary email'
+                '[cron:daily-summary] No admin email configured, skipping summary email'
             );
             return NextResponse.json({
                 success: true,
@@ -215,7 +210,7 @@ export async function GET(request: NextRequest) {
 
         if (!emailResult.success) {
             console.error(
-                '[v0] Failed to send daily summary email:',
+                '[cron:daily-summary] Failed to send daily summary email:',
                 emailResult.error
             );
         }
@@ -234,7 +229,7 @@ export async function GET(request: NextRequest) {
             }
         });
     } catch (error) {
-        console.error('[v0] Daily summary cron error:', error);
+        console.error('[cron:daily-summary] Daily summary cron error:', error);
         return NextResponse.json(
             {
                 error: 'Internal server error',
