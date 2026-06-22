@@ -1,21 +1,20 @@
-import type { Plan } from '@/generated/prisma/client';
 import type Stripe from 'stripe';
-
 import { stripe } from '@/lib/stripe';
+import {
+    type PlanStripeRefs,
+    isFreePlan,
+    resolvePlanStripePriceId
+} from '@/lib/stripe-prices';
 import { buildSubscriptionSyncData } from '@/lib/stripe-subscription';
 
-export function isFreePlan(plan: Pick<Plan, 'slug' | 'level'>): boolean {
-    return plan.slug === 'free' || plan.level === 1;
-}
+export { isFreePlan } from '@/lib/stripe-prices';
 
-export function getStripePriceIdForPlan(
-    plan: Pick<Plan, 'stripeMonthlyId' | 'stripeYearlyId' | 'slug' | 'level'>,
+export async function getStripePriceIdForPlan(
+    plan: PlanStripeRefs,
     billingInterval: 'MONTHLY' | 'YEARLY'
-): string | null {
+): Promise<string | null> {
     if (isFreePlan(plan)) return null;
-    return billingInterval === 'YEARLY'
-        ? plan.stripeYearlyId
-        : plan.stripeMonthlyId;
+    return resolvePlanStripePriceId(plan, billingInterval);
 }
 
 export async function cancelStripeSubscription(

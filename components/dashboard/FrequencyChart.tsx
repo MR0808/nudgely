@@ -13,7 +13,7 @@ import {
     ChartTooltipContent
 } from '@/components/ui/chart';
 import { FrequencyChartProps } from '@/types/dashboard';
-import { Pie, PieChart, Cell, ResponsiveContainer, Legend } from 'recharts';
+import { Pie, PieChart, Cell, Legend } from 'recharts';
 
 const COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)'];
 
@@ -31,10 +31,9 @@ const FrequencyChart = ({ data }: FrequencyChartProps) => {
                         WEEKLY: { label: 'Weekly', color: 'var(--chart-2)' },
                         MONTHLY: { label: 'Monthly', color: 'var(--chart-3)' }
                     }}
-                    className="h-64"
+                    className="aspect-auto h-64 w-full"
                 >
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
+                    <PieChart>
                             <Pie
                                 data={data}
                                 dataKey="count"
@@ -54,7 +53,6 @@ const FrequencyChart = ({ data }: FrequencyChartProps) => {
                             <ChartTooltip content={<ChartTooltipContent />} />
                             <Legend />
                         </PieChart>
-                    </ResponsiveContainer>
                 </ChartContainer>
             </CardContent>
         </Card>

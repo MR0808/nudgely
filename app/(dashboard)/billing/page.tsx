@@ -21,7 +21,8 @@ import { DynamicIcon } from '@/components/global/DynamicIcon';
 import { cn } from '@/lib/utils';
 import {
     getCustomerPaymentInformation,
-    getPendingSubscriptions
+    getPendingSubscriptions,
+    syncBillingCheckoutSession
 } from '@/actions/subscriptions';
 import BillingPaymentMethod from '@/components/billing/BillingPaymentMethod';
 import BillingInvoices from '@/components/billing/BillingInvoices';
@@ -60,10 +61,17 @@ const BillingPage = async ({
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) => {
     const userSession = await authCheck('/billing');
+    const params = await searchParams;
+    const sessionId =
+        typeof params.session_id === 'string' ? params.session_id : undefined;
+
+    if (sessionId) {
+        await syncBillingCheckoutSession(sessionId);
+    }
+
     const res = await getCompany();
     if (!res.success || !res.data) return null;
     const { company, userCompany } = res.data;
-    const params = await searchParams;
 
     if (userCompany.role !== 'COMPANY_ADMIN') {
         return (
@@ -344,7 +352,7 @@ const BillingPage = async ({
                             customerId={company.stripeCustomerId || null}
                         />
                         <BillingInvoices
-                            invoices={details?.data?.invoices}
+                            invoices={details?.data?.invoices ?? undefined}
                             customerId={company.stripeCustomerId || null}
                         />
                     </>

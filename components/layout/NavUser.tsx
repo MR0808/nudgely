@@ -40,6 +40,11 @@ export function NavUser({ initialSession }: { initialSession: SessionType }) {
     const [email, setEmail] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+    const showUpgrade =
+        session?.userCompany?.role === 'COMPANY_ADMIN' &&
+        !!session?.company?.plan &&
+        (session.company.plan.slug === 'free' || session.company.plan.level === 1);
+
     useEffect(() => {
         if (session?.user) {
             const name = session.user.name ?? '';
@@ -103,18 +108,22 @@ export function NavUser({ initialSession }: { initialSession: SessionType }) {
                                 </div>
                             </div>
                         </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem asChild>
-                                <Link
-                                    href="/subscription"
-                                    className="cursor-pointer"
-                                >
-                                    <Sparkles />
-                                    Upgrade to Pro
-                                </Link>
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
+                        {showUpgrade && (
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuGroup>
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href="/subscription"
+                                            className="cursor-pointer"
+                                        >
+                                            <Sparkles />
+                                            Upgrade to Pro
+                                        </Link>
+                                    </DropdownMenuItem>
+                                </DropdownMenuGroup>
+                            </>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
                             <DropdownMenuItem asChild>

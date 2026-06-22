@@ -1,7 +1,10 @@
 import type { Plan } from '@/generated/prisma/client';
 
 import { getCompany } from '@/actions/company';
-import { getCustomerPaymentInformation } from '@/actions/subscriptions';
+import type {
+    BillingInvoicesList,
+    BillingPayment
+} from '@/lib/stripe-billing-display';
 
 export type CompanyData = Awaited<ReturnType<typeof getCompany>>;
 
@@ -13,19 +16,8 @@ export type Company = NonNullable<
     CompanyDataData extends { company: infer T } ? T : never
 >;
 
-export type GetPaymentReturn = Awaited<
-    ReturnType<typeof getCustomerPaymentInformation>
->;
-
-export type Payment = Extract<
-    GetPaymentReturn,
-    { success: true }
->['data']['payment'];
-
-export type Invoices = Extract<
-    GetPaymentReturn,
-    { success: true }
->['data']['invoices'];
+export type Payment = BillingPayment;
+export type Invoices = BillingInvoicesList;
 
 export interface BillingPlanSelectionProps {
     company: Company;

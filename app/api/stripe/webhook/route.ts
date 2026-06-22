@@ -3,7 +3,6 @@ import type Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import {
     logSubscriptionCancel,
-    logSubscriptionCreate,
     logSubscriptionUpdate
 } from '@/actions/audit/audit-subscription';
 import { checkDowngradedPlan } from '@/actions/subscriptions';
@@ -13,10 +12,17 @@ import {
     sendUpgradeEmail
 } from '@/lib/mail';
 import {
+    applySubscriptionToCompany,
+    syncCheckoutSessionToCompany
+} from '@/lib/sync-company-subscription';
+import {
+    findPlanByStripePriceId,
+    planMatchesStripePrice
+} from '@/lib/stripe-prices';
+import {
     buildSubscriptionSyncData,
     getAuditUserId,
     getCancellationEndDate,
-    getSubscriptionPriceId,
     isAdminPlanChange,
     shouldSendCancellationEmail,
     stripeCustomerId
@@ -35,17 +41,6 @@ async function markStripeEventProcessed(
 ): Promise<void> {
     await prisma.processedStripeEvent.create({
         data: { id: eventId, type: eventType }
-    });
-}
-
-async function findPlanByStripePriceId(priceId: string) {
-    return prisma.plan.findFirst({
-        where: {
-            OR: [
-                { stripeMonthlyId: priceId },
-                { stripeYearlyId: priceId }
-            ]
-        }
     });
 }
 
@@ -172,80 +167,23 @@ async function handleSubscriptionScheduleUpdated(event: Stripe.Event) {
 
 async function handleCheckoutSessionCompleted(event: Stripe.Event) {
     const session = event.data.object as Stripe.Checkout.Session;
-    const companyId = session.client_reference_id;
-    const customerId = stripeCustomerId(session.customer);
+    if (!session.id) return;
 
-    if (!companyId || !customerId) return;
-
-    await prisma.company.update({
-        where: { id: companyId },
-        data: { stripeCustomerId: customerId }
+    await syncCheckoutSessionToCompany(session.id, {
+        companyIdHint: session.client_reference_id ?? undefined,
+        sendWelcomeEmail: true,
+        writeAuditLog: true
     });
 }
 
 async function handleSubscriptionCreated(event: Stripe.Event) {
     const subscription = event.data.object as Stripe.Subscription;
-    const customerId = stripeCustomerId(subscription.customer);
-    if (!customerId) return;
 
-    const priceId = getSubscriptionPriceId(subscription);
-    const plan = await findPlanByStripePriceId(priceId);
-
-    if (!plan) {
-        throw new Error(`No plan found for Stripe price ${priceId}`);
-    }
-
-    const company = await prisma.company.findUnique({
-        where: { stripeCustomerId: customerId },
-        include: { creator: true, companySubscription: true }
+    await applySubscriptionToCompany(subscription, {
+        companyIdHint: subscription.metadata?.companyId,
+        sendWelcomeEmail: true,
+        writeAuditLog: true
     });
-
-    if (!company) {
-        throw new Error(`No company found for Stripe customer ${customerId}`);
-    }
-
-    const syncData = buildSubscriptionSyncData(subscription);
-
-    let companySubscription = company.companySubscription;
-
-    if (companySubscription) {
-        companySubscription = await prisma.companySubscription.update({
-            where: { id: companySubscription.id },
-            data: {
-                stripeSubscriptionId: subscription.id,
-                ...syncData
-            }
-        });
-    } else {
-        companySubscription = await prisma.companySubscription.create({
-            data: {
-                stripeSubscriptionId: subscription.id,
-                ...syncData,
-                company: { connect: { id: company.id } }
-            }
-        });
-    }
-
-    await prisma.company.update({
-        where: { id: company.id },
-        data: { planId: plan.id }
-    });
-
-    if (!isAdminPlanChange(subscription)) {
-        await sendUpgradeEmail({
-            email: company.contactEmail || company.creator.email,
-            name: company.creator.name,
-            plan: plan.name
-        });
-    }
-
-    await logSubscriptionCreate(
-        getAuditUserId(subscription, company.creatorId) || company.creatorId,
-        {
-            companyId: company.id,
-            companySubscription: companySubscription.id
-        }
-    );
 }
 
 async function handleSubscriptionUpdated(event: Stripe.Event) {
@@ -256,7 +194,7 @@ async function handleSubscriptionUpdated(event: Stripe.Event) {
     const customerId = stripeCustomerId(subscription.customer);
     if (!customerId) return;
 
-    const company = await prisma.company.findFirst({
+    let company = await prisma.company.findFirst({
         where: { stripeCustomerId: customerId },
         include: {
             plan: true,
@@ -265,7 +203,25 @@ async function handleSubscriptionUpdated(event: Stripe.Event) {
         }
     });
 
-    if (!company?.companySubscriptionId) return;
+    if (!company && subscription.metadata?.companyId) {
+        company = await prisma.company.findFirst({
+            where: { id: subscription.metadata.companyId },
+            include: {
+                plan: true,
+                companySubscription: true,
+                creator: true
+            }
+        });
+    }
+
+    if (!company?.companySubscriptionId) {
+        await applySubscriptionToCompany(subscription, {
+            companyIdHint: subscription.metadata?.companyId,
+            sendWelcomeEmail: false,
+            writeAuditLog: true
+        });
+        return;
+    }
 
     const syncData = buildSubscriptionSyncData(subscription);
     const priceId = syncData.priceId;
@@ -343,7 +299,25 @@ async function handleInvoicePaid(event: Stripe.Event) {
         include: { plan: true, companySubscription: true }
     });
 
-    if (!company?.companySubscriptionId) return;
+    if (!company) return;
+
+    const subscriptionRef = invoice.parent?.subscription_details?.subscription;
+    const subscriptionId =
+        typeof subscriptionRef === 'string'
+            ? subscriptionRef
+            : subscriptionRef?.id;
+
+    if (!company.companySubscriptionId && subscriptionId) {
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        await applySubscriptionToCompany(subscription, {
+            companyIdHint: subscription.metadata?.companyId,
+            sendWelcomeEmail: false,
+            writeAuditLog: false
+        });
+        return;
+    }
+
+    if (!company.companySubscriptionId) return;
 
     const lineItem = invoice.lines?.data?.[0];
     const priceRef = lineItem?.pricing?.price_details?.price;
@@ -357,12 +331,6 @@ async function handleInvoicePaid(event: Stripe.Event) {
               ? legacyPrice.price
               : legacyPrice?.price?.id;
 
-    const subscriptionRef = invoice.parent?.subscription_details?.subscription;
-    const subscriptionId =
-        typeof subscriptionRef === 'string'
-            ? subscriptionRef
-            : subscriptionRef?.id;
-
     let syncData: ReturnType<typeof buildSubscriptionSyncData> | null = null;
 
     if (subscriptionId) {
@@ -371,9 +339,10 @@ async function handleInvoicePaid(event: Stripe.Event) {
     }
 
     if (priceId && company.companySubscription) {
-        const matchesCurrentPlan =
-            priceId === company.plan.stripeMonthlyId ||
-            priceId === company.plan.stripeYearlyId;
+        const matchesCurrentPlan = await planMatchesStripePrice(
+            company.plan,
+            priceId
+        );
 
         if (!matchesCurrentPlan) {
             const plan = await findPlanByStripePriceId(priceId);

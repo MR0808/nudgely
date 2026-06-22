@@ -20,7 +20,8 @@
     "db:seed": "npx prisma db seed",
     "db:generate": "npx prisma generate",
     "stripe:test": "tsx scripts/stripe-test.ts",
-    "stripe:test:check": "tsx scripts/stripe-test.ts --check-only"
+    "stripe:test:check": "tsx scripts/stripe-test.ts --check-only",
+    "stripe:sync-plans": "tsx scripts/stripe-sync-plans.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

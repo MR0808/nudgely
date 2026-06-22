@@ -16,7 +16,7 @@ import {
 import { InferActionField } from '@/types/actions';
 import { getCompanyTeams } from '@/actions/team';
 import { SessionType } from '@/types/session';
-import { getCustomerPaymentInformation } from '@/actions/subscriptions';
+import type { BillingPayment } from '@/lib/stripe-billing-display';
 
 export type CompanyData = Awaited<ReturnType<typeof getCompany>>;
 
@@ -48,14 +48,7 @@ export type Teams = NonNullable<
     TeamsUpper extends { teams: infer T } ? T : never
 >;
 
-export type GetPaymentReturn = Awaited<
-    ReturnType<typeof getCustomerPaymentInformation>
->;
-
-export type Payment = Extract<
-    GetPaymentReturn,
-    { success: true }
->['data']['payment'];
+export type Payment = BillingPayment;
 
 export interface CompanyProps {
     company: Company;

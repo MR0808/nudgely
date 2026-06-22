@@ -229,7 +229,7 @@ export async function changePlan(companyId: string, planId: string) {
     }
 
     if (company.companySubscription?.stripeSubscriptionId) {
-        const priceId = getStripePriceIdForPlan(
+        const priceId = await getStripePriceIdForPlan(
             targetPlan,
             company.companySubscription.billingInterval
         );

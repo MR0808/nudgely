@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react';
 import { ArrowRight, Calendar, Check, Star } from 'lucide-react';
 import type { Plan } from '@/generated/prisma/client';
-import { loadStripe } from '@stripe/stripe-js';
 
 import {
     Card,
@@ -44,10 +43,6 @@ const BillingPlanSelection = ({
         return monthlyTotal - yearlyTotal;
     };
 
-    const stripePromise = loadStripe(
-        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-    );
-
     const handlePlanSelect = async (plan: Plan) => {
         if (company.plan.level > plan.level) {
             setPlan(plan);
@@ -55,13 +50,6 @@ const BillingPlanSelection = ({
             return;
         }
         startTransition(async () => {
-            const stripe = await stripePromise;
-
-            if (!stripe) {
-                console.error('Stripe failed to load');
-                return;
-            }
-
             if (company.companySubscription && company.stripeCustomerId) {
                 const response = await createPortalSession(
                     company.stripeCustomerId,
@@ -79,12 +67,9 @@ const BillingPlanSelection = ({
                     window.location.href = response.data.url;
                 }
             } else {
-                const planId =
-                    billingInterval === 'YEARLY'
-                        ? plan.stripeYearlyId
-                        : plan.stripeMonthlyId;
                 const response = await createCheckoutSessions(
-                    planId,
+                    plan.id,
+                    billingInterval,
                     company.id
                 );
 

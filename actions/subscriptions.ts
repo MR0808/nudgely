@@ -3,6 +3,18 @@
 import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
 import { authCheckServerWithCompany } from '@/lib/authCheck';
+import {
+    findPlanByStripePriceId,
+    isYearlyStripePriceId,
+    resolvePlanStripePriceId
+} from '@/lib/stripe-prices';
+import { syncCheckoutSessionToCompany } from '@/lib/sync-company-subscription';
+import {
+    serializeStripeInvoices,
+    serializeStripePayment,
+    type BillingInvoicesList,
+    type BillingPayment
+} from '@/lib/stripe-billing-display';
 import type Stripe from 'stripe';
 
 type ActionResult<T> =
@@ -32,7 +44,8 @@ function ownsStripeCustomer(session: CompanySession, customerId: string) {
 ──────────────────────────────────────────────────────────────────────────── */
 
 export async function createCheckoutSessions(
-    priceId: string,
+    planId: string,
+    billingInterval: 'MONTHLY' | 'YEARLY',
     companyId: string
 ): Promise<ActionResult<{ sessionId: string; url: string | null }>> {
     const session = await authCheckServerWithCompany();
@@ -56,6 +69,13 @@ export async function createCheckoutSessions(
         if (!company) {
             return { success: false, message: 'Company not found' };
         }
+
+        const plan = await prisma.plan.findUnique({ where: { id: planId } });
+        if (!plan) {
+            return { success: false, message: 'Plan not found' };
+        }
+
+        const priceId = await resolvePlanStripePriceId(plan, billingInterval);
 
         const subscriptionMetadata = {
             userId: session.user.id,
@@ -102,6 +122,46 @@ export async function createCheckoutSessions(
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
+   Sync billing after Stripe Checkout redirect (webhook fallback)
+──────────────────────────────────────────────────────────────────────────── */
+
+export async function syncBillingCheckoutSession(
+    checkoutSessionId: string
+): Promise<ActionResult<{ planName: string }>> {
+    const session = await authCheckServerWithCompany();
+    if (!session || !isCompanyAdmin(session)) {
+        return { success: false, message: 'Not authorised' };
+    }
+
+    try {
+        const result = await syncCheckoutSessionToCompany(checkoutSessionId, {
+            companyIdHint: session.company.id,
+            sendWelcomeEmail: false,
+            writeAuditLog: false
+        });
+
+        if (!result) {
+            return { success: false, message: 'Checkout session has no subscription' };
+        }
+
+        if (result.company.id !== session.company.id) {
+            return { success: false, message: 'Not authorised' };
+        }
+
+        return {
+            success: true,
+            message: 'Subscription synced',
+            data: { planName: result.plan.name }
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: `Failed to sync subscription - ${error}`
+        };
+    }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
    Get Pending Subscriptions
 ──────────────────────────────────────────────────────────────────────────── */
 
@@ -139,20 +199,13 @@ export async function getPendingSubscriptions(): Promise<
             };
         }
 
-        const plan = await prisma.plan.findFirst({
-            where: {
-                OR: [
-                    { stripeMonthlyId: pending.priceId },
-                    { stripeYearlyId: pending.priceId }
-                ]
-            }
-        });
+        const plan = await findPlanByStripePriceId(pending.priceId);
 
         if (!plan) {
             return { success: false, message: 'No plan found' };
         }
 
-        const isYearly = plan.stripeYearlyId === pending.priceId;
+        const isYearly = await isYearlyStripePriceId(pending.priceId);
 
         return {
             success: true,
@@ -184,11 +237,8 @@ export async function getCustomerPaymentInformation(
     subscriptionId?: string
 ): Promise<
     ActionResult<{
-        payment: {
-            address: Stripe.Address | null;
-            card: Stripe.PaymentMethod.Card | null | undefined;
-        } | null;
-        invoices: Stripe.ApiList<Stripe.Invoice> | null;
+        payment: BillingPayment | null;
+        invoices: BillingInvoicesList | null;
         nextBillingDate: number | null;
     }>
 > {
@@ -248,8 +298,8 @@ export async function getCustomerPaymentInformation(
             success: true,
             message: 'Payment information loaded',
             data: {
-                payment,
-                invoices,
+                payment: serializeStripePayment(payment),
+                invoices: serializeStripeInvoices(invoices),
                 nextBillingDate:
                     subscription.items.data[0]?.current_period_end ?? null
             }

@@ -19,7 +19,6 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    ResponsiveContainer,
     Cell
 } from 'recharts';
 
@@ -46,10 +45,9 @@ const TopNudgesChart = ({ data }: TopNudgesChartProps) => {
                             color: 'var(--chart-4)'
                         }
                     }}
-                    className="h-80"
+                    className="aspect-auto h-80 w-full"
                 >
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={data} layout="vertical">
+                    <BarChart data={data} layout="vertical">
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis type="number" domain={[0, 100]} />
                             <YAxis
@@ -71,7 +69,6 @@ const TopNudgesChart = ({ data }: TopNudgesChartProps) => {
                                 ))}
                             </Bar>
                         </BarChart>
-                    </ResponsiveContainer>
                 </ChartContainer>
             </CardContent>
         </Card>

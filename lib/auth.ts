@@ -146,7 +146,6 @@ const options = {
     },
   },
   plugins: [
-    nextCookies(),
     admin({
       defaultRole: SiteRole.USER,
       adminRoles: [SiteRole.SITE_ADMIN],
@@ -171,6 +170,9 @@ export const auth = betterAuth({
       const company = userCompany
         ? await prisma.company.findUnique({
             where: { id: userCompany.companyId },
+            include: {
+              plan: { select: { slug: true, level: true } },
+            },
           })
         : null;
       return {
@@ -182,6 +184,7 @@ export const auth = betterAuth({
       };
     }, options),
     openAPI(),
+    nextCookies(),
   ],
 });
 

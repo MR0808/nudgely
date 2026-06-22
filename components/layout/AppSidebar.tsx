@@ -86,14 +86,16 @@ export function AppSidebar({ userSession, ...props }: AppSidebarProps) {
                                     alt="Nudgely"
                                     width={100}
                                     height={100}
-                                    className="block dark:hidden"
+                                    className="block h-8 w-auto dark:hidden"
+                                    style={{ height: 'auto' }}
                                 />
                                 <Image
                                     src="/images/logo/logowhite.png"
                                     alt="Nudgely"
                                     width={100}
                                     height={100}
-                                    className="hidden dark:block"
+                                    className="hidden h-8 w-auto dark:block"
+                                    style={{ height: 'auto' }}
                                 />
                             </Link>
                         </SidebarMenuButton>

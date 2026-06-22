@@ -11,7 +11,7 @@ import 'dotenv/config';
 
 import { createDirectPrismaClient } from '../lib/create-prisma-client';
 import { stripe } from '../lib/stripe';
-import { isFreePlan } from '../lib/stripe-admin';
+import { isFreePlan, resolveStripePriceId } from '../lib/stripe-prices';
 
 const REQUIRED_WEBHOOK_EVENTS = [
     'checkout.session.completed',
@@ -84,29 +84,38 @@ async function validatePlanPrices(
             continue;
         }
 
-        for (const [label, priceId] of [
-            ['monthly', plan.stripeMonthlyId],
-            ['yearly', plan.stripeYearlyId]
+        for (const [label, lookupKey] of [
+            ['monthly', plan.stripeMonthlyLookup],
+            ['yearly', plan.stripeYearlyLookup]
         ] as const) {
-            if (!priceId) {
-                results.push(fail(`Plan "${plan.name}" is missing ${label} Stripe price ID`));
+            if (!lookupKey) {
+                results.push(
+                    fail(`Plan "${plan.name}" is missing ${label} lookup key`)
+                );
                 continue;
             }
 
             try {
+                const priceId = await resolveStripePriceId(lookupKey);
                 const price = await stripe.prices.retrieve(priceId);
                 if (!price.active) {
                     results.push(
-                        fail(`Plan "${plan.name}" ${label} price ${priceId} exists but is inactive`)
+                        fail(
+                            `Plan "${plan.name}" ${label} lookup "${lookupKey}" → ${priceId} is inactive`
+                        )
                     );
                 } else {
                     results.push(
-                        pass(`Plan "${plan.name}" ${label} price ${priceId} is active`)
+                        pass(
+                            `Plan "${plan.name}" ${label} lookup "${lookupKey}" → ${priceId} is active`
+                        )
                     );
                 }
             } catch {
                 results.push(
-                    fail(`Plan "${plan.name}" ${label} price ${priceId} not found in Stripe`)
+                    fail(
+                        `Plan "${plan.name}" ${label} lookup "${lookupKey}" not found in Stripe`
+                    )
                 );
             }
         }
@@ -206,26 +215,22 @@ async function runSubscriptionSmokeTest(
         return [fail('No paid plan found in database for subscription smoke test')];
     }
 
-    const priceId = paidPlan.stripeMonthlyId;
-    if (!priceId) {
-        return [fail(`Paid plan "${paidPlan.name}" has no monthly Stripe price ID`)];
-    }
-
     let customerId: string | null = null;
     let subscriptionId: string | null = null;
 
     try {
+        const priceId = await resolveStripePriceId(paidPlan.stripeMonthlyLookup);
         const customer = await stripe.customers.create({
             email: `stripe-test+${Date.now()}@nudgely.local`,
             metadata: { source: 'nudgely-stripe-test-script' }
         });
         customerId = customer.id;
 
-        await stripe.paymentMethods.attach('pm_card_visa', {
+        const paymentMethod = await stripe.paymentMethods.attach('pm_card_visa', {
             customer: customerId
         });
         await stripe.customers.update(customerId, {
-            invoice_settings: { default_payment_method: 'pm_card_visa' }
+            invoice_settings: { default_payment_method: paymentMethod.id }
         });
 
         const subscription = await stripe.subscriptions.create({

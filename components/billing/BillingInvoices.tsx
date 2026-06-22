@@ -3,7 +3,6 @@
 import { Download } from 'lucide-react';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
-import { loadStripe } from '@stripe/stripe-js';
 
 import {
     Card,
@@ -28,10 +27,6 @@ const BillingInvoices = ({ invoices, customerId }: BillingInvoicesProps) => {
         return formattedDate;
     };
 
-    const stripePromise = loadStripe(
-        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-    );
-
     const handleDownload = async () => {
         if (!customerId) {
             toast.error(
@@ -40,14 +35,6 @@ const BillingInvoices = ({ invoices, customerId }: BillingInvoicesProps) => {
             return;
         }
         startTransition(async () => {
-            const stripe = await stripePromise;
-
-            if (!stripe) {
-                console.error('Stripe failed to load');
-                return;
-            }
-
-            // const response = await downloadAllInvoices(customerId);
             const response = await fetch(
                 `/api/stripe/invoices/export?customer_id=${encodeURIComponent(customerId)}`
             );

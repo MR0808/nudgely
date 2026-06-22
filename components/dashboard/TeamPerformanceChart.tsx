@@ -19,7 +19,6 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    ResponsiveContainer,
     Cell
 } from 'recharts';
 
@@ -46,10 +45,9 @@ const TeamPerformanceChart = ({ data }: TeamPerformanceChartProps) => {
                             color: 'var(--chart-3)'
                         }
                     }}
-                    className="h-64"
+                    className="aspect-auto h-64 w-full"
                 >
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={data} layout="vertical">
+                    <BarChart data={data} layout="vertical">
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis type="number" domain={[0, 100]} />
                             <YAxis
@@ -71,7 +69,6 @@ const TeamPerformanceChart = ({ data }: TeamPerformanceChartProps) => {
                                 ))}
                             </Bar>
                         </BarChart>
-                    </ResponsiveContainer>
                 </ChartContainer>
             </CardContent>
         </Card>

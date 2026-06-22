@@ -1,7 +1,6 @@
 'use client';
 
 import { CreditCard, House } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
 import { useTransition } from 'react';
 
 import {
@@ -33,10 +32,6 @@ const BillingPaymentMethod = ({
         return countryName;
     }
 
-    const stripePromise = loadStripe(
-        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-    );
-
     const handleRedirectToPortal = async () => {
         if (!customerId) {
             toast.error(
@@ -45,13 +40,6 @@ const BillingPaymentMethod = ({
             return;
         }
         startTransition(async () => {
-            const stripe = await stripePromise;
-
-            if (!stripe) {
-                console.error('Stripe failed to load');
-                return;
-            }
-
             const response = await createPortalSession(customerId);
 
             if (!response.success) {

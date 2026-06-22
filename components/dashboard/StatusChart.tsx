@@ -19,7 +19,6 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    ResponsiveContainer,
     Cell
 } from 'recharts';
 
@@ -48,10 +47,9 @@ const StatusChart = ({ data }: StatusChartProps) => {
                         },
                         DISABLED: { label: 'Disabled', color: 'var(--chart-4)' }
                     }}
-                    className="h-64"
+                    className="aspect-auto h-64 w-full"
                 >
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={data}>
+                    <BarChart data={data}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="status" />
                             <YAxis />
@@ -68,7 +66,6 @@ const StatusChart = ({ data }: StatusChartProps) => {
                                 ))}
                             </Bar>
                         </BarChart>
-                    </ResponsiveContainer>
                 </ChartContainer>
             </CardContent>
         </Card>

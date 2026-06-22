@@ -1,7 +1,6 @@
 'use client';
 
 import { useTransition } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 
 import {
     Dialog,
@@ -48,19 +47,8 @@ const BillingPlanSelectionDowngradeDialog = ({
         }
     ];
 
-    const stripePromise = loadStripe(
-        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-    );
-
     const handlePlanSelect = async () => {
         startTransition(async () => {
-            const stripe = await stripePromise;
-
-            if (!stripe) {
-                console.error('Stripe failed to load');
-                return;
-            }
-
             if (company.companySubscription && company.stripeCustomerId) {
                 const response = await createPortalSession(
                     company.stripeCustomerId,

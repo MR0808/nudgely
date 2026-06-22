@@ -121,6 +121,6 @@ Key variables:
 - `DATABASE_URL` — Prisma Accelerate URL (app runtime)
 - `DIRECT_DATABASE_URL` — Direct Postgres URL (migrations, db push, seed)
 - `CRON_SECRET` — Cron job authentication
-- `STRIPE_*` — Billing
+- `STRIPE_*` — Billing ([setup guide](docs/stripe-setup.md))
 - `RESEND_API_KEY` — Email delivery
 - `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_*` — Authentication

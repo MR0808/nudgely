@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 import { sendDowngradeWarningEmail } from '@/lib/mail';
+import { findPlanByStripePriceId } from '@/lib/stripe-prices';
 import { verifyCronRequest } from '@/lib/cron-auth';
 
 export async function GET(request: NextRequest) {
@@ -40,14 +41,7 @@ export async function GET(request: NextRequest) {
         // Process each subscription: Send mock email and optionally update status
         for (const sub of subscriptions) {
             if (sub.company) {
-                const plan = await prisma.plan.findFirst({
-                    where: {
-                        OR: [
-                            { stripeMonthlyId: sub.priceId },
-                            { stripeYearlyId: sub.priceId }
-                        ]
-                    }
-                });
+                const plan = await findPlanByStripePriceId(sub.priceId);
 
                 if (plan) {
                     await sendDowngradeWarningEmail({
