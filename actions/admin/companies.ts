@@ -11,6 +11,9 @@ import {
 import { checkDowngradedPlan } from '@/actions/subscriptions';
 import { CompanyStatus } from '@/generated/prisma/client';
 import type { Prisma } from '@/generated/prisma/client';
+import { requireSiteAdmin } from '@/lib/require-site-admin';
+import { logAdminAction } from '@/lib/admin-audit';
+import { revokeCompanyMemberSessions } from '@/lib/revoke-user-sessions';
 
 type CompanyWithRelations = Prisma.CompanyGetPayload<{
     include: {
@@ -24,6 +27,7 @@ type CompanyWithRelations = Prisma.CompanyGetPayload<{
 export async function getCompanies(searchParams: {
     [key: string]: string | string[] | undefined;
 }) {
+    await requireSiteAdmin();
     const page = parseInt((searchParams.page as string) || '1', 10);
     const pageSize = parseInt((searchParams.pageSize as string) || '20', 10);
     const search = searchParams.search as string | undefined;
@@ -78,6 +82,7 @@ export async function getCompanies(searchParams: {
 }
 
 export async function toggleCompanyStatus(companyId: string) {
+    const session = await requireSiteAdmin();
     const company = await prisma.company.findUnique({
         where: { id: companyId }
     });
@@ -85,41 +90,82 @@ export async function toggleCompanyStatus(companyId: string) {
         throw new Error('Company not found');
     }
 
+    const newStatus =
+        company.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
+
     await prisma.company.update({
         where: { id: companyId },
-        data: {
-            status: company.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE'
-        }
+        data: { status: newStatus }
     });
+
+    if (newStatus === 'DISABLED') {
+        await revokeCompanyMemberSessions(companyId);
+    }
+
+    await logAdminAction(
+        session.user.id,
+        'admin.company_status_changed',
+        `${newStatus === 'DISABLED' ? 'Disabled' : 'Enabled'} company ${company.name}`,
+        {
+            companyId,
+            previousStatus: company.status,
+            newStatus
+        }
+    );
 
     return { success: true };
 }
 
 export async function banCompany(companyId: string, reason: string) {
+    const session = await requireSiteAdmin();
+    const company = await prisma.company.findUnique({
+        where: { id: companyId }
+    });
+    if (!company) throw new Error('Company not found');
+
     await prisma.company.update({
         where: { id: companyId },
-        data: {
-            status: 'BANNED'
-            // TODO: Store ban reason in a separate table or audit log
-        }
+        data: { status: 'BANNED' }
     });
+
+    await revokeCompanyMemberSessions(companyId);
+
+    await logAdminAction(
+        session.user.id,
+        'admin.company_banned',
+        `Banned company ${company.name}`,
+        { companyId, reason }
+    );
 
     return { success: true };
 }
 
 export async function deleteCompany(companyId: string) {
-    // Instead of actually deleting, we disable the company
+    const session = await requireSiteAdmin();
+    const company = await prisma.company.findUnique({
+        where: { id: companyId }
+    });
+    if (!company) throw new Error('Company not found');
+
     await prisma.company.update({
         where: { id: companyId },
-        data: {
-            status: 'DISABLED'
-        }
+        data: { status: 'DISABLED' }
     });
+
+    await revokeCompanyMemberSessions(companyId);
+
+    await logAdminAction(
+        session.user.id,
+        'admin.company_status_changed',
+        `Soft-deleted (disabled) company ${company.name}`,
+        { companyId, previousStatus: company.status, newStatus: 'DISABLED' }
+    );
 
     return { success: true };
 }
 
 export async function grantFreePlan(companyId: string) {
+    const session = await requireSiteAdmin();
     const freePlan = await prisma.plan.findFirst({
         where: { slug: 'free' }
     });
@@ -159,10 +205,18 @@ export async function grantFreePlan(companyId: string) {
         }
     });
 
+    await logAdminAction(
+        session.user.id,
+        'admin.company_free_plan_granted',
+        `Granted free plan to ${company.name}`,
+        { companyId }
+    );
+
     return { success: true };
 }
 
 export async function extendTrial(companyId: string, days: number) {
+    const session = await requireSiteAdmin();
     const company = await prisma.company.findUnique({
         where: { id: companyId }
     });
@@ -182,10 +236,18 @@ export async function extendTrial(companyId: string, days: number) {
         }
     });
 
+    await logAdminAction(
+        session.user.id,
+        'admin.company_trial_extended',
+        `Extended trial for ${company.name} by ${days} days`,
+        { companyId, days, trialEndsAt: newTrialEnd.toISOString() }
+    );
+
     return { success: true };
 }
 
 export async function changePlan(companyId: string, planId: string) {
+    const session = await requireSiteAdmin();
     const company = await prisma.company.findUnique({
         where: { id: companyId },
         include: { plan: true, companySubscription: true }
@@ -225,6 +287,18 @@ export async function changePlan(companyId: string, planId: string) {
         });
 
         await checkDowngradedPlan(companyId);
+
+        await logAdminAction(
+            session.user.id,
+            'admin.company_plan_changed',
+            `Changed plan for ${company.name} to ${targetPlan.name}`,
+            {
+                companyId,
+                previousPlanId: company.planId,
+                newPlanId: planId
+            }
+        );
+
         return { success: true };
     }
 
@@ -258,6 +332,17 @@ export async function changePlan(companyId: string, planId: string) {
     if (isDowngrade) {
         await checkDowngradedPlan(companyId);
     }
+
+    await logAdminAction(
+        session.user.id,
+        'admin.company_plan_changed',
+        `Changed plan for ${company.name} to ${targetPlan.name}`,
+        {
+            companyId,
+            previousPlanId: company.planId,
+            newPlanId: planId
+        }
+    );
 
     return { success: true };
 }

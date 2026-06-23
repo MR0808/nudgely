@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useForm, SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useTransition } from 'react';
+import { useTransition, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -30,6 +30,21 @@ const LoginForm = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const callbackURL = searchParams.get('callbackURL') || '/';
+
+    useEffect(() => {
+        const error = searchParams.get('error');
+        if (error === 'account_inactive') {
+            toast.error(
+                'This account has been deactivated. Contact support if you need help.',
+                { position: 'top-center' }
+            );
+        } else if (error === 'company_inactive') {
+            toast.error(
+                'Your company account is inactive. Contact your administrator or support.',
+                { position: 'top-center' }
+            );
+        }
+    }, [searchParams]);
 
     const form = useForm<z.infer<typeof LoginSchema>>({
         resolver: zodResolver(LoginSchema),

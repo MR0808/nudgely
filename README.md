@@ -91,7 +91,10 @@ npm run db:migrate:resolve   # marks 0_baseline as applied — run once only
 | `npm run db:generate` | Regenerate Prisma client |
 | `npm run db:migrate` | Apply migrations (via `DIRECT_DATABASE_URL`) |
 | `npm run db:push` | Push schema (via `DIRECT_DATABASE_URL`) |
-| `npm run db:seed` | Seed demo data (via `DIRECT_DATABASE_URL`) |
+| `npm run db:seed` | Wipe and reseed reference data + admin user (**destructive**; blocked in production unless `ALLOW_PRODUCTION_SEED=true`) |
+| `npm run db:seed:reference` | Load reference data only if empty (safe for production bootstrap) |
+| `npm run db:seed:demo` | Add demo companies (non-destructive) |
+| `npm run stripe:live:check` | Validate live Stripe setup (no charges) |
 | `npm run email` | Preview React Email templates |
 
 ## Cron jobs (Vercel)
@@ -102,9 +105,11 @@ npm run db:migrate:resolve   # marks 0_baseline as applied — run once only
 | Daily 03:00 UTC | `/api/cron/daily-summary` | Admin digest email |
 | Daily 04:00 UTC | `/api/cron/check-subscriptions` | Downgrade warning emails |
 
-All cron routes require `Authorization: Bearer $CRON_SECRET`. On Vercel, `x-vercel-cron` is also validated.
+All cron routes require `Authorization: Bearer $CRON_SECRET`. On Vercel, cron invocations also include `x-vercel-cron-schedule` and `user-agent: vercel-cron/1.0`.
 
 Set `CRON_SUMMARY_TIMEZONE` (default `UTC`) for daily summary date boundaries.
+
+Optional send-nudges tuning: `CRON_BUDGET_MS`, `CRON_NUDGE_BATCH_SIZE`, `CRON_REMINDER_BATCH_SIZE`, `CRON_RECIPIENT_CONCURRENCY` (see `.env.example`). The cron returns `hasMoreNudges` / `hasMoreReminders` when work remains for the next hourly run.
 
 ## Migrations
 
@@ -121,6 +126,9 @@ Key variables:
 - `DATABASE_URL` — Prisma Accelerate URL (app runtime)
 - `DIRECT_DATABASE_URL` — Direct Postgres URL (migrations, db push, seed)
 - `CRON_SECRET` — Cron job authentication
+- `ADMIN_EMAIL` — Optional recipient for daily admin digest
 - `STRIPE_*` — Billing ([setup guide](docs/stripe-setup.md))
 - `RESEND_API_KEY` — Email delivery
+- `RESEND_WEBHOOK_SECRET` — Resend bounce/complaint webhooks ([setup](docs/resend-webhooks.md))
 - `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_*` — Authentication
+- [deployment.md](docs/deployment.md) — full go-live runbook

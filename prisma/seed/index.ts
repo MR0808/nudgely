@@ -11,6 +11,17 @@ import { seedReferenceData } from './lib/seed-reference-data';
 const prisma = createDirectPrismaClient();
 
 async function main() {
+    if (
+        process.env.NODE_ENV === 'production' &&
+        process.env.ALLOW_PRODUCTION_SEED !== 'true'
+    ) {
+        console.error(
+            '\n❌ Refusing to run destructive seed in production.\n' +
+                '   Set ALLOW_PRODUCTION_SEED=true only if you intend to wipe the database.\n'
+        );
+        process.exit(1);
+    }
+
     console.log('🌱 Nudgely database seed');
     console.log('   This will DELETE all data and reload reference tables.\n');
 

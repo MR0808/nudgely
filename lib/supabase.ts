@@ -2,10 +2,11 @@ import { createClient } from '@supabase/supabase-js';
 
 import { prisma } from '@/lib/prisma';
 
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_KEY!;
+const supabaseUrl =
+    process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey =
+    process.env.SUPABASE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// Server-side client with service role key for admin operations
 export const supabaseServer = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
         autoRefreshToken: false,
@@ -30,12 +31,13 @@ export async function cleanupOrphanedImages(
     const { dryRun = false, olderThanDays } = options;
 
     try {
-        // Build the where clause
-        const whereClause: any = {
+        const whereClause: {
+            OR: Array<{ relatedEntity: null } | { relatedEntity: string }>;
+            createdAt?: { lt: Date };
+        } = {
             OR: [{ relatedEntity: null }, { relatedEntity: '' }]
         };
 
-        // Optionally filter by age
         if (olderThanDays) {
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
@@ -44,7 +46,6 @@ export async function cleanupOrphanedImages(
             };
         }
 
-        // Find all orphaned images
         const orphanedImages = await prisma.image.findMany({
             where: whereClause,
             select: {
@@ -66,10 +67,8 @@ export async function cleanupOrphanedImages(
         let deletedCount = 0;
         const errors: string[] = [];
 
-        // Process each orphaned image
         for (const image of orphanedImages) {
             try {
-                // Delete from Supabase storage
                 const { error: storageError } = await supabaseServer.storage
                     .from(image.bucket)
                     .remove([image.imageName]);
@@ -85,7 +84,6 @@ export async function cleanupOrphanedImages(
                     continue;
                 }
 
-                // Delete from database
                 await prisma.image.delete({
                     where: { id: image.id }
                 });

@@ -8,16 +8,15 @@ import { UserActions } from '@/components/admin/users/UserActions';
 import { UserInfoDialog } from '@/components/admin/users/UserInfoDialog';
 
 export async function UserList({
-    searchParams
+    searchParams,
+    currentUserId
 }: {
     searchParams: { [key: string]: string | string[] | undefined };
+    currentUserId: string;
 }) {
     const { users, totalCount } = await getUsers(searchParams);
     const currentPage = parseInt((searchParams.page as string) || '1', 10);
     const pageSize = parseInt((searchParams.pageSize as string) || '20', 10);
-
-    // TODO: Replace with actual auth - get current user from session/JWT
-    const currentUser = { role: 'SITE_ADMIN' }; // Placeholder
 
     if (users.length === 0) {
         return (
@@ -31,10 +30,9 @@ export async function UserList({
         <div className="space-y-4">
             <div className="space-y-3">
                 {users.map((user) => {
-                    const canModify = !(
-                        currentUser.role === 'SITE_ADMIN' &&
-                        user.role === 'SITE_ADMIN'
-                    );
+                    const canModify =
+                        user.id !== currentUserId &&
+                        user.role !== 'SITE_ADMIN';
 
                     return (
                         <Card key={user.id} className="p-4">

@@ -180,9 +180,27 @@ Manual test:
 ### Production
 
 1. Deploy with **live** env vars on Vercel
-2. `npm run stripe:sync-plans` locally with `sk_live_...` if you cache IDs (optional)
-3. Run `npm run stripe:test:check` with live keys only on a staging machine if needed — or verify in Stripe Dashboard
-4. One real low-tier subscription test, then refund/cancel in Stripe if desired
+2. Run automated live validation (no charges):
+
+```bash
+# Temporarily set sk_live_ / pk_live_ / production NEXT_PUBLIC_APP_URL in .env
+npm run stripe:live:check
+```
+
+3. `npm run stripe:sync-plans` locally with `sk_live_...` if you cache price IDs (optional)
+4. **Manual live payment test** (one real subscription, then cancel/refund in Stripe):
+
+| Step | Action |
+|------|--------|
+| 1 | Log in as company admin on production |
+| 2 | **Billing** → upgrade to Starter (lowest paid plan) |
+| 3 | Complete Checkout with a real card |
+| 4 | Confirm Billing shows active plan |
+| 5 | Stripe Dashboard → **Webhooks** → confirm `2xx` for `checkout.session.completed` and `customer.subscription.created` |
+| 6 | Cancel or refund the test subscription in Stripe |
+| 7 | (Optional) Verify `invoice.payment_failed` updates billing status and sends email |
+
+5. Confirm webhook endpoint subscribes to all events in [1.3 Webhooks](#13-webhooks)
 
 ---
 
@@ -218,8 +236,9 @@ npm run stripe:sync-plans
 ### Useful commands
 
 ```bash
-npm run stripe:test:check      # Validate setup (test keys)
+npm run stripe:test:check      # Validate test setup (test keys)
 npm run stripe:test            # Smoke test subscription
+npm run stripe:live:check      # Validate live setup (live keys, no charges)
 npm run stripe:sync-plans      # Cache price_xxx IDs from lookup keys
 stripe trigger customer.subscription.updated
 ```

@@ -18,6 +18,7 @@ import CompanyTeamsCard from '@/components/company/CompanyTeamsCard';
 import { getCompanyTeams } from '@/actions/team';
 import { Button } from '@/components/ui/button';
 import CompanyBillingCard from '@/components/company/CompanyBillingCard';
+import { CompanyDataExportCard } from '@/components/company/CompanyDataExportCard';
 import { getCompanyNudgeCount } from '@/actions/nudges';
 import { getCustomerPaymentInformation } from '@/actions/subscriptions';
 
@@ -176,6 +177,8 @@ const CompanyPage = async () => {
                         details.data?.nextBillingDate ? nextBillingDate : null
                     }
                 />
+
+                <CompanyDataExportCard company={company} />
 
                 {/* <CompanyDangerZone /> */}
             </div>

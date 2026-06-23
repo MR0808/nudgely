@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { checkCompanyStatus } from '@/actions/company';
 import { CompanySetupBanner } from '@/components/layout/CompanySetupBanner';
+import { PaymentPastDueBanner } from '@/components/layout/PaymentPastDueBanner';
 import { LoadingBar } from '@/components/layout/LoadingBar';
 // import ServerSidebar from '@/components/layout/ServerSidebar';
 import { SiteHeader } from '@/components/layout/SiteHeader';
@@ -59,6 +60,9 @@ export default async function RootLayout({
             >
                 <AppSidebar variant="inset" userSession={session} />
                 <SidebarInset>
+                    <PaymentPastDueBanner
+                        subscriptionStatus={companyStatus.subscriptionStatus}
+                    />
                     {showBanner && (
                         <CompanySetupBanner
                             companyName={companyStatus.companyName}

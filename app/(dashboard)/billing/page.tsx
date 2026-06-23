@@ -65,8 +65,10 @@ const BillingPage = async ({
     const sessionId =
         typeof params.session_id === 'string' ? params.session_id : undefined;
 
+    let checkoutSyncSuccess: boolean | null = null;
     if (sessionId) {
-        await syncBillingCheckoutSession(sessionId);
+        const syncResult = await syncBillingCheckoutSession(sessionId);
+        checkoutSyncSuccess = syncResult.success;
     }
 
     const res = await getCompany();
@@ -173,11 +175,36 @@ const BillingPage = async ({
                     </p>
                 </div>
 
-                {params.session_id && (
+                {checkoutSyncSuccess === true && (
                     <Alert variant="default">
                         <AlertTitle>Thank You</AlertTitle>
                         <AlertDescription>
                             Your subscription has been updated.
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                {checkoutSyncSuccess === false && (
+                    <Alert variant="destructive">
+                        <AlertTitle>Checkout sync issue</AlertTitle>
+                        <AlertDescription>
+                            Your payment may have succeeded, but we could not
+                            confirm the subscription update. Please refresh this
+                            page or contact support if your plan does not update
+                            shortly.
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                {(company.companySubscription?.status === 'past_due' ||
+                    company.companySubscription?.status === 'unpaid') && (
+                    <Alert variant="destructive">
+                        <AlertTitle>Payment issue</AlertTitle>
+                        <AlertDescription>
+                            Your last payment could not be processed. Update
+                            your payment method below — Stripe will retry
+                            automatically, but unresolved failures may limit
+                            your subscription.
                         </AlertDescription>
                     </Alert>
                 )}
@@ -350,6 +377,11 @@ const BillingPage = async ({
                         <BillingPaymentMethod
                             payment={details?.data?.payment || null}
                             customerId={company.stripeCustomerId || null}
+                            paymentIssue={
+                                company.companySubscription?.status ===
+                                    'past_due' ||
+                                company.companySubscription?.status === 'unpaid'
+                            }
                         />
                         <BillingInvoices
                             invoices={details?.data?.invoices ?? undefined}

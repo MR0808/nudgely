@@ -471,13 +471,14 @@ model CompanySubscription {
 }
 
 model PendingCompanySubscription {
-  id               String   @id @default(uuid())
-  activeDate       DateTime
-  stripeScheduleId String   @unique
-  priceId          String
-  company          Company?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                     String    @id @default(uuid())
+  activeDate             DateTime
+  stripeScheduleId       String    @unique
+  priceId                String
+  downgradeWarningSentAt DateTime?
+  company                Company?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   @@map("pending_company_subscriptions")
 }
@@ -802,4 +803,17 @@ model ProcessedStripeEvent {
   createdAt DateTime @default(now())
 
   @@map("processed_stripe_events")
+}
+
+model EmailSuppression {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  reason        String
+  source        String?
+  details       String?
+  resendEmailId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("email_suppressions")
 }

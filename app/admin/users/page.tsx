@@ -1,8 +1,6 @@
 import { Suspense } from 'react';
 import { UserList } from '@/components/admin/users/UserList';
 import { UserFilters } from '@/components/admin/users/UserFilters';
-import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { authCheckAdmin } from '@/lib/authCheck';
 
@@ -11,7 +9,7 @@ export default async function UsersPage({
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    await authCheckAdmin('/admin/users');
+    const session = await authCheckAdmin('/admin/users');
     const params = await searchParams;
     return (
         <div className="space-y-6">
@@ -29,7 +27,7 @@ export default async function UsersPage({
             </Suspense>
 
             <Suspense fallback={<UserListSkeleton />}>
-                <UserList searchParams={params} />
+                <UserList searchParams={params} currentUserId={session.user.id} />
             </Suspense>
         </div>
     );

@@ -1,8 +1,8 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
-import { createAuthMiddleware } from 'better-auth/api';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { nextCookies } from 'better-auth/next-js';
-import { SiteRole, Gender } from '@/generated/prisma/client';
+import { SiteRole, Gender, UserStatus } from '@/generated/prisma/client';
 import { admin, customSession, openAPI } from 'better-auth/plugins';
 
 import { prisma } from '@/lib/prisma';
@@ -10,6 +10,14 @@ import { hashPassword, verifyPassword } from '@/lib/argon2';
 import { sendVerificationEmail, sendResetEmail } from '@/lib/mail';
 import { ac, roles } from '@/lib/permissions';
 import { logPasswordResetRequested } from '@/actions/audit/audit-auth';
+import { isUserAccessBlocked } from '@/lib/user-access';
+import {
+    checkForgotPasswordRateLimits,
+    getClientIpFromHeaders,
+    recordForgotPasswordAttempt
+} from '@/lib/auth-ratelimit';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 const baseURL =
   process.env.BETTER_AUTH_URL ||
@@ -20,8 +28,9 @@ const trustedOrigins = [
   baseURL,
   process.env.NEXT_PUBLIC_APP_URL,
   process.env.BETTER_AUTH_URL,
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
+  ...(isProduction
+    ? []
+    : ['http://localhost:3000', 'http://127.0.0.1:3000']),
 ]
   .filter(Boolean)
   .map((origin) => origin!.replace(/\/$/, ''));
@@ -32,12 +41,13 @@ const options = {
   database: prismaAdapter(prisma, {
     provider: 'postgresql', // or "mysql", "postgresql", ...etc
   }),
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    },
-  },
+  // Google OAuth disabled until ban/disabled checks are enforced on social sign-in.
+  // socialProviders: {
+  //   google: {
+  //     clientId: process.env.GOOGLE_CLIENT_ID as string,
+  //     clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+  //   },
+  // },
   emailAndPassword: {
     enabled: true,
     password: {
@@ -55,9 +65,50 @@ const options = {
     },
   },
   hooks: {
-    after: createAuthMiddleware(async (ctx) => {
-      // const newSession = ctx.context.newSession;
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === '/sign-in/email') {
+        const email =
+          typeof ctx.body?.email === 'string' ? ctx.body.email : undefined;
+
+        if (email) {
+          const user = await prisma.user.findUnique({ where: { email } });
+
+          if (user && isUserAccessBlocked(user)) {
+            throw new APIError('FORBIDDEN', {
+              message: 'This account is not active. Contact support if you need help.'
+            });
+          }
+        }
+      }
+
       if (ctx.path === '/forget-password') {
+        const email =
+          typeof ctx.body?.email === 'string' ? ctx.body.email : undefined;
+        const ip = getClientIpFromHeaders(ctx.headers ?? {});
+
+        if (email) {
+          const rateLimitMessage = await checkForgotPasswordRateLimits(
+            email,
+            ip
+          );
+          if (rateLimitMessage) {
+            throw new APIError('TOO_MANY_REQUESTS', {
+              message: rateLimitMessage
+            });
+          }
+        }
+      }
+    }),
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === '/forget-password') {
+        const email =
+          typeof ctx.body?.email === 'string' ? ctx.body.email : undefined;
+        const ip = getClientIpFromHeaders(ctx.headers ?? {});
+
+        if (email) {
+          await recordForgotPasswordAttempt(email, ip);
+        }
+
         await logPasswordResetRequested(ctx.body.email);
       }
     }),
@@ -131,13 +182,18 @@ const options = {
         type: 'string',
         required: false,
       },
+      status: {
+        type: ['ACTIVE', 'DISABLED', 'BANNED'] as Array<UserStatus>,
+        required: false,
+      },
     },
   },
   session: {
     expiresIn: 30 * 24 * 60 * 60,
     cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60,
+      // Short cache so bans/disabled status and company changes take effect quickly.
+      enabled: !isProduction,
+      maxAge: isProduction ? 0 : 5 * 60,
     },
   },
   account: {
@@ -183,7 +239,7 @@ export const auth = betterAuth({
         userCompany,
       };
     }, options),
-    openAPI(),
+    ...(isProduction ? [] : [openAPI()]),
     nextCookies(),
   ],
 });

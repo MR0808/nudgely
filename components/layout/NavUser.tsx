@@ -6,6 +6,7 @@ import {
     CircleDollarSign,
     LogOut,
     Settings,
+    Shield,
     User,
     Sparkles
 } from 'lucide-react';
@@ -44,6 +45,8 @@ export function NavUser({ initialSession }: { initialSession: SessionType }) {
         session?.userCompany?.role === 'COMPANY_ADMIN' &&
         !!session?.company?.plan &&
         (session.company.plan.slug === 'free' || session.company.plan.level === 1);
+
+    const showAdmin = session?.user?.role === 'SITE_ADMIN';
 
     useEffect(() => {
         if (session?.user) {
@@ -119,6 +122,22 @@ export function NavUser({ initialSession }: { initialSession: SessionType }) {
                                         >
                                             <Sparkles />
                                             Upgrade to Pro
+                                        </Link>
+                                    </DropdownMenuItem>
+                                </DropdownMenuGroup>
+                            </>
+                        )}
+                        {showAdmin && (
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuGroup>
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href="/admin"
+                                            className="cursor-pointer"
+                                        >
+                                            <Shield />
+                                            Admin
                                         </Link>
                                     </DropdownMenuItem>
                                 </DropdownMenuGroup>

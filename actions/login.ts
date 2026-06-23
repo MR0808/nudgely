@@ -9,6 +9,13 @@ import { auth, ErrorCode } from '@/lib/auth';
 import { LoginSchema } from '@/schemas/auth';
 import { logUserLogin } from '@/actions/audit/audit-auth';
 import { prisma } from '@/lib/prisma';
+import { isUserAccessBlocked } from '@/lib/user-access';
+import {
+    checkLoginRateLimits,
+    clearLoginRateLimit,
+    getClientIp,
+    recordFailedLoginAttempt
+} from '@/lib/auth-ratelimit';
 
 /* ------------------------------------------------------------------
  * Types
@@ -38,8 +45,22 @@ export const login = async (
     }
 
     const { email, password, rememberMe } = validatedFields.data;
+    const ip = await getClientIp();
 
     try {
+        const rateLimitMessage = await checkLoginRateLimits(email, ip);
+        if (rateLimitMessage) {
+            return { error: rateLimitMessage };
+        }
+
+        const existingUser = await prisma.user.findUnique({ where: { email } });
+
+        if (existingUser && isUserAccessBlocked(existingUser)) {
+            return {
+                error: 'This account is not active. Contact support if you need help.'
+            };
+        }
+
         const data = await auth.api.signInEmail({
             headers: await headers(),
             body: {
@@ -54,6 +75,8 @@ export const login = async (
             rememberMe
         });
 
+        await clearLoginRateLimit(email);
+
         return {
             error: null,
             emailVerified: data.user.emailVerified
@@ -67,10 +90,12 @@ export const login = async (
                 case 'EMAIL_NOT_VERIFIED':
                     redirect('/auth/verify-email');
                 default:
+                    await recordFailedLoginAttempt(email, ip);
                     return { error: err.message };
             }
         }
 
+        await recordFailedLoginAttempt(email, ip);
         console.error('[login] Unexpected error:', err);
         return { error: 'Internal Server Error' };
     }

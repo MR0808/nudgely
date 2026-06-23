@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 
 import { prisma } from '@/lib/prisma';
 import { authCheckServerWithCompany } from '@/lib/authCheck';
+import { getCompanyPaymentBlock } from '@/lib/subscription-payment';
 import { CreateNudgeSchema } from '@/schemas/nudge';
 import {
     logNudgePaused,
@@ -198,6 +199,14 @@ export const createNudge = async (
     }
 
     const { user, company } = userSession;
+
+    const paymentBlock = await getCompanyPaymentBlock(company.id);
+    if (paymentBlock.blocked) {
+        return {
+            success: false,
+            error: paymentBlock.message ?? 'Payment required'
+        };
+    }
 
     try {
         const plan = await prisma.plan.findUnique({

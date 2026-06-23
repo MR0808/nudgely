@@ -112,8 +112,19 @@ export type AuditAction =
     | 'admin.user_created'
     | 'admin.user_deleted'
     | 'admin.user_suspended'
+    | 'admin.user_banned'
+    | 'admin.user_unbanned'
+    | 'admin.user_status_changed'
     | 'admin.role_assigned'
-    | 'admin.permission_granted';
+    | 'admin.permission_granted'
+    | 'admin.company_banned'
+    | 'admin.company_status_changed'
+    | 'admin.company_plan_changed'
+    | 'admin.company_trial_extended'
+    | 'admin.company_free_plan_granted'
+    | 'admin.plan_updated'
+    | 'admin.template_updated'
+    | 'admin.cron_triggered';
 
 export interface CreateAuditLogParams {
     userId?: string;

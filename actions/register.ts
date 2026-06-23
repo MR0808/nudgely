@@ -17,6 +17,11 @@ import { EmailCheckResult } from '@/types/register';
 import { logCompanyCreated } from '@/actions/audit/audit-company';
 import { TeamRole } from '@/generated/prisma/client';
 import { ActionResult } from '@/types/global';
+import {
+    checkRegisterRateLimit,
+    getClientIp,
+    recordRegisterAttempt
+} from '@/lib/auth-ratelimit';
 
 let cachedDomains: string[] | null = null;
 let lastFetched: number | null = null;
@@ -59,6 +64,15 @@ export const registerInitial = async (
     const compName = companyName || `${name} ${lastName}`;
 
     try {
+        const ip = await getClientIp();
+        const rateLimitMessage = await checkRegisterRateLimit(ip);
+        if (rateLimitMessage) {
+            return {
+                success: false,
+                message: rateLimitMessage
+            };
+        }
+
         const emailCheck = await checkEmail(email);
 
         if (emailCheck.error) {
@@ -247,6 +261,8 @@ export const registerInitial = async (
             }
         };
     } catch (err: unknown) {
+        await recordRegisterAttempt(await getClientIp());
+
         if (err instanceof APIError) {
             return {
                 success: false,

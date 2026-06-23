@@ -391,6 +391,19 @@ export function convertTo24Hour(time12h: string): string {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
+/** Parse timeOfDay whether stored as 24h (`09:00`) or 12h (`9:00 AM`). */
+export function parseTimeOfDayHourMinute(timeOfDay: string): {
+    hour: number;
+    minute: number;
+} {
+    const normalized =
+        timeOfDay.includes('AM') || timeOfDay.includes('PM')
+            ? convertTo24Hour(timeOfDay)
+            : timeOfDay.trim();
+    const [hour, minute] = normalized.split(':').map(Number);
+    return { hour: hour ?? 0, minute: minute ?? 0 };
+}
+
 /**
  * Get day name from day number
  */

@@ -14,12 +14,15 @@ import TeamInviteEmailTemplate from '@/emails/team-invite';
 import UpgradeEmailTemplate from '@/emails/upgrade-email';
 import DowngradeEmailTemplate from '@/emails/downgrade-email';
 import DowngradeWarningEmailTemplate from '@/emails/downgrade-warning';
+import PaymentFailedEmailTemplate from '@/emails/payment-failed';
 import CancelSubscriptionEmailTemplate from '@/emails/cancel-subscription';
 import NudgeReminderTemplate from '@/emails/nudge-reminder';
 import { SendCompletionNotificationProps } from '@/types/complete';
 import NudgeCompletionNotificationEmail from '@/emails/nudge-completion-notification';
 import DailyNudgeSummaryEmail from '@/emails/daily-nudge-summary';
 import { SendDailySummaryEmailOptions } from '@/types/email';
+import { isEmailSuppressed } from '@/lib/email-suppression';
+import { sendResendEmail } from '@/lib/mail-send';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -197,7 +200,7 @@ export const sendUpgradeEmail = async ({
     name: string;
     plan: string;
 }) => {
-    await resend.emails.send({
+    return sendResendEmail({
         from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
         to: email,
         subject: 'Nudgely - Your plan has been upgraded',
@@ -214,7 +217,7 @@ export const sendDowngradeEmail = async ({
     name: string;
     plan: string;
 }) => {
-    await resend.emails.send({
+    return sendResendEmail({
         from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
         to: email,
         subject: 'Nudgely - Your plan has been downgraded',
@@ -231,11 +234,26 @@ export const sendDowngradeWarningEmail = async ({
     name: string;
     plan: string;
 }) => {
-    await resend.emails.send({
+    return sendResendEmail({
         from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
         to: email,
         subject: 'Nudgely - Your plan is about to be downgraded',
         react: DowngradeWarningEmailTemplate({ name, plan })
+    });
+};
+
+export const sendPaymentFailedEmail = async ({
+    email,
+    name
+}: {
+    email: string;
+    name: string;
+}) => {
+    return sendResendEmail({
+        from: fromNudgely,
+        to: email,
+        subject: 'Nudgely - Payment failed — action required',
+        react: PaymentFailedEmailTemplate({ name })
     });
 };
 
@@ -248,7 +266,7 @@ export const sendCancellationEmail = async ({
     name: string;
     endDate: Date;
 }) => {
-    await resend.emails.send({
+    return sendResendEmail({
         from: process.env.NEXT_PUBLIC_APP_EMAIL as string,
         to: email,
         subject: 'Nudgely - Your plan has been cancelled',
@@ -273,6 +291,13 @@ export const sendNudgeEmail = async ({
     scheduleInfo?: string;
     isReminder?: boolean;
 }) => {
+    if (await isEmailSuppressed(email)) {
+        return {
+            success: false,
+            error: 'Recipient email is suppressed (bounce or complaint)'
+        };
+    }
+
     const subjectPrefix = isReminder ? 'Reminder: ' : '';
     const { error } = await resend.emails.send({
         from: process.env.NEXT_PUBLIC_APP_EMAIL as string,

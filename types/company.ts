@@ -140,5 +140,6 @@ export interface CompanyCheckResult {
     companyName: string | null;
     isComplete: boolean;
     missingFields: string[];
+    subscriptionStatus?: string | null;
 }
 

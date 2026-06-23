@@ -35,6 +35,7 @@ export interface BillingPlanSelectionDowngradeDialogProps {
 export interface BillingPaymentMethodProps {
     payment: Payment | null;
     customerId: string | null;
+    paymentIssue?: boolean;
 }
 
 export interface BillingInvoicesProps {

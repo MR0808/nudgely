@@ -47,6 +47,11 @@ const ChartContainer = React.forwardRef<
 >(({ id, className, children, config, ...props }, ref) => {
     const uniqueId = React.useId();
     const chartId = `chart-${id || uniqueId.replace(/:/g, '')}`;
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
 
     return (
         <ChartContext.Provider value={{ config }}>
@@ -54,7 +59,7 @@ const ChartContainer = React.forwardRef<
                 data-chart={chartId}
                 ref={ref}
                 className={cn(
-                    'flex aspect-video justify-center text-xs min-h-0 w-full',
+                    'relative h-[200px] w-full min-h-[200px] min-w-0 text-xs',
                     '[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground',
                     "[&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50",
                     '[&_.recharts-curve.recharts-tooltip-cursor]:stroke-border',
@@ -72,9 +77,15 @@ const ChartContainer = React.forwardRef<
                 {...props}
             >
                 <ChartStyle id={chartId} config={config} />
-                <RechartsPrimitive.ResponsiveContainer>
-                    {children}
-                </RechartsPrimitive.ResponsiveContainer>
+                {mounted ? (
+                    <RechartsPrimitive.ResponsiveContainer
+                        width="100%"
+                        height="100%"
+                        minWidth={0}
+                    >
+                        {children}
+                    </RechartsPrimitive.ResponsiveContainer>
+                ) : null}
             </div>
         </ChartContext.Provider>
     );

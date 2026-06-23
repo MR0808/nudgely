@@ -6,7 +6,7 @@
     "dev": "npx prisma generate && next dev",
     "email": "email dev",
     "build": "npx prisma generate && next build",
-    "vercel-build": "npx prisma generate && next build",
+    "vercel-build": "npx prisma generate && npx prisma migrate deploy && next build",
     "postinstall": "npx prisma generate",
     "start": "next start",
     "lint": "next lint",
@@ -19,11 +19,13 @@
     "db:sync": "npx prisma db push",
     "db:seed": "npx prisma db seed",
     "db:seed:demo": "tsx prisma/seed/seed-demo.ts",
+    "db:seed:reference": "tsx prisma/seed/seed-reference.ts",
     "db:reset": "npx prisma migrate reset",
     "db:generate": "npx prisma generate",
     "stripe:test": "tsx scripts/stripe-test.ts",
     "stripe:test:check": "tsx scripts/stripe-test.ts --check-only",
-    "stripe:sync-plans": "tsx scripts/stripe-sync-plans.ts"
+    "stripe:sync-plans": "tsx scripts/stripe-sync-plans.ts",
+    "stripe:live:check": "tsx scripts/stripe-live-check.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

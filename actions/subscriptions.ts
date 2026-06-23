@@ -387,38 +387,88 @@ export async function checkDowngradedPlan(
         const { maxNudges, maxTeams, maxUsers, maxRecipients } = company.plan;
 
         if (maxUsers !== 0 && company.members.length > maxUsers) {
-            await prisma.user.updateMany({
-                where: { companyMember: { some: { companyId } } },
-                data: { status: 'DISABLED' }
-            });
-        }
+            const admins = company.members.filter(
+                (member) => member.role === 'COMPANY_ADMIN'
+            );
+            const others = company.members
+                .filter((member) => member.role !== 'COMPANY_ADMIN')
+                .sort(
+                    (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+                );
 
-        if (maxTeams !== 0 && company.teams.length > maxTeams) {
-            await prisma.team.updateMany({
-                where: { companyId },
-                data: { status: 'DISABLED' }
-            });
-        }
+            const allowedOthers = Math.max(0, maxUsers - admins.length);
+            const activeUserIds = new Set([
+                ...admins.map((member) => member.userId),
+                ...others.slice(0, allowedOthers).map((member) => member.userId)
+            ]);
 
-        for (const team of company.teams) {
-            if (maxTeams !== 0 && company.teams.length > maxTeams) {
-                await prisma.nudge.updateMany({
-                    where: { teamId: team.id },
+            const disableUserIds = company.members
+                .filter((member) => !activeUserIds.has(member.userId))
+                .map((member) => member.userId);
+
+            if (disableUserIds.length > 0) {
+                await prisma.user.updateMany({
+                    where: { id: { in: disableUserIds } },
                     data: { status: 'DISABLED' }
                 });
             }
         }
 
-        const totalNudges = company.teams.reduce(
-            (acc, team) => acc + team.nudges.length,
-            0
+        if (maxTeams !== 0 && company.teams.length > maxTeams) {
+            const defaultTeam = company.teams.find((team) => team.defaultTeam);
+            const otherTeams = company.teams
+                .filter((team) => !team.defaultTeam)
+                .sort(
+                    (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+                );
+
+            const keepTeamIds = new Set<string>();
+            if (defaultTeam) keepTeamIds.add(defaultTeam.id);
+
+            for (const team of otherTeams) {
+                if (keepTeamIds.size >= maxTeams) break;
+                keepTeamIds.add(team.id);
+            }
+
+            const disableTeamIds = company.teams
+                .filter((team) => !keepTeamIds.has(team.id))
+                .map((team) => team.id);
+
+            if (disableTeamIds.length > 0) {
+                await prisma.team.updateMany({
+                    where: { id: { in: disableTeamIds } },
+                    data: { status: 'DISABLED' }
+                });
+            }
+        }
+
+        const allNudges = company.teams.flatMap((team) =>
+            team.nudges.map((nudge) => ({
+                ...nudge,
+                teamId: team.id
+            }))
         );
 
-        if (maxNudges !== 0 && totalNudges > maxNudges) {
-            await prisma.nudge.updateMany({
-                where: { team: { companyId } },
-                data: { status: 'DISABLED' }
-            });
+        if (maxNudges !== 0 && allNudges.length > maxNudges) {
+            const keepNudgeIds = new Set(
+                [...allNudges]
+                    .sort(
+                        (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+                    )
+                    .slice(0, maxNudges)
+                    .map((nudge) => nudge.id)
+            );
+
+            const disableNudgeIds = allNudges
+                .filter((nudge) => !keepNudgeIds.has(nudge.id))
+                .map((nudge) => nudge.id);
+
+            if (disableNudgeIds.length > 0) {
+                await prisma.nudge.updateMany({
+                    where: { id: { in: disableNudgeIds } },
+                    data: { status: 'DISABLED' }
+                });
+            }
         }
 
         const nudges = await prisma.nudge.findMany({

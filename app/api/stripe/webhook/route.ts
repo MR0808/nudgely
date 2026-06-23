@@ -9,6 +9,7 @@ import { checkDowngradedPlan } from '@/actions/subscriptions';
 import {
     sendCancellationEmail,
     sendDowngradeEmail,
+    sendPaymentFailedEmail,
     sendUpgradeEmail
 } from '@/lib/mail';
 import {
@@ -371,15 +372,47 @@ async function handleInvoicePaymentFailed(event: Stripe.Event) {
 
     const company = await prisma.company.findUnique({
         where: { stripeCustomerId: customerId },
-        include: { companySubscription: true }
+        include: {
+            companySubscription: true,
+            creator: { select: { email: true, name: true } }
+        }
     });
 
     if (!company?.companySubscriptionId) return;
+
+    const previousStatus = company.companySubscription?.status;
+    const wasAlreadyBlocked =
+        previousStatus === 'past_due' || previousStatus === 'unpaid';
 
     await prisma.companySubscription.update({
         where: { id: company.companySubscriptionId },
         data: { status: 'past_due' }
     });
+
+    if (wasAlreadyBlocked) {
+        return;
+    }
+
+    const billingEmail =
+        company.contactEmail || company.creator.email;
+
+    try {
+        const result = await sendPaymentFailedEmail({
+            email: billingEmail,
+            name: company.creator.name
+        });
+        if (!result.success) {
+            console.error(
+                '[stripe:webhook] Failed to send payment failed email:',
+                result.error
+            );
+        }
+    } catch (error) {
+        console.error(
+            '[stripe:webhook] Failed to send payment failed email:',
+            error
+        );
+    }
 }
 
 async function handleSubscriptionDeleted(event: Stripe.Event) {

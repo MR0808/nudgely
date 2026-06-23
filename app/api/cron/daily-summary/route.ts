@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { sendDailySummaryEmail } from '@/lib/mail';
 import { verifyCronRequest } from '@/lib/cron-auth';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
 const SUMMARY_TIMEZONE =
     process.env.CRON_SUMMARY_TIMEZONE || 'UTC';
 
@@ -171,7 +174,10 @@ export async function GET(request: NextRequest) {
         console.log(`  Teams: ${teamStats.length}`);
 
         // Send summary email to admin
-        const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_FROM;
+        const adminEmail =
+            process.env.ADMIN_EMAIL ||
+            process.env.NEXT_PUBLIC_APP_EMAIL ||
+            process.env.EMAIL_FROM;
         if (!adminEmail) {
             console.warn(
                 '[cron:daily-summary] No admin email configured, skipping summary email'

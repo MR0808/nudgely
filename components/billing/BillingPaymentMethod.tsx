@@ -17,7 +17,8 @@ import { createPortalSession } from '@/actions/subscriptions';
 
 const BillingPaymentMethod = ({
     payment,
-    customerId
+    customerId,
+    paymentIssue = false
 }: BillingPaymentMethodProps) => {
     const [isPending, startTransition] = useTransition();
 
@@ -89,7 +90,11 @@ const BillingPaymentMethod = ({
                             disabled={isPending}
                             className="cursor-pointer"
                         >
-                            {isPending ? 'Loading...' : 'Manage Subscription'}
+                            {isPending
+                                ? 'Loading...'
+                                : paymentIssue
+                                  ? 'Update payment method'
+                                  : 'Manage Subscription'}
                         </Button>
                     </div>
                     <div className="flex gap-3 items-start">

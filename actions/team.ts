@@ -3,6 +3,7 @@
 import z from 'zod';
 import { prisma } from '@/lib/prisma';
 import { authCheckServerWithCompany } from '@/lib/authCheck';
+import { getCompanyPaymentBlock } from '@/lib/subscription-payment';
 import { TeamSchema } from '@/schemas/team';
 import { checkCompanyTeamLimits } from '@/lib/team';
 import { revalidatePath } from 'next/cache';
@@ -307,6 +308,14 @@ export const createTeam = async (
 
     if (session.userCompany.role !== 'COMPANY_ADMIN') {
         return { data: null, message: 'Not authorised' };
+    }
+
+    const paymentBlock = await getCompanyPaymentBlock(companyId);
+    if (paymentBlock.blocked) {
+        return {
+            data: null,
+            error: paymentBlock.message ?? 'Payment required'
+        };
     }
 
     try {

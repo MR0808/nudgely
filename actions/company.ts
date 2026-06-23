@@ -81,7 +81,8 @@ export const checkCompanyStatus = async () => {
             companyId: null,
             companyName: null,
             isComplete: true,
-            missingFields: []
+            missingFields: [],
+            subscriptionStatus: null
         };
 
         return {
@@ -96,7 +97,8 @@ export const checkCompanyStatus = async () => {
         where: { id: userCompany.companyId },
         include: {
             region: true,
-            country: true
+            country: true,
+            companySubscription: { select: { status: true } }
         }
     });
 
@@ -142,7 +144,8 @@ export const checkCompanyStatus = async () => {
         companyId: company.id,
         companyName: company.name ?? null,
         isComplete: missingFields.length === 0,
-        missingFields
+        missingFields,
+        subscriptionStatus: company.companySubscription?.status ?? null
     };
 
     return {
