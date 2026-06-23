@@ -95,6 +95,8 @@ npm run db:migrate:resolve   # marks 0_baseline as applied — run once only
 | `npm run db:seed:reference` | Load reference data only if empty (safe for production bootstrap) |
 | `npm run db:seed:demo` | Add demo companies (non-destructive) |
 | `npm run stripe:live:check` | Validate live Stripe setup (no charges) |
+| `npm run production:check` | Full production readiness (env + DB + Stripe + health) |
+| `npm run production:verify` | Post-deploy health check against live URL |
 | `npm run email` | Preview React Email templates |
 
 ## Cron jobs (Vercel)

@@ -19,7 +19,13 @@ At checkout the app calls Stripe with the lookup key and uses the `price_xxx` re
 
 ## Lookup keys (must match in test and live)
 
-Create these prices in **both** Stripe dashboards:
+Create these prices in **both** Stripe dashboards (or use the bootstrap script):
+
+```bash
+npm run stripe:bootstrap-prices -- --dry-run   # preview
+npm run stripe:bootstrap-prices                # create missing prices (uses STRIPE_SECRET_KEY)
+npm run stripe:sync-plans                      # cache price_xxx IDs on plans
+```
 
 | Plan | Monthly lookup key | Yearly lookup key |
 |------|-------------------|-------------------|

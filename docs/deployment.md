@@ -71,15 +71,33 @@ See [resend-webhooks.md](./resend-webhooks.md).
 
 ## 5. Post-deploy verification
 
+Run locally (with production env vars in `.env`):
+
+```bash
+npm run production:check    # Full pre-go-live: env, DB, Stripe live, health
+npm run production:verify   # Quick post-deploy: GET /api/health only
+npm run stripe:live:check   # Stripe-only subset
+```
+
 | Check | Command / action |
 |-------|------------------|
-| Health | `GET /api/health` → `{ "status": "ok" }` |
+| Health | `npm run production:verify -- https://app.nudgelyapp.com` |
+| Full readiness | `npm run production:check` |
 | Crons | Vercel → Cron Jobs → confirm 200 responses (not 401) |
 | Nudges | Create test nudge; wait for hourly cron or trigger from Admin → Cron |
 | Billing | Upgrade test company; confirm webhook + billing page |
 | Bounces | Resend dashboard → send test bounce webhook |
+| Sentry | Visit `/sentry-example-page` once, confirm issue in Sentry dashboard |
 
 Set up external uptime monitoring on `/api/health`.
+
+### Sentry on Vercel
+
+| Variable | Required |
+|----------|----------|
+| `SENTRY_AUTH_TOKEN` | Yes (for readable stack traces via source maps) |
+
+Runtime error reporting uses the DSN in `sentry.*.config.ts` — no extra DSN env vars needed.
 
 ---
 

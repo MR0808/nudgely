@@ -70,7 +70,7 @@ export function validateWebhookSecret(): CheckResult {
 }
 
 export function validateAppUrl(mode: StripeCheckMode): CheckResult {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/+$/, '');
     if (!appUrl) {
         return fail('NEXT_PUBLIC_APP_URL is not set');
     }
@@ -148,7 +148,7 @@ export async function validateWebhookEndpoints(
     mode: StripeCheckMode
 ): Promise<CheckResult[]> {
     const results: CheckResult[] = [];
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/+$/, '');
 
     try {
         const endpoints = await stripe.webhookEndpoints.list({ limit: 20 });

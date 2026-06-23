@@ -49,3 +49,5 @@ next-env.d.ts
 companies.csv
 
 .ncurc.json
+# Sentry Config File
+.env.sentry-build-plugin
