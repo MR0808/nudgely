@@ -101,6 +101,8 @@ Set up external uptime monitoring on `/api/health`.
 
 Runtime error reporting uses the DSN in `sentry.*.config.ts` — no extra DSN env vars needed.
 
+See **[sentry.md](./sentry.md)** for verification steps, alerts, and tuning.
+
 ---
 
 ## 6. Related docs
