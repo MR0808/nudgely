@@ -29,7 +29,8 @@ jobs:
 
             - run: npm run build
               env:
-                  DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+                  # Accelerate-shaped URL satisfies lib/prisma.ts at build time (no DB connection needed)
+                  DATABASE_URL: prisma+postgres://localhost:51213/?api_key=ci_dummy
                   DIRECT_DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
                   BETTER_AUTH_SECRET: ci-build-secret-minimum-32-chars-long
                   NEXT_PUBLIC_APP_URL: http://localhost:3000

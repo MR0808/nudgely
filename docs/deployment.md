@@ -71,6 +71,8 @@ See [resend-webhooks.md](./resend-webhooks.md).
 
 ## 5. Post-deploy verification
 
+See **[production-runsheet.md](./production-runsheet.md)** for the full go-live checklist and production test plan.
+
 Run locally (with production env vars in `.env`):
 
 ```bash
@@ -103,6 +105,7 @@ Runtime error reporting uses the DSN in `sentry.*.config.ts` — no extra DSN en
 
 ## 6. Related docs
 
+- [production-runsheet.md](./production-runsheet.md) — **go-live checklist & production test plan**
 - [stripe-setup.md](./stripe-setup.md) — lookup keys, webhooks, live checklist
 - [resend-webhooks.md](./resend-webhooks.md) — bounce suppression
 - [README.md](../README.md) — local development

@@ -133,4 +133,5 @@ Key variables:
 - `RESEND_API_KEY` — Email delivery
 - `RESEND_WEBHOOK_SECRET` — Resend bounce/complaint webhooks ([setup](docs/resend-webhooks.md))
 - `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_*` — Authentication
-- [deployment.md](docs/deployment.md) — full go-live runbook
+- [deployment.md](docs/deployment.md) — deploy runbook
+- [production-runsheet.md](docs/production-runsheet.md) — go-live checklist & production test plan
