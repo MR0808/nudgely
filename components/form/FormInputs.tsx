@@ -17,6 +17,7 @@ type FormInputProps = {
     defaultValue?: string;
     placeholder?: string;
     disabled?: boolean;
+    autoComplete?: string;
 };
 
 type btnSize = 'default' | 'lg' | 'sm';

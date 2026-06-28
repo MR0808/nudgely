@@ -44,21 +44,31 @@ Current production tuning (already applied):
 
 ## 3. Verify Sentry is working
 
-### After deploy
+### Verify it works
 
-1. Open https://app.nudgelyapp.com
-2. Open browser devtools → **Network** → filter `monitoring` or `sentry`
-3. Trigger a harmless client error (e.g. run in console on any page):
+**Important:** `throw new Error(...)` typed directly in the browser DevTools console is **not** sent to Sentry. Chrome runs that outside the page’s error handlers.
 
-```js
-throw new Error('Nudgely Sentry production test');
+#### Server test (recommended)
+
+```bash
+curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://app.nudgelyapp.com/api/sentry-test
 ```
 
-4. Sentry → **Issues** → you should see a new issue within ~1 minute
+Check Sentry → **Issues** within ~1 minute for `Nudgely Sentry server test`.
 
-### Server-side error
+#### Client test
 
-Temporarily add a test route or use an admin-only action that throws, then check Sentry. Remove the test after confirming.
+On any app page, run in DevTools **Console**:
+
+```js
+setTimeout(() => { throw new Error('Nudgely Sentry client test'); }, 0);
+```
+
+(`setTimeout` runs in the page context so Sentry’s global handler can catch it.)
+
+#### Network check
+
+DevTools → **Network** → filter `monitoring` — after a client error you should see POSTs to `/monitoring` with status **200**.
 
 ### Source maps
 

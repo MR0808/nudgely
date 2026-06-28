@@ -117,6 +117,7 @@ const LoginForm = () => {
                                             {...field}
                                             type="email"
                                             name="email"
+                                            autoComplete="email"
                                         />
                                     </FormControl>
                                 </FormItem>
@@ -139,6 +140,7 @@ const LoginForm = () => {
                                             name="password"
                                             type="password"
                                             defaultValue=""
+                                            autoComplete="current-password"
                                         />
                                     </FormControl>
                                 </FormItem>

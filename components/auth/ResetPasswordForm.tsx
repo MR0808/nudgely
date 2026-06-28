@@ -110,6 +110,7 @@ const ResetPasswordForm = ({ token }: { token: string }) => {
                                             name="password"
                                             type="password"
                                             defaultValue=""
+                                            autoComplete="new-password"
                                         />
                                     </FormControl>
                                 </FormItem>
@@ -132,6 +133,7 @@ const ResetPasswordForm = ({ token }: { token: string }) => {
                                             name="confirmPassword"
                                             type="password"
                                             defaultValue=""
+                                            autoComplete="new-password"
                                         />
                                     </FormControl>
                                 </FormItem>

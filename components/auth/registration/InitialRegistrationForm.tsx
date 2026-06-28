@@ -126,6 +126,7 @@ const InitialRegistrationForm = ({
                                             {...field}
                                             type="text"
                                             name="name"
+                                            autoComplete="given-name"
                                         />
                                     </FormControl>
                                 </FormItem>
@@ -144,6 +145,7 @@ const InitialRegistrationForm = ({
                                             {...field}
                                             type="text"
                                             name="lastName"
+                                            autoComplete="family-name"
                                         />
                                     </FormControl>
                                 </FormItem>
@@ -165,6 +167,7 @@ const InitialRegistrationForm = ({
                                             {...field}
                                             type="email"
                                             name="email"
+                                            autoComplete="email"
                                         />
                                     </FormControl>
                                 </FormItem>
@@ -188,6 +191,7 @@ const InitialRegistrationForm = ({
                                                 name="password"
                                                 type="password"
                                                 defaultValue=""
+                                                autoComplete="new-password"
                                             />
                                         </FormControl>
                                     </FormItem>

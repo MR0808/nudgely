@@ -91,6 +91,7 @@ const ForgotPasswordForm = () => {
                                                 {...field}
                                                 type="email"
                                                 name="email"
+                                                autoComplete="email"
                                             />
                                         </FormControl>
                                     </FormItem>
